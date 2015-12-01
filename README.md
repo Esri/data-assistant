@@ -10,18 +10,20 @@ In this release you can test the FieldMapper user experience for different Metho
 
 This config file will be replaced each time ArcGIS Pro is run for testing purposes.
 
-Things to test:
-Overall user experience - use the FieldMapper to test all of the end user functionality
-Tool interaction and basic behavior of the user interface for each method.
-Save (Apply) functionality
+<strong>Things to test:</strong>
+<li>Overall user experience - use the FieldMapper to test all of the end user functionality</li>
+<li>Tool interaction and basic behavior of the user interface for each method.</li>
+<li>Save (Apply) functionality</li>
 
-Things that do not work:
-Save on DataGrid (i.e., ValueMapper Method) does not work correctly
-The FieldMapper button will eventually be merged into the Data Sharing Wizard
-The Wizard Icons (in the upper left) are not implemented. Suggestions are welcome.
-There are some aspects of adding new value map values, sorting concatenated fields, and some other areas that need work. Please provide suggestions on how to complete those parts of the UX.
+<strong>Things that do not work:</strong>
+<li>The FieldMapper button will eventually be merged into the Data Sharing Wizard</li>
+<li>The Wizard Icons (in the upper left of the wizard form) are not implemented. Suggestions are welcome.</li>
+<li>Save on DataGrid (i.e., ValueMapper Method) does not work correctly</li>
+<li>There are some aspects of adding new value map values, sorting concatenated fields, and some other areas that need work. Please provide suggestions on how to complete those parts of the UX.</li>
+<li>General UI improvements will be made to look closer to ArcGIS Pro Icons and UI styling. Suggestions are welcome.</li>
 
-Things to consider:
-Names of the tools and the AddIn - is this aggregation or data sharing? How does it fit with the existing Pro 'Share' ribbon?
-Should the Source Field (Dropdown list in the left-side DataGrid) and Method (ComboBox list on the right-hand Panel) portions of the FieldMapper be swapped? Not all Methods have a single Source Field
+<strong>Things to consider:</strong>
+<li>Names of the tools and the AddIn - is this aggregation or data sharing? How does it fit with the existing Pro 'Share' ribbon?</li>
+<li>Should the Source Field (Dropdown list in the left-side DataGrid) and Method (ComboBox list on the right-hand Panel) portions of the FieldMapper be swapped? Not all Methods have a single Source Field</li>
+<li>Are the names of the Tools/Buttons in the ribbon the best names?</li>
 

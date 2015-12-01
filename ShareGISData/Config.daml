@@ -1,0 +1,61 @@
+﻿<ArcGIS defaultAssembly="ShareGISData.dll" defaultNamespace="ShareGISData" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="1.0" desktopVersion="1.1.3308">
+    <Name>ShareGISData</Name>
+    <Description>Tools to configure and run data sharing processes</Description>
+    <Image>Images\AddinDesktop32.png</Image>
+    <Author>Steve</Author>
+    <Company>Vertex3 for Esri</Company>
+    <Date>10/10/2015 10:08:35 AM, 2015</Date>
+    <Subject>Content,Framework,Data</Subject>
+  </AddInInfo>
+  <modules>
+    <insertModule id="ShareGISData_Module" className="Module1" autoLoad="false" caption="Module1">
+      <tabs>
+        <tab id="ShareGISData_Tab1" caption="Share Data">
+          <group refID="ShareGISData_Group1"/>
+          <group refID="ShareGISData_Group2"/>
+        </tab>
+      </tabs>
+      <groups>
+        <group id="ShareGISData_Group1" caption="Configure" appearsOnAddInTab="true">
+          <button refID="ShareGISData_Wizard" size="large" />
+        </group>
+        <group id="ShareGISData_Group2" caption="Share" appearsOnAddInTab="true">
+          <button refID="ShareGISData_Dockpane1_ShowButton" size="large" />
+          <button refID="ShareGISData_Dockpane1_PreviewButton" size="large"/>
+          <button refID="ShareGISData_Dockpane1_PublishButton" size="large" />
+          <button refID="ShareGISData_Dockpane1_AggregateButton" size="large" />
+        </group>
+      </groups>
+      <controls>
+        <!-- add your controls here -->
+        <button id="ShareGISData_Wizard" caption="Data Sharing Wizard" className="ShareWizard" loadOnClick="true" smallImage="Images\AddInDesktop16.png" largeImage="Images\AddInDesktop32.png">
+          <tooltip heading="Configure Data Sharing">Tooltip text<disabledText /></tooltip>
+        </button>
+        <button id="ShareGISData_Dockpane1_ShowButton" caption="Field Mapper" className="Dockpane1_ShowButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+          <tooltip heading="Field Mapper">Field Mapper<disabledText /></tooltip>
+        </button>
+        <button id="ShareGISData_Dockpane1_PreviewButton" caption="Preview" className="Dockpane1_PreviewButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+          <tooltip heading="Preview Results">
+            Preview Results<disabledText />
+          </tooltip>
+        </button>
+        <button id="ShareGISData_Dockpane1_PublishButton" caption="Publish" className="Dockpane1_PublishButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+          <tooltip heading="Publish Data">
+            Publish Data<disabledText />
+          </tooltip>
+        </button>
+        <button id="ShareGISData_Dockpane1_AggregateButton" caption="Aggregate" className="Dockpane1_AggregateButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+          <tooltip heading="Aggregate Data">
+            Aggregate Data<disabledText />
+          </tooltip>
+        </button>
+      </controls>
+      <dockPanes>
+        <dockPane id="ShareGISData_Dockpane1" caption="Field Mapper" className="Dockpane1ViewModel" dock="group" dockWith="esri_core_contentsDockPane">
+          <content className="Dockpane1View" />
+        </dockPane>
+      </dockPanes>
+    </insertModule>
+  </modules>
+</ArcGIS>

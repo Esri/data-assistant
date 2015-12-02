@@ -26,6 +26,6 @@ This config file will be replaced each time ArcGIS Pro is run for testing purpos
 <li>Should the Source Field (Dropdown list in the left-side DataGrid) and Method (ComboBox list on the right-hand Panel) portions of the FieldMapper be swapped? Not all Methods have a single Source Field</li>
 <li>Are the names of the Tools/Buttons in the ribbon the best names? I've been thinking about Data Loading Assistant since this is becoming like the Attribute Assistant...</li>
 
-Things Fixed Dec 2
+<strong>Things Fixed Dec 2</strong>
 <li>The Wizard Icons work now</li>
 <li>Save on DataGrid (i.e., ValueMapper Method) now works.</li>

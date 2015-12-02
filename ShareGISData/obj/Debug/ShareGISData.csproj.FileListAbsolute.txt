@@ -17,7 +17,6 @@ C:\Users\Steve\Documents\GitHub\ShareGISData\ShareGISData\bin\Debug\ShareGISData
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\ConfigData.xml
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\ShareGISData.dll
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\ShareGISData.pdb
-C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\ShareGISData.csprojResolveAssemblyReference.cache
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane1.baml
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DockpaneShare.baml
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane1.g.cs
@@ -29,4 +28,10 @@ C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\ShareGIS
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\ShareGISData.csproj.GenerateResource.Cache
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\ShareGISData.dll
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\ShareGISData.pdb
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\ShareGISData.csprojResolveAssemblyReference.cache
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon0.png
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon1.png
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon2.png
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon3.png
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon4.png
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\ShareGISData.esriAddInX

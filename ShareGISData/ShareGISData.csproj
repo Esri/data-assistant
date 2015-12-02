@@ -103,6 +103,11 @@
     <Compile Include="Module1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.Designer.cs" />
+    <Compile Include="Resources1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Settings.Designer.cs" />
     <Compile Include="Settings1.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -121,18 +126,34 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources.resx" />
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Wizard.resx">
       <DependentUpon>Wizard.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Images\Icon0.png" />
-    <EmbeddedResource Include="Images\Icon1.png" />
-    <EmbeddedResource Include="Images\Icon2.png" />
-    <EmbeddedResource Include="Images\Icon3.png" />
-    <EmbeddedResource Include="Images\Icon4.png" />
+    <Content Include="Config\ConfigData.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Images\Icon0.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Icon1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Icon2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Icon3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Icon4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="Settings.settings">

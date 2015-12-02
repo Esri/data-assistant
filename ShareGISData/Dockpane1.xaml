@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"                                             
              xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="ShareGISData.Dockpane1View"                                             
-             mc:Ignorable="d" MinHeight="400" MinWidth="500" d:DesignHeight="508" d:DesignWidth="644.2">
+             mc:Ignorable="d" MinHeight="500" MinWidth="480" d:DesignHeight="500" d:DesignWidth="480">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -12,47 +12,55 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto">
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" MinHeight="500" MinWidth="480">
         <Grid.RowDefinitions>
             <RowDefinition Height="150*"/>
             <RowDefinition Height="0"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280*"/>
+            <ColumnDefinition Width="320"/>
             <ColumnDefinition Width="160*"/>
         </Grid.ColumnDefinitions>
 
-        <DataGrid x:Name="FieldGrid" ItemsSource="{Binding XPath=/SourceTargetMatrix/Dataset/Field}" 
+        <StackPanel Grid.Column="0" Margin="5,5,5,5" Grid.Row="0" x:Name="Fields" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Width="310" >
+            <StackPanel.Effect>
+                <DropShadowEffect ShadowDepth="1" BlurRadius="2"/>
+            </StackPanel.Effect>
+            <DataGrid x:Name="FieldGrid" ItemsSource="{Binding XPath=/SourceTargetMatrix/Dataset/Field}" 
                   Height="Auto" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Margin="5,5,5,5" MinWidth="280" 
-                  Grid.Row="0" Grid.Column="0" AutoGenerateColumns="False" AutoGeneratingColumn="FieldGrid_AutoGeneratingColumn"
-                  CanUserResizeColumns="True" CanUserSortColumns="True" SelectedCellsChanged="FieldGrid_Selected" ScrollViewer.CanContentScroll="True" SelectionChanged="FieldGrid_SelectionChanged">
-            <DataGrid.DataContext>
-                <XmlDataProvider Source="ConfigData.xml" XPath="/SourceTargetMatrix/Dataset/Field"/>
-            </DataGrid.DataContext>
-            <DataGrid.Columns>
-                <!--<DataGridTextColumn x:Name="Method" Binding="{Binding XPath=Method}" ClipboardContentBinding="{x:Null}" Header="Method" MinWidth="100"/>-->
-                <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}" 
-                                    ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="150"/>
-                <DataGridComboBoxColumn x:Name="aSourceFieldName"  Header="Source" MinWidth="150">
-                    <DataGridComboBoxColumn.ElementStyle>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="ItemsSource" Value="{Binding XPath=SourceName}"/>
-                            <Setter Property="SelectedValue" Value="{Binding XPath=SourceName}"/>
-                            <Setter Property="IsReadOnly" Value="True"/>
-                        </Style>
-                    </DataGridComboBoxColumn.ElementStyle>
-                    <DataGridComboBoxColumn.EditingElementStyle>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="ItemsSource" Value="{Binding XPath=//SourceField/Name}"/>
-                            <EventSetter Event="SelectionChanged" Handler="SourceSelectionChanged" />
-                        </Style>
-                    </DataGridComboBoxColumn.EditingElementStyle>
-                </DataGridComboBoxColumn>
-                
-                <!--<DataGridTextColumn x:Name="SourceFieldName" Binding="{Binding XPath=SourceName}" 
+                  AutoGenerateColumns="False" AutoGeneratingColumn="FieldGrid_AutoGeneratingColumn"
+                  CanUserResizeColumns="True" CanUserSortColumns="True" SelectedCellsChanged="FieldGrid_Selected" 
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                      ScrollViewer.CanContentScroll="True" 
+                      SelectionChanged="FieldGrid_SelectionChanged">
+                <DataGrid.DataContext>
+                    <XmlDataProvider Source="ConfigData.xml" XPath="/SourceTargetMatrix/Dataset/Field"/>
+                </DataGrid.DataContext>
+                <DataGrid.Columns>
+                    <!--<DataGridTextColumn x:Name="Method" Binding="{Binding XPath=Method}" ClipboardContentBinding="{x:Null}" Header="Method" MinWidth="100"/>-->
+                    <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}" 
+                                    ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="130"/>
+                    <DataGridComboBoxColumn x:Name="aSourceFieldName"  Header="Source" MinWidth="130">
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="ItemsSource" Value="{Binding XPath=SourceName}"/>
+                                <Setter Property="SelectedValue" Value="{Binding XPath=SourceName}"/>
+                                <Setter Property="IsReadOnly" Value="True"/>
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="ItemsSource" Value="{Binding XPath=//SourceField/Name}"/>
+                                <EventSetter Event="SelectionChanged" Handler="SourceSelectionChanged" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
+
+                    <!--<DataGridTextColumn x:Name="SourceFieldName" Binding="{Binding XPath=SourceName}" 
                                     ClipboardContentBinding="{x:Null}" Header="Source" MinWidth="150"/>-->
-            </DataGrid.Columns>
-        </DataGrid>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
         <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="0" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
             <StackPanel.Effect>
                 <DropShadowEffect ShadowDepth="1" BlurRadius="2"/>
@@ -96,16 +104,17 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBox Text="{Binding Path=Source}"/>
+                                    <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged"/>
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+
                     <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="100" Header="Targets">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBox Text="{Binding Path=Target}"/>
+                                    <TextBox x:Name="Method3Target" Text="{Binding Path=Target}" TextChanged="Method3Target_TextChanged"/>
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -206,9 +215,9 @@
             <TextBox x:Name="Method11Value" Margin="5,0,5,5" Text="" ToolTip="Enter the expression" Height="100"/>
             <Button x:Name="Method11Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method11Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,5,5,50" Grid.Row="0" x:Name="Buttons" Visibility="Visible" VerticalAlignment="Bottom">
-            <Button x:Name="MethodPanelApply" Content="Apply" Width="70"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="25,25,5,5" Click="MethodPanelApply_Click"/>
-            <Button x:Name="MethodPanelCancel" Content="Cancel" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="25,-25,25,5" Click="MethodPanelCancel_Click"/>
+        <StackPanel Grid.Column="1" Margin="5,5,5,50" Grid.Row="0" x:Name="Buttons" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="150">
+            <Button x:Name="MethodPanelApply" Content="Apply" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-75,5,5,5" Click="MethodPanelApply_Click"/>
+            <Button x:Name="MethodPanelCancel" Content="Cancel" Width="50" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="75,-50,5,5" Click="MethodPanelCancel_Click"/>
         </StackPanel>
 <!--        <Button x:Name="CloseButton"  Content="Close" HorizontalAlignment="Stretch" Margin="5,5,5,5" Grid.Row="1" Width="70" Click="CloseButton_Click"/>
         -->

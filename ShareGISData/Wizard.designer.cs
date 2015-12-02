@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Wizard));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel1 = new System.Windows.Forms.Panel();
             this.cancelButton = new System.Windows.Forms.Button();
             this.backButton = new System.Windows.Forms.Button();
@@ -53,11 +52,6 @@
             this.richTextBox3 = new System.Windows.Forms.RichTextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.label3 = new System.Windows.Forms.Label();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.Source = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Target = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Method = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.fSettings = new System.Windows.Forms.DataGridViewButtonColumn();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.panel3 = new System.Windows.Forms.Panel();
             this.richTextBox2 = new System.Windows.Forms.RichTextBox();
@@ -73,7 +67,6 @@
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabPage4.SuspendLayout();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
@@ -143,6 +136,7 @@
             // 
             // pictureBoxChanges
             // 
+            this.pictureBoxChanges.ImageLocation = "";
             this.pictureBoxChanges.InitialImage = ((System.Drawing.Image)(resources.GetObject("pictureBoxChanges.InitialImage")));
             this.pictureBoxChanges.Location = new System.Drawing.Point(5, 6);
             this.pictureBoxChanges.Margin = new System.Windows.Forms.Padding(1);
@@ -152,7 +146,6 @@
             this.pictureBoxChanges.TabIndex = 4;
             this.pictureBoxChanges.TabStop = false;
             this.pictureBoxChanges.WaitOnLoad = true;
-            this.pictureBoxChanges.Click += new System.EventHandler(this.pictureBoxChanges_Click);
             // 
             // textBoxChanges
             // 
@@ -364,7 +357,6 @@
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.label3);
-            this.tabPage3.Controls.Add(this.dataGridView1);
             this.tabPage3.Location = new System.Drawing.Point(4, 25);
             this.tabPage3.Margin = new System.Windows.Forms.Padding(4);
             this.tabPage3.Name = "tabPage3";
@@ -383,56 +375,6 @@
             this.label3.TabIndex = 14;
             this.label3.Text = "This will be replaced with FieldMapper Content";
             this.label3.Click += new System.EventHandler(this.label3_Click_1);
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Source,
-            this.Target,
-            this.Method,
-            this.fSettings});
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Margin = new System.Windows.Forms.Padding(4);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(646, 305);
-            this.dataGridView1.TabIndex = 13;
-            this.dataGridView1.Visible = false;
-            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
-            // 
-            // Source
-            // 
-            this.Source.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Source.HeaderText = "Source";
-            this.Source.Name = "Source";
-            // 
-            // Target
-            // 
-            this.Target.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Target.HeaderText = "Target";
-            this.Target.Name = "Target";
-            // 
-            // Method
-            // 
-            this.Method.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Method.HeaderText = "Method";
-            this.Method.Name = "Method";
-            this.Method.Width = 80;
-            // 
-            // fSettings
-            // 
-            this.fSettings.HeaderText = "Settings";
-            this.fSettings.Name = "fSettings";
-            this.fSettings.Text = "...";
             // 
             // tabPage4
             // 
@@ -558,7 +500,6 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tabPage4.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
@@ -592,13 +533,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboBox2;
         private System.Windows.Forms.ComboBox comboBox1;
-        private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Source;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Target;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Method;
-        private System.Windows.Forms.DataGridViewButtonColumn fSettings;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.ComboBox comboBox3;
         private System.Windows.Forms.Button button3;

@@ -25,11 +25,19 @@ namespace ShareGISData
     /// </summary>
     public partial class Dockpane1View : UserControl
     {
-        string filename = "ConfigData.xml";
+        public static string AddinAssemblyLocation()
+        {
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            return System.IO.Path.GetDirectoryName(
+                              Uri.UnescapeDataString(
+                                      new Uri(asm.CodeBase).LocalPath));
+        }
+        string filename = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
         string fieldXPath = "/SourceTargetMatrix/Dataset/Field";
         string sampleText = "Jefferson County, Colorado, USA";
         System.Xml.XmlDocument xml = new System.Xml.XmlDocument();
         TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+
 
         public Dockpane1View()
         {
@@ -533,6 +541,43 @@ namespace ShareGISData
                 }
             }
             return child;
+        }
+
+        private void Method3Target_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Method3TextChanged(sender, "Target");
+        }
+        private void Method3Source_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Method3TextChanged(sender,"Source");
+        }
+        private void Method3TextChanged(object sender,string sourcetarget)
+        {
+            TextBox txt = sender as TextBox;
+
+            if(Method3Grid.SelectedIndex == -1)
+                return;
+
+            if (txt != null)
+            {
+                for (int i = 0; i < Method3Grid.Items.Count; i++)
+                {
+                    if (i == Method3Grid.SelectedIndex)
+                    {
+                        object item = Method3Grid.Items.GetItemAt(i);
+                        ValueMapRow row = item as ValueMapRow;
+                        if (row != null)
+                        {
+                            if(sourcetarget == "Source")
+                                row.Source = txt.Text;
+                            else if (sourcetarget == "Target")
+                                row.Target = txt.Text;
+                        }
+                    }
+                }
+
+            }
+
         }
     }
 }

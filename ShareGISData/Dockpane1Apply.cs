@@ -127,6 +127,10 @@ namespace ShareGISData
             System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
             if (nodes != null)
             {
+                DataGrid grid = this.Method3Grid as DataGrid;
+                if (grid == null)
+                    return;
+
                 try
                 {
                     nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
@@ -137,10 +141,10 @@ namespace ShareGISData
                     if(node != null)
                     {
                         node.RemoveAll();
-                        for (int s = 0; s < Method3Grid.Items.Count; s++)
+                        for (int s = 0; s < grid.Items.Count; s++)
                         {
-                            object values = Method3Grid.Items[s];
-                            ValueMapRow row = values as ValueMapRow;
+                            object values = grid.Items[s];
+                            ValueMapRow row = grid.Items.GetItemAt(s) as ValueMapRow; 
                             if (row != null)
                             {
                                 string source = row.Source;

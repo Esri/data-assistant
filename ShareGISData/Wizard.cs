@@ -29,6 +29,7 @@ using System.Xml.XPath;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Resources;
+using System.Windows.Media.Imaging;
 
 namespace ShareGISData
 {
@@ -41,9 +42,11 @@ namespace ShareGISData
         {
             InitializeComponent();
             if (wizardPages1.SelectedIndex == 0)
+            {
                 backButton.Visible = false;
-            
-            setupEvents();          
+                pictureBoxChanges.Image = getImage();
+            }
+            //setupEvents();          
         }
 
         private void setupEvents()
@@ -259,51 +262,88 @@ namespace ShareGISData
         //    return license;
         //}
 
+        Image getImage()
+        {
+            int page = wizardPages1.SelectedIndex;
+            string iconName = "Images\\icon" + page.ToString() + ".png";
+            string ass = Dockpane1View.AddinAssemblyLocation();
+            string fileName = System.IO.Path.Combine(Dockpane1View.AddinAssemblyLocation(), iconName);
+            Image image = null;
+            if (File.Exists(fileName) == true)
+                image = Image.FromFile(fileName);
+            else if (File.Exists(iconName) == true)
+                image = Image.FromFile(iconName);
+            if (image == null)
+                MessageBox.Show("Unable to locate image file: " + iconName);
 
+            return image;
+        }
         void setGraphicsPanel()
         {
             int page = wizardPages1.SelectedIndex;
-            //string iconName = "icon" + page.ToString();
 
-            //Image image =  Properties.Resources.Icon0;
+            //Image is defined as Embedded Resource. Copy to Output Directory = Do not copy
+            //var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            //var stm = asm.GetManifestResourceStream(this.wizardPages1.GetType(), "Images. " + iconName);
+            //BitmapImage embeddedResource = new BitmapImage();
+            //embeddedResource .BeginInit();
+            //embeddedResource .StreamSource = stm;
+            //embeddedResource .EndInit();            
+            
+            //BitmapImage fromResource = new BitmapImage(new Uri("pack://application:,,,/ShareGISData;component/Images/" + iconName, UriKind.Absolute));
+            //Bitmap image = BitmapImage2Bitmap(embeddedResource);
             string txt = "";
+
             switch (page)
             {
                 case 0:
                     txt = "This tool enables data sharing between systems and organizations.";
-                    //image = Properties.Resources.Icon0;
                     break;
                 case 1:
                     txt = "Select the source and target layers to use for data sharing.";
-                    //image = Properties.Resources.Icon1;
                     break;
                 case 2:
                     txt = "Map source fields to target fields";
-                    //image = Properties.Resources.Icon2;
                     break;
                 case 3:
                     txt = "Save the configuration file. Note that you can use the 'Share Data' tool to run this configuration later.";
-                    //image = Properties.Resources.Icon3;
                     break;
                 case 4:
                     txt = "How did you get here?";
-                    //image = Properties.Resources.Icon4;
                     break;
             }
-            this.Invoke((MethodInvoker)delegate
+            try
             {
-                try
+                this.Invoke((MethodInvoker)delegate
                 {
-            //        pictureBoxChanges.Image = image;
-                    textBoxChanges.Text = txt;
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Error loading image\n" + e);
-                }
-            });
+                    try
+                    {
+                        pictureBoxChanges.Image = getImage();
+                        textBoxChanges.Text = txt;
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Error loading image\n" + e);
+                    }
+                });
+            }
+            catch { }
             refreshWizardcb();
         }
+        //private Bitmap BitmapImage2Bitmap(BitmapImage bitmapImage)
+        //{
+        //    // BitmapImage bitmapImage = new BitmapImage(new Uri("../Images/test.png", UriKind.Relative));
+
+        //    using (MemoryStream outStream = new MemoryStream())
+        //    {
+        //        BitmapEncoder enc = new BmpBitmapEncoder();
+        //        enc.Frames.Add(BitmapFrame.Create(bitmapImage));
+        //        enc.Save(outStream);
+        //        System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(outStream);
+
+        //        return new Bitmap(bitmap);
+        //    }
+        //}
         private void refreshWizard(object userData)
         {
             refreshWizardcb();
@@ -358,11 +398,6 @@ namespace ShareGISData
         }
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBoxChanges_Click(object sender, EventArgs e)
         {
 
         }

@@ -14,12 +14,11 @@ This config file will be replaced each time ArcGIS Pro is run for testing purpos
 <li>Overall user experience - use the FieldMapper to test all of the end user functionality</li>
 <li>Tool interaction and basic behavior of the user interface for each method.</li>
 <li>Save (Apply) functionality</li>
+<li>Create new SourceTarget config files and test in ArcGIS Pro</li>
+<li>Note improvements in ValueMap and Concatenate functionality</li>
 
 <strong>Things that do not work:</strong>
-<li>The FieldMapper button/functionality will eventually be merged into the Data Sharing Wizard</li>
-<li>There are some aspects of adding new value map values, sorting concatenated fields, and some other areas that need work. Please provide suggestions on how to complete those parts of the UX.</li>
 <li>General UI improvements will be made to look closer to ArcGIS Pro Icons and UI styling. Suggestions are welcome.</li>
-<li>Need to add +/- row functionality for Value Mapping</li>
 
 <strong>Things to consider:</strong>
 <li>Names of the tools and the AddIn - is this aggregation or data sharing? How does it fit with the existing Pro 'Share' ribbon?</li>
@@ -29,3 +28,8 @@ This config file will be replaced each time ArcGIS Pro is run for testing purpos
 <strong>Things Fixed Dec 2</strong>
 <li>The Wizard Icons work now</li>
 <li>Save on DataGrid (i.e., ValueMapper Method) now works.</li>
+
+<strong>Things Fixed Dec 4</strong>
+<li>ValueMap and Concatenate functionality</li>
+<li>Save and Load functionality is functionally complete</li>
+<li>Create new config files with new GP tool - find in your Debug\bin\GPTools folder</li>

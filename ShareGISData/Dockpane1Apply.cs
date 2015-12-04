@@ -32,40 +32,28 @@ namespace ShareGISData
             // Figure out which panel is visible and then write the document section for the panel
             if(Method0.IsVisible)
                 saveM0();
-
             else if(Method1.IsVisible)
                 saveM1();
-
             else if (Method2.IsVisible)
                 saveM2();
-
             else if (Method3.IsVisible)
                 saveM3();
-
             else if (Method4.IsVisible)
                 saveM4();
-
             else if (Method5.IsVisible)
                 saveM5();
-
             else if (Method6.IsVisible)
                 saveM6();
-
             else if (Method7.IsVisible)
                 saveM7();
-
             else if (Method8.IsVisible)
                 saveM8();
-
             else if (Method9.IsVisible)
                 saveM9();
-
             else if (Method10.IsVisible)
                 saveM10();
-
             else if (Method11.IsVisible)
                 saveM11();
-
         }
         private void saveM0()
         {

@@ -68,6 +68,7 @@ namespace ShareGISData
                 XmlDataProvider dp = new XmlDataProvider();
                 dp = this.FieldGrid.DataContext as XmlDataProvider;
                 dp.IsAsynchronous = false;
+                filename = FileName.Text;
                 dp.Document.Save(filename);
             }           
         }

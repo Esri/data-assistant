@@ -11,7 +11,7 @@
 		</Field>
 		<Field>
 			<SourceName>STREET_NAME</SourceName>
-			<TargetName>FullStreetNameIsAReallyLongName</TargetName>
+			<TargetName>FullStreetName</TargetName>
 			<Method>ChangeCase</Method>
 			<ChangeCase>Title</ChangeCase>
 		</Field>

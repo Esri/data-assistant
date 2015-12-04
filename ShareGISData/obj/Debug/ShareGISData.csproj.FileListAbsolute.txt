@@ -34,4 +34,6 @@ C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\I
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon2.png
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon3.png
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\Images\Icon4.png
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\GPTools\arcpy\dlaCreateSourceTarget.py
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\GPTools\DataLoadingAssistant.tbx
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\ShareGISData.esriAddInX

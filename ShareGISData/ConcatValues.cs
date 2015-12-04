@@ -11,7 +11,6 @@ namespace ShareGISData
     {
         public bool Checked { get; set; }  
         public string Name  { get; set; }
-        public int Sequence { get; set; }
         //        public static ObservableCollection<ConcatRow> ConcatValues()  
         //     {  
         //          ObservableCollection<ConcatRow> concatrows = new ObservableCollection<ConcatRow>()  

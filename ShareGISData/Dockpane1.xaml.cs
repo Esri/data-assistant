@@ -37,16 +37,25 @@ namespace ShareGISData
         string sampleText = "Jefferson County, Colorado, USA";
         System.Xml.XmlDocument xml = new System.Xml.XmlDocument();
         TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-
+        //public int concatSequence = 0;
+        private List<string> _concat = new List<string> { };
 
         public Dockpane1View()
         {
             InitializeComponent();
             System.Data.DataSet ds = new DataSet();
-            xml.Load(filename);
-            setXmlDataProvider(this.FieldGrid,filename,fieldXPath);
+            this.FileName.Text = filename;
+            loadFile();
         }
-
+        public void loadFile()
+        {
+            // load the selected file
+            if(System.IO.File.Exists(filename))
+            {
+                xml.Load(filename);
+                setXmlDataProvider(this.FieldGrid,filename,fieldXPath);
+            }
+        }
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             setXmlDataProvider(this.FieldGrid.DataContext,filename,fieldXPath);
@@ -66,27 +75,35 @@ namespace ShareGISData
         {
             System.Data.DataSet ds = new DataSet();
             XmlDataProvider dp = new XmlDataProvider();
-            try
+            if (this.IsInitialized)
             {
-                dp.IsAsynchronous = false;
-                ds.ReadXml(filename);
-                dp.Document = xml;
-                dp.XPath = xpath;
-                DataGrid uictrl = ctrl as DataGrid;
-                uictrl.DataContext = dp;
-            }
-            catch
-            {
-                MessageBox.Show("Error setting Xml data provider");
+                try
+                {
+                    dp.IsAsynchronous = false;
+                    ds.ReadXml(filename);
+                    dp.Document = xml;
+                    dp.XPath = xpath;
+                    DataGrid uictrl = ctrl as DataGrid;
+                    uictrl.DataContext = dp;
+                }
+                catch
+                {
+                    MessageBox.Show("Error setting Xml data provider");
+                }
             }
         }
         private void FieldGrid_Selected(object sender, SelectedCellsChangedEventArgs e)
         {
-
+            if (FieldGrid.SelectedIndex == -1 || FieldGrid.SelectedIndex == null)
+                Methods.IsEnabled = false;
+            else
+                Methods.IsEnabled = true;
         }
         private void FieldGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Need to pull the current configuration values from the config, also need to set the correct panel as visible
+            if(FieldGrid.SelectedIndex == -1)
+                return;
             var cfg = getConfigSettingsForField();
             int methodnum = setFieldSelectionValues(cfg); // just use the int for now.
             
@@ -104,6 +121,14 @@ namespace ShareGISData
                 { 
                         var node = nodes.Item(0).SelectSingleNode("SourceName");
                         node.InnerText = selected.ToString();
+                        if (comboMethod.SelectedIndex == 0)
+                        {
+                            // source field selection should change to Copy
+                            comboMethod.SelectedIndex = 1;
+                            node = nodes.Item(0).SelectSingleNode("Method");
+                            node.InnerText = "Copy";
+                            setFieldSelectionValues(1);
+                        }
                         saveFieldGrid();
                 }
                 catch
@@ -185,7 +210,9 @@ namespace ShareGISData
                     setComboValue(4, getPanelValue(4, "ChangeCase"));
                     break;
                 case 5: // Concatenate
-                    setConcatValues(5, getPanelValue(5, "Separator"));
+                    _concat.Clear();
+                    setConcatSeparator(getPanelValue(5,"Separator"));
+                    setConcatValues(); 
                     Method5.InvalidateArrange();
                     break;
                 case 6: // Left
@@ -263,12 +290,14 @@ namespace ShareGISData
 
         private void setValueMapValues(int combonum, string nodename)
         {
-
+            if (FieldGrid.SelectedIndex == -1)
+                return;
             int fieldnum = FieldGrid.SelectedIndex + 1;
-            System.Xml.XmlNodeList snodes = getFieldNodes(fieldnum);
+            System.Xml.XmlNodeList nodes = getFieldNodes(fieldnum);
+            System.Xml.XmlNodeList snodes;
             System.Xml.XmlNodeList tnodes;
-            tnodes = snodes[0].SelectNodes("ValueMap/tValue");
-            snodes = snodes[0].SelectNodes("ValueMap/sValue");
+            tnodes = nodes[0].SelectNodes("ValueMap/tValue");
+            snodes = nodes[0].SelectNodes("ValueMap/sValue");
 
             string name = "Method" + combonum + "Grid";
             Object ctrl = this.FindName(name);
@@ -286,56 +315,79 @@ namespace ShareGISData
 
                 grid.Items.Add(new ValueMapRow() { Source = sourcename, Target = targetname });
             }
-
+            System.Xml.XmlNode othnode = nodes[0].SelectSingleNode("ValueMap/Otherwise");
+            if(othnode != null)
+                Method3Otherwise.Text = othnode.InnerText;
+            else Method3Otherwise.Text = "";
+            
+            if (grid.Items.Count > 0)
+                ValueMapRemove.IsEnabled = true;
+            else
+                ValueMapRemove.IsEnabled = false;
         }
-
-        private void setConcatValues(int combonum, string separator)
+ 
+        private void setConcatSeparator(string separator)
         {
-            System.Xml.XmlNodeList sourcenodes = getSourceFields();
-
-            string name = "Method" + combonum + "Value";
-            Object ctrl = this.FindName(name);
-            TextBox txt = ctrl as TextBox;
+            TextBox txt = Method5Value;
             if (txt != null && separator != txt.Text)
             {
                 txt.Text = separator;
             }
+        }
+        private void setConcatValues()
+        {
+            System.Xml.XmlNodeList sourcenodes = getSourceFields();
 
             int fieldnum = FieldGrid.SelectedIndex + 1;
-            System.Xml.XmlNodeList cnodes = getFieldNodes(fieldnum);
-            cnodes = cnodes[0].SelectNodes("cFields/cField");
-
-            name = "Method" + combonum + "Grid";
-            ctrl = this.FindName(name);
-            DataGrid grid = ctrl as DataGrid;
+            DataGrid grid = Method5Grid;
             if (grid == null)
                 return;
+            System.Xml.XmlNodeList cnodes = getFieldNodes(fieldnum);
+            try { cnodes = cnodes[0].SelectNodes("cFields/cField"); }
+            catch { }
 
             grid.Items.Clear();
+            if (_concat.Count == 0 && cnodes != null)
+            {
+                for (int c = 0; c < cnodes.Count; c++)
+                {
+                    // assume source nodes written in sequence order... and only checked items in the xml
+                    System.Xml.XmlNode cnode = cnodes.Item(c);
+                    string cname = cnode.SelectSingleNode("Name").InnerText;
+                    grid.Items.Add(new ConcatRow() { Checked = true, Name = cname });
+                    _concat.Add(cname);
+                }
+            }
+            else
+            {
+                for (int c = 0; c < _concat.Count; c++)
+                {
+                    // if there are items in the concat list use them in order
+                    grid.Items.Add(new ConcatRow() { Checked = true, Name = _concat[c] });
+                }
+            }
+            if(_concat.Count > 0)
+                Method5ClearAll.IsEnabled = true;
+
             for (int i = 0; i < sourcenodes.Count; i++)
             {
+                // add the unchecked items in row order
                 System.Xml.XmlNode sourcenode = sourcenodes.Item(i);
                 string sourcename = sourcenode.SelectSingleNode("Name").InnerText;
-
-                bool check = false;
-                for (int j = 0; j < cnodes.Count; j++)
+                bool found = false;
+                for (int c = 0; c < _concat.Count; c++)
                 {
-                    // look for a matching field that has a checked value, will add field regardless - unchecked.
-                    System.Xml.XmlNode cnode = cnodes.Item(j);
-                    string cname = cnode.SelectSingleNode("Name").InnerText;
+                    // look for a matching field that has a checked value, don't add if checked.
+                    string cname = _concat[c];
                     if (cname == sourcename)
-                    {
-                        try
-                        {
-                            check = Convert.ToBoolean(cnode.SelectSingleNode("Checked").InnerText);
-                        }
-                        catch { }
-                    }
+                        found = true;
                 }
-                grid.Items.Add(new ConcatRow() { Checked = check, Name = sourcename, Sequence = i });
+                if(!found)
+                    grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
             }
             
         }
+
         private void setSubstringValues(string start, string length)
         {
             try
@@ -356,6 +408,7 @@ namespace ShareGISData
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            setFieldSelectionValues(comboMethod.SelectedIndex);
             setPanelVisibility(comboMethod.SelectedIndex);
         }
 
@@ -421,7 +474,7 @@ namespace ShareGISData
 
         }
 
-        private void ConcatNone_Click(object sender, RoutedEventArgs e)
+        private void Method5ClearAll_Click(object sender, RoutedEventArgs e)
         {
             setAllConcat(false,5);
         }
@@ -441,12 +494,17 @@ namespace ShareGISData
                 return;
 
             grid.Items.Clear();
+            _concat.Clear();
             for (int i = 0; i < sourcenodes.Count; i++)
             {
                 System.Xml.XmlNode sourcenode = sourcenodes.Item(i);
                 string sourcename = sourcenode.SelectSingleNode("Name").InnerText;
-                grid.Items.Add(new ConcatRow() { Checked = val, Name = sourcename, Sequence =  i });
+                if (val == true)
+                    _concat.Add(sourcename);
+                grid.Items.Add(new ConcatRow() { Checked = val, Name = sourcename});
             }
+            if (val == false)
+                Method5ClearAll.IsEnabled = false;
         }
 
         private void Method5Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -455,7 +513,9 @@ namespace ShareGISData
         private void Method5Check_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox check = sender as CheckBox;
-            
+            if (Method5Grid.SelectedIndex == -1)
+                return;
+
             if(check != null)
             {
                 for (int i = 0; i < Method5Grid.Items.Count; i++)
@@ -465,46 +525,22 @@ namespace ShareGISData
                         object item = Method5Grid.Items.GetItemAt(i);
                         ConcatRow row = item as ConcatRow;
                         if (row != null)
-                            row.Checked = (check.IsChecked.HasValue) ? check.IsChecked.Value : false;
+                        {
+                            bool chk = (check.IsChecked.HasValue) ? check.IsChecked.Value : false;
+                            row.Checked = chk;
+                            if (chk == true)
+                                _concat.Add(row.Name);
+                            else
+                                _concat.Remove(row.Name);
+                            setConcatValues();
+                        }
                     }
                 }
 
             }
         }
-        private DataRowView rowBeingEdited = null;
 
-        private void Method3Grid_CurrentCellChanged(object sender, EventArgs e)        
-        {
-            
-            DataGrid dataGrid = sender as DataGrid;
-            DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(0);
-            DataGridCell rowColumn = dataGrid.Columns[0].GetCellContent(row).Parent as DataGridCell;
-            
-            DataGridCell cell = GetCell(Method3Grid, row, 1);
-            var cellValue = rowColumn.Content;
-            if (cellValue != null)
-            {
-                ValueMapRow vmrow = rowColumn.Content as ValueMapRow;
-                //string currValue = vmrow.Target;
-            }
-        }
-        private void Method3Grid_CellEditEndingx(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            DataRowView rowView = e.Row.Item as DataRowView;
-            rowBeingEdited = rowView;
 
-        }
-        private bool isManualEditCommit;
-        private void Method3Grid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            if (!isManualEditCommit)
-            {
-                isManualEditCommit = true;
-                DataGrid grid = (DataGrid)sender;
-                grid.CommitEdit(DataGridEditingUnit.Row, true);
-                isManualEditCommit = false;
-            }
-        }
 
         private DataGridCell GetCell(DataGrid grid, DataGridRow row, int column)
         {
@@ -579,5 +615,81 @@ namespace ShareGISData
             }
 
         }
+
+        private void SelectButton_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dlg = new System.Windows.Forms.OpenFileDialog())
+            {
+                //dlg.Description = "Browse for a Source-Target File (.xml)";
+                System.Windows.Forms.DialogResult result = dlg.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
+                {
+                    this.FileName.Text = dlg.FileName;
+                    filename = dlg.FileName;
+                    loadFile();
+                }
+            }
+
+        }
+
+        private void FileName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if(filename != txt.Text)
+                loadFile();
+        }
+        /// <summary>
+        /// SCRAP Heap
+        /// </summary>
+        private DataRowView rowBeingEdited = null;
+
+        private void Method3Grid_CurrentCellChanged(object sender, EventArgs e)
+        {
+
+            DataGrid dataGrid = sender as DataGrid;
+            DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(0);
+            DataGridCell rowColumn = dataGrid.Columns[0].GetCellContent(row).Parent as DataGridCell;
+
+            DataGridCell cell = GetCell(Method3Grid, row, 1);
+            var cellValue = rowColumn.Content;
+            if (cellValue != null)
+            {
+                ValueMapRow vmrow = rowColumn.Content as ValueMapRow;
+                //string currValue = vmrow.Target;
+            }
+        }
+        private void Method3Grid_CellEditEndingx(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            DataRowView rowView = e.Row.Item as DataRowView;
+            rowBeingEdited = rowView;
+
+        }
+        private bool isManualEditCommit;
+        private void Method3Grid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (!isManualEditCommit)
+            {
+                isManualEditCommit = true;
+                DataGrid grid = (DataGrid)sender;
+                grid.CommitEdit(DataGridEditingUnit.Row, true);
+                isManualEditCommit = false;
+            }
+        }
+
+        private void ValueMapAdd_Click(object sender, RoutedEventArgs e)
+        {
+            Method3Grid.Items.Add(new ValueMapRow() { Source = "", Target = "" });
+            Method3Grid.InvalidateArrange();
+            ValueMapRemove.IsEnabled = true;
+        }
+
+        private void ValueMapRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if (Method3Grid.SelectedIndex > -1 && Method3Grid.Items.Count > 0)
+                Method3Grid.Items.RemoveAt(Method3Grid.SelectedIndex);
+        }
     }
+
+
+
 }

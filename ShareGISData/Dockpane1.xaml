@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"                                             
              xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="ShareGISData.Dockpane1View"                                             
-             mc:Ignorable="d" MinHeight="500" MinWidth="480" d:DesignHeight="500" d:DesignWidth="480">
+             mc:Ignorable="d" MinHeight="400" MinWidth="480" d:DesignHeight="500" d:DesignWidth="480">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -12,59 +12,55 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
+
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" MinHeight="500" MinWidth="480">
         <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
             <RowDefinition Height="150*"/>
-            <RowDefinition Height="0"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="320"/>
             <ColumnDefinition Width="160*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0" Margin="5,5,5,5" Grid.Row="0" x:Name="Fields" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Width="310" >
-            <StackPanel.Effect>
-                <DropShadowEffect ShadowDepth="1" BlurRadius="2"/>
-            </StackPanel.Effect>
-            <DataGrid x:Name="FieldGrid" ItemsSource="{Binding XPath=/SourceTargetMatrix/Dataset/Field}" 
-                  Height="Auto" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Margin="5,5,5,5" MinWidth="280" 
+        <Label x:Name="FileLabel" Grid.Column="0" Grid.Row="0" Margin="0,0,5,0" Content="Configuration File" VerticalAlignment="Top"/>
+        <TextBox x:Name="FileName" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Margin="5,25,55,5" TextWrapping="NoWrap"  
+                 Text="ConfigData.xml" TextChanged="FileName_TextChanged" VerticalAlignment="Top"/>
+        <Button x:Name="SelectButton" Content="Select..." Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5,25,5,5" Click="SelectButton_Click"/>
+        <!--   <Button x:Name="SaveButton"  Content="Save" HorizontalAlignment="Left" Margin="13,38,0,0" VerticalAlignment="Top" Width="75" Grid.Row="1" Height="26"/>
+            <Button x:Name="ReloadButton" Content="Reload" HorizontalAlignment="Left" Margin="93,38,0,0" VerticalAlignment="Top" Width="75" Grid.Row="1" Height="26" Click="Button_Click"/>
+-->
+            <DataGrid x:Name="FieldGrid" Grid.Column="0" Grid.Row="1" ItemsSource="{Binding XPath=/SourceTargetMatrix/Dataset/Field}" 
+                  Width="Auto" MinHeight="250" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="280" 
                   AutoGenerateColumns="False" AutoGeneratingColumn="FieldGrid_AutoGeneratingColumn"
                   CanUserResizeColumns="True" CanUserSortColumns="True" SelectedCellsChanged="FieldGrid_Selected" 
                       ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                       ScrollViewer.CanContentScroll="True" 
-                      SelectionChanged="FieldGrid_SelectionChanged">
+                      SelectionChanged="FieldGrid_SelectionChanged" Margin="5,5,5,5">
                 <DataGrid.DataContext>
                     <XmlDataProvider Source="ConfigData.xml" XPath="/SourceTargetMatrix/Dataset/Field"/>
                 </DataGrid.DataContext>
                 <DataGrid.Columns>
-                    <!--<DataGridTextColumn x:Name="Method" Binding="{Binding XPath=Method}" ClipboardContentBinding="{x:Null}" Header="Method" MinWidth="100"/>-->
                     <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}" 
                                     ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="130"/>
-                    <DataGridComboBoxColumn x:Name="aSourceFieldName"  Header="Source" MinWidth="130">
-                        <DataGridComboBoxColumn.ElementStyle>
-                            <Style TargetType="ComboBox">
-                                <Setter Property="ItemsSource" Value="{Binding XPath=SourceName}"/>
-                                <Setter Property="SelectedValue" Value="{Binding XPath=SourceName}"/>
-                                <Setter Property="IsReadOnly" Value="True"/>
-                            </Style>
-                        </DataGridComboBoxColumn.ElementStyle>
-                        <DataGridComboBoxColumn.EditingElementStyle>
-                            <Style TargetType="ComboBox">
-                                <Setter Property="ItemsSource" Value="{Binding XPath=//SourceField/Name}"/>
-                                <EventSetter Event="SelectionChanged" Handler="SourceSelectionChanged" />
-                            </Style>
-                        </DataGridComboBoxColumn.EditingElementStyle>
-                    </DataGridComboBoxColumn>
-
-                    <!--<DataGridTextColumn x:Name="SourceFieldName" Binding="{Binding XPath=SourceName}" 
-                                    ClipboardContentBinding="{x:Null}" Header="Source" MinWidth="150"/>-->
-                </DataGrid.Columns>
+                <DataGridComboBoxColumn x:Name="aSourceFieldName"  Header="Source" MinWidth="130">
+                    <DataGridComboBoxColumn.ElementStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="ItemsSource" Value="{Binding XPath=SourceName}"/>
+                            <Setter Property="SelectedValue" Value="{Binding XPath=SourceName}"/>
+                            <Setter Property="IsReadOnly" Value="True"/>
+                        </Style>
+                    </DataGridComboBoxColumn.ElementStyle>
+                    <DataGridComboBoxColumn.EditingElementStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="ItemsSource" Value="{Binding XPath=//SourceField/Name}"/>
+                            <EventSetter Event="SelectionChanged" Handler="SourceSelectionChanged" />
+                        </Style>
+                    </DataGridComboBoxColumn.EditingElementStyle>
+                </DataGridComboBoxColumn>
+            </DataGrid.Columns>
             </DataGrid>
-        </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="0" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
-            <StackPanel.Effect>
-                <DropShadowEffect ShadowDepth="1" BlurRadius="2"/>
-            </StackPanel.Effect>
+        <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Visibility="Visible" IsEnabled="False">
             <Label x:Name="lbl1" Content="Method" Margin="5,5,5,5"/>
             <ComboBox x:Name="comboMethod"  Margin="5,5,5,5" SelectedIndex="0" SelectionChanged="comboMethod_SelectionChanged" >
                 <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
@@ -81,26 +77,26 @@
                 <ComboBoxItem Content="Expression" ToolTip="Enter any Python Expression."/>
             </ComboBox>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,275" Grid.Row="0" x:Name="Method0" Visibility="Hidden">
+        <StackPanel Grid.Column="1" Margin="5,75,5,175" Grid.Row="1" x:Name="Method0" Visibility="Hidden">
             <TextBlock HorizontalAlignment="Stretch" Margin="5,5,5,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Set Target Values to null."/></TextBlock>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,275" Grid.Row="0" x:Name="Method1" Visibility="Hidden">
+        <StackPanel Grid.Column="1" Margin="5,75,5,175" Grid.Row="1" x:Name="Method1" Visibility="Hidden">
             <TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0"  LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Copy Source Field values to Target Fields."/></TextBlock>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,275" Grid.Row="0" x:Name="Method2" Visibility="Hidden">
+        <StackPanel Grid.Column="1" Margin="5,75,5,175" Grid.Row="1" x:Name="Method2" Visibility="Hidden">
             <Label Content="Default Value" Margin="5,5,5,5"/>
             <TextBox x:Name="Method2Value" Margin="5,0,5,0" Text="" ToolTip="Default Value to Set"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,100" Grid.Row="0" x:Name="Method3" Visibility="Hidden">
+        <StackPanel Grid.Column="1" Margin="5,75,5,100" Grid.Row="1" x:Name="Method3" Visibility="Hidden">
             <Label Content="Value Mapping" Margin="5,5,5,5"/>
-<!--            <Button x:Name="ValueMapSources" Content="Values..."  HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5"/>
-            <Button x:Name="ValueMapTargets" Content="Values..." HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,25,5"/>
--->
+            <Button x:Name="ValueMapAdd" Content="+" Width="20" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="ValueMapAdd_Click"/>
+            <Button x:Name="ValueMapRemove" Content="-" Width="20" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,25,5" Click="ValueMapRemove_Click"/>
+
             <DataGrid x:Name="Method3Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
-                      Height="Auto" Width="Auto"><!-- IsSynchronizedWithCurrentItem="True" CurrentCellChanged="Method3Grid_CurrentCellChanged" CellEditEnding="Method3Grid_CellEditEnding">-->
+                      Height="Auto" Width="Auto" MinWidth="150">
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn x:Name="Method3Sources" MinWidth="100" Header="Sources">
+                    <DataGridTemplateColumn x:Name="Method3Sources" MinWidth="75" Header="Sources">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -110,7 +106,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="100" Header="Targets">
+                    <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="75" Header="Targets">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -119,16 +115,14 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <!--<DataGridTextColumn x:Name="Method3Sources" Header="Sources" Binding="{Binding Path=Source}" MinWidth="100"/>-->
                 </DataGrid.Columns>
             </DataGrid>
             <Label Content="Otherwise:" Margin="5,5,5,5"/>
-            <TextBox  Margin="5,5,5,5" ToolTip="Otherwise set to value"/>
+            <TextBox x:Name="Method3Otherwise" Margin="5,5,5,5" ToolTip="Otherwise set to value"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,275" Grid.Row="0" x:Name="Method4" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Change the case of the source text strings."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,175" Grid.Row="1" x:Name="Method4" Visibility="Hidden">
             <Label Content="String Function" Margin="5,5,5,5"/>
-            <ComboBox x:Name="Method4Combo"  Margin="5,0,5,5" SelectedIndex="0" >
+            <ComboBox x:Name="Method4Combo"  Margin="5,5,5,5" SelectedIndex="0" >
                 <ComboBoxItem Content="Uppercase"/>
                 <ComboBoxItem Content="Lowercase"/>
                 <ComboBoxItem Content="Title"/>
@@ -136,10 +130,10 @@
             </ComboBox>
             <Button x:Name="Method4Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method4Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,100" Grid.Row="0" x:Name="Method5" Visibility="Hidden" ScrollViewer.CanContentScroll="True">
+        <StackPanel Grid.Column="1" Margin="5,75,5,100" Grid.Row="1" x:Name="Method5" Visibility="Hidden" ScrollViewer.CanContentScroll="True">
             <Label Content="Select Fields" Margin="5,5,5,5"/>
-            <Button x:Name="ConcatAll" Content="All"  Width="60" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="15,15,5,5" Click="ConcatAll_Click"/>
-            <Button x:Name="ConcatNone" Content="None" Width="60" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,15,5" Click="ConcatNone_Click"/>
+            <Button x:Name="Method5ClearAll" Content="Clear" IsEnabled="False"  Width="60" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="Method5ClearAll_Click"/>
+            <!--<Button x:Name="ConcatNone" Content="None" Width="60" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,15,5" Click="ConcatNone_Click"/>-->
             <DataGrid x:Name="Method5Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" 
                       Height="150" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged">
@@ -153,36 +147,34 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn x:Name="Method5Field" Header="Fields" Binding="{Binding Path=Name}" MinWidth="80" IsReadOnly="True" />
-                    <DataGridTemplateColumn x:Name="Method5Sequence" MinWidth="30" Header="Sequence">
+                    <DataGridTextColumn x:Name="Method5Field" Header="Fields" Binding="{Binding Path=Name}" MinWidth="100" IsReadOnly="True" />
+<!--                    <DataGridTemplateColumn x:Name="Method5Sequence" MinWidth="30" Header="Sequence" Visibility="Hidden">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBox Text="{Binding Path=Sequence}"/>
+                                    <TextBox x:Name="Method5Seq" Text="{Binding Path=Sequence}"/>
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    </DataGridTemplateColumn>-->
                 </DataGrid.Columns>
             </DataGrid>
             <Label Content="Separate With" Margin="5,5,5,5"/>
             <TextBox x:Name="Method5Value" Margin="5,0,5,5" Text="-" ToolTip="Separate values with a string (optional)" />
             <Button x:Name="Method5Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,5,5,5" MinWidth="60" Click="Method5Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,275" Grid.Row="0" x:Name="Method6" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Select the "/><Run Text="Extract a number of characters from the left."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,175" Grid.Row="1" x:Name="Method6" Visibility="Hidden">
             <TextBox Text="{Binding ElementName=Method6Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
             <Slider x:Name="Method6Slider" Minimum="0" Maximum="20" Margin="5,10,5,5" Value="2" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Number of Left Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft"/>
             <Button x:Name="Method6Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method6Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,275" Grid.Row="0" x:Name="Method7" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Select the "/><Run Text="Extract a number of characters from the right."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,175" Grid.Row="1" x:Name="Method7" Visibility="Hidden">
             <TextBox Text="{Binding ElementName=Method7Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
             <Slider x:Name="Method7Slider" IsDirectionReversed="True" Maximum="20" Minimum="0" Margin="5,10,5,5" Value="18" SmallChange="1" Cursor="None" ToolTip="Number of Right Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft"/>
             <Button x:Name="Method7Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method7Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,50" Grid.Row="0" x:Name="Method8" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Extract a set of characters from a string."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,50" Grid.Row="1" x:Name="Method8" Visibility="Hidden">
+            
             <Label Content="Start at position" Margin="5,5,5,5"/>
             <TextBox Text="{Binding ElementName=Method81Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
             <Slider x:Name="Method81Slider" Margin="5,10,5,5" Value="0" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Position to start at" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
@@ -191,16 +183,14 @@
             <Slider x:Name="Method82Slider" Margin="5,10,5,5" Value="9" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Number of Characters to extract" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
             <Button x:Name="Method8Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method8Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,190" Grid.Row="0" x:Name="Method9" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Split a string into parts and use one part."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,190" Grid.Row="1" x:Name="Method9" Visibility="Hidden">
             <Label Content="Character to split with" Margin="5,5,5,5"/>
             <TextBox x:Name="Method91Value" Margin="5,0,5,0" Text="' '" ToolTip="String value to split the string with"/>
             <Label Content="Part Number to use" Margin="5,5,5,5"/>
             <TextBox x:Name="Method92Value" Margin="5,0,5,0" Text="0" ToolTip="Each part will have a number starting with 0"/>
             <Button x:Name="Method9Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method9Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,150" Grid.Row="0" x:Name="Method10" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Construct an If/Else Statement."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,150" Grid.Row="1" x:Name="Method10" Visibility="Hidden">
             <Label Content="If value is:" Margin="5,5,5,5"/>
             <TextBox x:Name="Method101Value" Margin="5,0,5,0" Text="&lt; 0" ToolTip="Condition to test"/>
             <Label Content="Then set value to:" Margin="5,5,5,5"/>
@@ -209,17 +199,15 @@
             <TextBox x:Name="Method103Value" Margin="5,0,5,0" Text="T_ADDR_L" ToolTip="Else set to"/>
             <Button x:Name="Method10Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method10Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,75,5,155" Grid.Row="0" x:Name="Method11" Visibility="Hidden">
-            <!--<TextBlock HorizontalAlignment="Stretch" Margin="5,5,0,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Enter any Python Expression."/></TextBlock>-->
+        <StackPanel Grid.Column="1" Margin="5,75,5,155" Grid.Row="1" x:Name="Method11" Visibility="Hidden">
             <Label Content="Expression" Margin="5,5,5,5"/>
             <TextBox x:Name="Method11Value" Margin="5,0,5,5" Text="" ToolTip="Enter the expression" Height="100"/>
             <Button x:Name="Method11Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method11Preview_Click"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Margin="5,5,5,50" Grid.Row="0" x:Name="Buttons" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="150">
+        <StackPanel Grid.Column="1" Margin="5,5,5,50" Grid.Row="1" x:Name="Buttons" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="150">
             <Button x:Name="MethodPanelApply" Content="Apply" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-75,5,5,5" Click="MethodPanelApply_Click"/>
             <Button x:Name="MethodPanelCancel" Content="Cancel" Width="50" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="75,-50,5,5" Click="MethodPanelCancel_Click"/>
         </StackPanel>
-<!--        <Button x:Name="CloseButton"  Content="Close" HorizontalAlignment="Stretch" Margin="5,5,5,5" Grid.Row="1" Width="70" Click="CloseButton_Click"/>
-        -->
     </Grid>
+
 </UserControl>

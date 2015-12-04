@@ -133,34 +133,36 @@ namespace ShareGISData
 
                 try
                 {
-                    nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
+                    string method = getMethodVal();
+                    nodes[0].SelectSingleNode("Method").InnerText = method;
                     //DataGridRow row0 = (DataGridRow)Method3Grid.ItemContainerGenerator.ContainerFromIndex(0);
                     //TextBox txt = ((TextBox)Method3Grid.Columns[0].GetCellContent(row0));
-                    System.Xml.XmlNode node = nodes[0].SelectSingleNode("ValueMap");
                     trimNodes(nodes, 3);
-                    if(node != null)
+                    System.Xml.XmlNode noder = nodes[0].SelectSingleNode(method);
+                    if (noder == null)
                     {
-                        node.RemoveAll();
-                        for (int s = 0; s < grid.Items.Count; s++)
-                        {
-                            object values = grid.Items[s];
-                            ValueMapRow row = grid.Items.GetItemAt(s) as ValueMapRow; 
-                            if (row != null)
-                            {
-                                string source = row.Source;
-                                string target = row.Target;
-                                System.Xml.XmlNode snode = xml.CreateElement("sValue");
-                                snode.InnerText = source;
-                                node.AppendChild(snode);
-                                System.Xml.XmlNode tnode = xml.CreateElement("tValue");
-                                tnode.InnerText = target;
-                                node.AppendChild(tnode);
-                                nodes[0].AppendChild(node);
-                            }
-
-                        }
-                    saveFieldGrid();
+                        noder = xml.CreateElement(method);
+                        nodes[0].AppendChild(noder);
                     }
+                    noder.RemoveAll();
+                    for (int s = 0; s < grid.Items.Count; s++)
+                    {
+                        object values = grid.Items[s];
+                        ValueMapRow row = grid.Items.GetItemAt(s) as ValueMapRow; 
+                        if (row != null)
+                        {
+                            System.Xml.XmlNode snode = xml.CreateElement("sValue");
+                            snode.InnerText = row.Source;
+                            noder.AppendChild(snode);
+                            System.Xml.XmlNode tnode = xml.CreateElement("tValue");
+                            tnode.InnerText = row.Target;
+                            noder.AppendChild(tnode);
+                        }
+                    }
+                    System.Xml.XmlNode othnode = xml.CreateElement("Otherwise");
+                    othnode.InnerText = Method3Otherwise.Text;
+                    noder.AppendChild(othnode);
+                    saveFieldGrid();
                 }
                 catch { }
             }
@@ -220,9 +222,14 @@ namespace ShareGISData
                                 nm.InnerText = row.Name;
                                 cnode.AppendChild(nm);
 
-                                System.Xml.XmlNode chk = xml.CreateElement("Checked");
-                                chk.InnerText = "True";
-                                cnode.AppendChild(chk);
+                                // not writing these nodes since assuming row order and only writing checked items.
+                                //System.Xml.XmlNode chk = xml.CreateElement("Checked");
+                                //chk.InnerText = "True";
+                                //cnode.AppendChild(chk);
+
+                                //System.Xml.XmlNode seq = xml.CreateElement("Sequence");
+                                //chk.InnerText = i.ToString(); // write in row order
+                                //cnode.AppendChild(chk); 
 
                                 cnodes.AppendChild(cnode);
                             }

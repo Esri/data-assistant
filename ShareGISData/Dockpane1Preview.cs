@@ -21,57 +21,88 @@ namespace ShareGISData
 {
     public partial class Dockpane1View : UserControl
     {
-        private void Method4Preview_Click(object sender, RoutedEventArgs e)
+        private void Method0Preview_Click()
         {
+            setPreviewRows(null);
+        }
+        private void Method1Preview_Click()
+        {
+            setPreviewRows(getSourceFieldName());
+        }
+        private void Method2Preview_Click()
+        {
+            setPreviewRows(Method2Value.Text);
+        }
+        private void Method4Preview_Click()
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
             object obj = Method4Combo;
             ComboBox combo = obj as ComboBox;
             string val = combo.SelectionBoxItem as string;
-            if (val != null)
-                switch (val)
+            string targName = getTargetFieldName();
+            string attrName = getSourceFieldName();
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                string textval = "";
+                try
                 {
-                    case "Uppercase":
-                        MessageBox.Show(textInfo.ToUpper(sampleText));
-                        break;
-                    case "Lowercase":
-                        MessageBox.Show(textInfo.ToLower(sampleText));
-                        break;
-                    case "Title":
-                        MessageBox.Show(textInfo.ToTitleCase(sampleText));
-                        break;
-                    case "Capitalize":
-                        MessageBox.Show(char.ToUpper(sampleText[0]) + sampleText.Substring(1));
-                        break;
+                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                    if (att != null)
+                    {
+                        switch (val)
+                        {
+                            case "Uppercase":
+                                textval = textInfo.ToUpper(att.InnerText);
+                                break;
+                            case "Lowercase":
+                                textval = textInfo.ToLower(att.InnerText);
+                                break;
+                            case "Title":
+                                textval = textInfo.ToTitleCase(att.InnerText.ToLower());
+                                break;
+                            case "Capitalize":
+                                textval = char.ToUpper(att.InnerText[0]) + att.InnerText.Substring(1).ToLower();
+                                break;
+                        }
+                    }
+                    textval = targName + "=" + textval;
                 }
-        }
-        private void Method5Preview_Click(object sender, RoutedEventArgs e)
-        {
-            showPreview5();
-        }
+                catch { textval = targName + "=" + "None"; }
+                grid.Items.Add(new PreviewRow() { Value = textval });
 
-        private void showPreview5()
+            }
+        }
+        private void Method5Preview_Click()
         {
-            string sep1 = "+\"";
-            string sep2 = "\"+";
             string name = "Method" + 5 + "Grid";
             object ctrl = this.FindName(name);
             DataGrid grid = ctrl as DataGrid;
             if (grid == null)
                 return;
             string theval = "";
+            string sepvalue = "";
+            try
+            { sepvalue = this.Method5Value.Text.Replace("(space)", " ");}
+            catch{}
+
             for (int i = 0; i < grid.Items.Count; i++)
             {
                 ConcatRow row = grid.Items.GetItemAt(i) as ConcatRow;
                 if (row != null)
                 {
                     if (row.Checked == true)
-                        theval += row.Name + sep1 + this.Method5Value.Text + sep2;
+                    {
+                        theval += row.Name + sepvalue;
+                    }
                 }
             }
-            if (theval.EndsWith(sep2))
-                theval = theval.Substring(0, theval.LastIndexOf(sep1));
-            MessageBox.Show(theval);
+            if (theval.EndsWith(sepvalue))
+                theval = theval.Substring(0, theval.LastIndexOf(sepvalue));
+            setPreviewRows(theval);
         }
-        private void Method6Preview_Click(object sender, RoutedEventArgs e)
+
+        private void Method6Preview_Click()
         {
             // Left
             int num;
@@ -81,11 +112,11 @@ namespace ShareGISData
             if (slide != null)
             {
                 Int32.TryParse(slide.Value.ToString(), out num);
-                MessageBox.Show(sampleText.Substring(0, num));
+                setPreviewSubstringRows(getSourceFieldName(),0, num);
             }
         }
 
-        private void Method7Preview_Click(object sender, RoutedEventArgs e)
+        private void Method7Preview_Click()
         {
             // Right
             int num;
@@ -95,13 +126,12 @@ namespace ShareGISData
             if (slide != null)
             {
                 Int32.TryParse(slide.Value.ToString(), out num);
-                int start = sampleText.Length - num;
-
-                MessageBox.Show(sampleText.Substring(start));
+                //int start = sampleText.Length - num;
+                setPreviewSubstringRows(getSourceFieldName(),num, -1);
             }
         }
 
-        private void Method8Preview_Click(object sender, RoutedEventArgs e)
+        private void Method8Preview_Click()
         {
             // Substring
             string name = "Method" + 81 + "Slider";
@@ -118,34 +148,258 @@ namespace ShareGISData
                 int start = num;
                 Int32.TryParse(slide2.Value.ToString(), out num);
                 int len = num;
-                MessageBox.Show(sampleText.Substring(start, len));
+                setPreviewSubstringRows(getSourceFieldName(),start, len);
             }
         }
-        private void Method9Preview_Click(object sender, RoutedEventArgs e)
+        private void Method9Preview_Click()
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            string attrName = getSourceFieldName();
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                string textval = "";
+                try
+                {
+                    string res = "";
+                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                    if (att != null)
+                    {
+                        try
+                        {
+                            var split = att.InnerText.Split(Method91Value.Text.ToCharArray());
+                            int num;
+                            Int32.TryParse(Method92Value.Text, out num);
+                            res = split[num];
+                            textval = res;
+                        }
+                        catch { }
+                    }
+                    textval = targName + "=" + res;
+                }
+                catch { textval = targName + "=" + "None"; }
+                grid.Items.Add(new PreviewRow() { Value = textval });
+            }
+
+        }
+
+        private void Method10Preview_Click()
+        {
+            string fname = getSourceFieldName();
+            string val = Method102Value.Text + " if " + fname + " " + Method10Value.Text + " " + Method101Value.Text + " else " + Method103Value.Text;
+            setPreviewRows(val);
+        }
+
+        private void Method11Preview_Click()
+        {
+            setPreviewRows(Method11Value.Text);
+        }
+        private void showResult(string value)
         {
             try
             {
-                var split = sampleText.Split(Method91Value.Text.ToCharArray());
-                int num;
-                Int32.TryParse(Method92Value.Text, out num);
-                string res = split[num];
-                MessageBox.Show(res);
+                //MessageBox.Show(value);
+                //PreviewText.Text = value;
             }
-            catch { }
+            catch
+            {MessageBox.Show("Unable to preview results");}
+        }
+        private System.Xml.XmlNodeList getDataNodes()
+        {
+            string xpath = "//Data/Row"; // xpath for Rows
+            System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
+            return nodelist;
+        }
+        //private void ClickLabel(object sender, MouseButtonEventArgs e)
+        //{
+        //    showResult("Click");
+        //}
+        private void ClickPreviewButton(object sender, RoutedEventArgs e)
+        {
+            if(_methodnum < 0 || PreviewCheckBox.IsChecked == false)
+                return;
+            switch (_methodnum) { // preview values for each stack panel
+                case 0: // None
+                    Method0Preview_Click();
+                    break;
+                case 1: // Copy
+                    Method1Preview_Click();
+                    break;
+                case 2: // DefaultValue
+                    Method2Preview_Click();
+                    break;
+                case 3: // ValueMap
+                    //Method3Preview_Click();
+                    break;
+                case 4: // ChangeCase
+                    Method4Preview_Click();
+                    break;
+                case 5: // Concatenate
+                    Method5Preview_Click();
+                    break;
+                case 6: // Left
+                    Method6Preview_Click();
+                    break;
+                case 7: // Right
+                    Method7Preview_Click();
+                    break;
+                case 8: // Substring
+                    Method8Preview_Click();
+                    break;
+                case 9: // Split
+                    Method9Preview_Click();
+                    break;
+                case 10: // Conditional Value
+                    Method10Preview_Click();
+                    break;
+                case 11: // Expression
+                    Method11Preview_Click();
+                    break;
+
+            }
+        }
+        private void PreviewCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            CheckBox chk = sender as CheckBox;
+            if (chk != null) 
+            {
+                //MessageBox.Show(chk.IsChecked.ToString());
+                setPreviewValues(chk.IsChecked);
+            }
         }
 
-        private void Method10Preview_Click(object sender, RoutedEventArgs e)
+        private void setPreviewValues(bool? onoff)
         {
-            int fieldnum = FieldGrid.SelectedIndex + 1;
-            System.Xml.XmlNodeList nodes = getFieldNodes(fieldnum);
-            System.Xml.XmlNode thenode = nodes.Item(0).SelectSingleNode("SourceName");
-            string val = Method102Value.Text + " if " + thenode.InnerText + " " + Method101Value.Text + " else " + Method103Value.Text;
-            MessageBox.Show(val);
-        }
+            if(onoff == false)
+            {
+                PreviewGrid.Items.Clear();
+                PreviewGrid.Height = 0;
+                PreviewGrid.InvalidateArrange();
+            }
+            else
+            {
+                PreviewGrid.Height = 100;
+                setPreviewRowsInit();
+                PreviewGrid.InvalidateArrange();
+            }
 
-        private void Method11Preview_Click(object sender, RoutedEventArgs e)
+        }
+        private void setPreviewRowsInit()
         {
-            MessageBox.Show(Method11Value.Text.Replace("!", ""));
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+
+            string textval = "";
+            textval = "Click Apply to Preview";
+            grid.Items.Add(new PreviewRow() { Value = textval });
+
+
+        }
+        private void setPreviewRows(string attrName)
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                string textval = "";
+                try
+                {
+                    if(attrName == null)
+                        textval = targName + "=None";
+                    else
+                    {
+                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                        if (att != null)
+                            textval = targName + "=\"" + att.InnerText + "\"";
+                        else
+                        {
+                            //textval = targName + "=" + attrName;
+                            textval = targName + "=\"" + replaceFieldValues(attrName, i) + "\"";
+                            //MessageBox.Show(textval);
+                        }   
+                    }
+                }
+                catch { textval = targName + "=" + "None"; }
+                grid.Items.Add(new PreviewRow() { Value = textval });
+            }
+        }
+        private void setPreviewSubstringRows(string attrName, int start, int length)
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                string textval = "";
+                try
+                {
+                    if (attrName == null)
+                        textval = targName + "=None";
+                    else
+                    {
+                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                        if (att != null)
+                        {
+                            try
+                            {
+                                if (length == -1)
+                                {
+                                    // num chars for right function
+                                    textval = targName + "=" + att.InnerText.Substring(att.InnerText.Length - start);
+                                }
+                                else
+                                {
+                                    textval = targName + "=" + att.InnerText.Substring(start, length);
+                                }
+                            }
+                            catch { textval = targName + "=" + "None"; }
+                        }
+                    }
+                }
+                catch { textval = targName + "=" + "None"; }
+                grid.Items.Add(new PreviewRow() { Value = textval });
+            }
+        }
+        private string replaceFieldValues(string expr,int rownum)
+        {
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                if (i == rownum)
+                {
+
+                    foreach (System.Xml.XmlAttribute att in _datarows[i].Attributes)
+                    {
+                        try
+                        {
+                            string val = att.InnerText;
+                            //if (val != "None")// && int.TryParse(val, out i) == false)
+                            //    val = val;
+                            expr = expr.Replace(att.Name, val);
+                        }
+                        catch {  }
+                    }
+                }
+            }
+            return expr;
+
+        }
+        
+        
+        private StackPanel getVisiblePanel()
+        {
+            for (int i = 0; i <= comboMethod.Items.Count; i++)
+            {
+                string method = "Method" + i;
+                Object ctrl = this.FindName(method);
+                StackPanel panel = ctrl as StackPanel;
+                if (panel != null)
+                {
+                    return panel;
+                }
+            }
+            return null;
         }
 
     }

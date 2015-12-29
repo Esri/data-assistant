@@ -16,6 +16,8 @@ using System.Xml.Linq;
 using System.Data;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Catalog;
 
 namespace ShareGISData
 {
@@ -54,6 +56,7 @@ namespace ShareGISData
                 saveM10();
             else if (Method11.IsVisible)
                 saveM11();
+            ClickPreviewButton(sender, e);
         }
         private void saveM0()
         {
@@ -129,7 +132,7 @@ namespace ShareGISData
                     System.Xml.XmlNode noder = nodes[0].SelectSingleNode(method);
                     if (noder == null)
                     {
-                        noder = xml.CreateElement(method);
+                        noder = _xml.CreateElement(method);
                         nodes[0].AppendChild(noder);
                     }
                     noder.RemoveAll();
@@ -139,15 +142,15 @@ namespace ShareGISData
                         ValueMapRow row = grid.Items.GetItemAt(s) as ValueMapRow; 
                         if (row != null)
                         {
-                            System.Xml.XmlNode snode = xml.CreateElement("sValue");
+                            System.Xml.XmlNode snode = _xml.CreateElement("sValue");
                             snode.InnerText = row.Source;
                             noder.AppendChild(snode);
-                            System.Xml.XmlNode tnode = xml.CreateElement("tValue");
+                            System.Xml.XmlNode tnode = _xml.CreateElement("tValue");
                             tnode.InnerText = row.Target;
                             noder.AppendChild(tnode);
                         }
                     }
-                    System.Xml.XmlNode othnode = xml.CreateElement("Otherwise");
+                    System.Xml.XmlNode othnode = _xml.CreateElement("Otherwise");
                     othnode.InnerText = Method3Otherwise.Text;
                     noder.AppendChild(othnode);
                     saveFieldGrid();
@@ -194,7 +197,7 @@ namespace ShareGISData
                     DataGrid grid = this.Method5Grid as DataGrid;
                     if (grid == null)
                         return;
-                    System.Xml.XmlNode cnodes = xml.CreateElement("cFields");
+                    System.Xml.XmlNode cnodes = _xml.CreateElement("cFields");
                     nodes[0].AppendChild(cnodes);
 
                     for (int i = 0; i < grid.Items.Count; i++)
@@ -204,18 +207,18 @@ namespace ShareGISData
                         {
                             if (row.Checked == true)
                             {
-                                System.Xml.XmlNode cnode = xml.CreateElement("cField");
+                                System.Xml.XmlNode cnode = _xml.CreateElement("cField");
 
-                                System.Xml.XmlNode nm = xml.CreateElement("Name");
+                                System.Xml.XmlNode nm = _xml.CreateElement("Name");
                                 nm.InnerText = row.Name;
                                 cnode.AppendChild(nm);
 
                                 // not writing these nodes since assuming row order and only writing checked items.
-                                //System.Xml.XmlNode chk = xml.CreateElement("Checked");
+                                //System.Xml.XmlNode chk = _xml.CreateElement("Checked");
                                 //chk.InnerText = "True";
                                 //cnode.AppendChild(chk);
 
-                                //System.Xml.XmlNode seq = xml.CreateElement("Sequence");
+                                //System.Xml.XmlNode seq = _xml.CreateElement("Sequence");
                                 //chk.InnerText = i.ToString(); // write in row order
                                 //cnode.AppendChild(chk); 
 
@@ -339,23 +342,30 @@ namespace ShareGISData
                 try
                 {
                     nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
-                    System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("If");
+                    System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("Oper");
                     trimNodes(nodes, 3);
+                    if (node != null)
+                        node.InnerText = Method10Value.Text;
+                    else
+                        addNode(nodes, "Oper", Method10Value.Text);
+
+                    node = nodes[0].LastChild.SelectSingleNode("If");
                     if (node != null)
                         node.InnerText = Method101Value.Text;
                     else
                         addNode(nodes, "If", Method101Value.Text);
+
                     node = nodes[0].LastChild.SelectSingleNode("Then");
                     if (node != null)
                         node.InnerText = Method102Value.Text;
                     else
                         addNode(nodes, "Then", Method102Value.Text);
+
                     node = nodes[0].LastChild.SelectSingleNode("Else");
                     if (node != null)
                         node.InnerText = Method103Value.Text;
                     else
                         addNode(nodes, "Else", Method103Value.Text);
-
 
                     saveFieldGrid();
                 }
@@ -390,18 +400,111 @@ namespace ShareGISData
             method = method.Substring(method.LastIndexOf(':') + 2);
             return method;
         }
+
+        private void SourceButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
+            string fileloc = getSourceTargetLocation("", "Select Target");
+            if (fileloc != null && fileloc != "")
+            {
+                node.InnerText = fileloc;
+                saveFieldGrid();
+            }
+        }
+
+        private void TargetButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
+            string fileloc = getSourceTargetLocation("", "Select Target");
+            if (fileloc != null && fileloc != "")
+            {
+                node.InnerText = fileloc;
+                saveFieldGrid();
+            }
+        }
+        private string getSourceTargetLocation(string initialLocation, string title)
+        {
+            string thePath = "";
+            var dlg = new ArcGIS.Desktop.Catalog.OpenItemDialog();
+            {
+                dlg.Title = title;
+                dlg.InitialLocation = initialLocation;
+                dlg.MultiSelect = false;
+                bool? result = dlg.ShowDialog();
+                if (result == true)
+                {
+                    IEnumerable<Item> items = dlg.Items;
+                    foreach (Item selectedItem in items)
+                    {
+                        thePath = selectedItem.Path;
+                    }
+                }
+            }
+            return thePath;
+        }
+
+        private void updateReplaceNodes()
+        {
+
+            System.Xml.XmlNode dsnode = _xml.SelectSingleNode("//Datasets");
+            System.Xml.XmlNodeList nodes;
+            System.Xml.XmlNode nodenew;
+            nodes = _xml.SelectNodes("//ReplaceBy");
+            if (nodes[0] == null)
+            {
+                nodenew = _xml.CreateElement("ReplaceBy");
+                dsnode.AppendChild(nodenew);
+                nodes = _xml.SelectNodes("//ReplaceBy");
+            }
+            else
+                trimNodes(nodes, 0);
+            if (nodes != null)
+            {
+                if (ReplaceField.SelectedIndex != -1)
+                {
+                    object content = ReplaceField.SelectedItem;
+                    System.Xml.XmlAttribute item = content as System.Xml.XmlAttribute;
+                    if (item != null)
+                    {
+                        string txt = item.InnerText;
+                        addNode(nodes, "FieldName", txt);
+                    }
+                }
+                if (ReplaceOperator.SelectedIndex != -1)
+                {
+                    object content = ReplaceOperator.SelectedItem;
+                    ComboBoxItem item = content as ComboBoxItem;
+                    if (item != null)
+                    {
+                        string txt = item.Content.ToString();
+                        addNode(nodes, "Operator", txt);
+                    }
+                }
+                if(ReplaceValue.Text != null && ReplaceValue.Text != "")
+                    addNode(nodes, "Value", ReplaceValue.Text);
+                saveFieldGrid();
+            }
+        }
+        
+        
         private void trimNodes(System.Xml.XmlNodeList nodes,int trimval)
         {
-            while(nodes[0].ChildNodes.Count > trimval)
+            if (nodes != null && nodes[0] != null)
             {
-                nodes[0].RemoveChild(nodes[0].LastChild);
+                while (nodes[0].ChildNodes.Count > trimval)
+                {
+                    nodes[0].RemoveChild(nodes[0].LastChild);
+                }
             }
         }
         private void addNode(System.Xml.XmlNodeList nodes,string name,string value)
         {
-            System.Xml.XmlNode nodenew = xml.CreateElement(name);
-            nodenew.InnerText = value;
-            nodes[0].AppendChild(nodenew);
+            if (nodes != null && value != null)
+            {
+                System.Xml.XmlNode nodenew = _xml.CreateElement(name);
+                nodenew.InnerText = value;
+                nodes[0].AppendChild(nodenew);
+            }
         }
     }
 }

@@ -25,4 +25,9 @@ namespace ShareGISData
         public string Source { get; set; }
         public string Target { get; set; }
     }
+    public class PreviewRow
+    {
+        public string Value { get; set; }
+    }
+
 }

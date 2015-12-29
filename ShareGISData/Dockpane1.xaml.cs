@@ -17,6 +17,9 @@ using System.Data;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Controls.Primitives;
+using ArcGIS.Desktop.Core.Geoprocessing;
+using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Catalog;
 
 namespace ShareGISData
 {
@@ -32,35 +35,146 @@ namespace ShareGISData
                               Uri.UnescapeDataString(
                                       new Uri(asm.CodeBase).LocalPath));
         }
-        string filename = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
-        string fieldXPath = "/SourceTargetMatrix/Dataset/Field";
-        string sampleText = "Jefferson County, Colorado, USA";
-        System.Xml.XmlDocument xml = new System.Xml.XmlDocument();
+        public string getXmlFileName()
+        {
+            return _filename;
+        }
+        public void setXmlFileName(string fname)
+        {
+            // set to default/current value if null
+            if(fname != null)
+                _filename = fname;
+            this.FileName.Text = _filename;
+        }
+        private string _filename = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
+        System.Xml.XmlNodeList _datarows;
+
+        string fieldXPath = "/SourceTargetMatrix/Fields/Field";
+        System.Xml.XmlDocument _xml = new System.Xml.XmlDocument();
         TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
         //public int concatSequence = 0;
         private List<string> _concat = new List<string> { };
+        string _noneField = "(None)";
+        string _spaceVal = "(space)";
+        private bool skipSelectionChanged = false;
+        int _methodnum = -1;
 
         public Dockpane1View()
         {
             InitializeComponent();
-            System.Data.DataSet ds = new DataSet();
-            this.FileName.Text = filename;
-            loadFile();
         }
-        public void loadFile()
+        public void loadFile(string fname)
         {
             // load the selected file
-            if(System.IO.File.Exists(filename))
+            if (fname != _filename && System.IO.File.Exists(fname))
             {
-                xml.Load(filename);
-                setXmlDataProvider(this.FieldGrid,filename,fieldXPath);
+                setXmlFileName(fname);
+                _xml.Load(_filename);
+                this.skipSelectionChanged = true;
+                setXmlDataProvider(this.FieldGrid, fieldXPath);
+                this.skipSelectionChanged = false;
+                setDatasetUI();
+                _datarows = _xml.SelectNodes("//Data/Row");
             }
         }
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void setDatasetUI()
         {
-            setXmlDataProvider(this.FieldGrid.DataContext,filename,fieldXPath);
+            SourceStack.IsEnabled = true;
+            TargetStack.IsEnabled = true;
+            ReplaceStack.IsEnabled = true;
+            SourceStack.Visibility = System.Windows.Visibility.Visible;
+            TargetStack.Visibility = System.Windows.Visibility.Visible;
+            ReplaceStack.Visibility = System.Windows.Visibility.Visible;
+
+            SourceLayer.Text = _xml.SelectSingleNode("//Datasets/Source").InnerText;
+            TargetLayer.Text = _xml.SelectSingleNode("//Datasets/Target").InnerText;
+
+            setXmlDataProvider(ReplaceField, "//TargetField/@Name");
+
+            System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
+            setReplaceValues(nodes);
+            setPreviewValues(false);
+            
+        }
+        private void setReplaceValues(System.Xml.XmlNodeList nodes)
+        {
+            if (nodes[0] != null)
+            {
+                try
+                {
+                    string field = getReplaceValue(nodes, "FieldName");
+                    string op = getReplaceValue(nodes, "Operator");
+                    string value = getReplaceValue(nodes, "Value");
+                    if (field != null)
+                        setReplaceValue(ReplaceField, field);
+                    else
+                        ReplaceField.SelectedIndex = -1;
+                    if (op != null)
+                        setReplaceValue(ReplaceOperator, op);
+                    else
+                        ReplaceOperator.SelectedIndex = -1;
+                    if (value != null)
+                        ReplaceValue.Text = value;
+                    else
+                        ReplaceValue.Text = "";
+                }
+                catch { MessageBox.Show("Error setting replace"); }
+            }
+            else
+            {
+                ReplaceField.SelectedIndex = -1;
+                ReplaceOperator.SelectedIndex = -1;
+                ReplaceValue.Text = "";
+            }
+
         }
 
+        private string getReplaceValue(System.Xml.XmlNodeList replace,string nodeName)
+        {
+            string txt = null;
+            System.Xml.XmlNode node = replace[0].SelectSingleNode(nodeName);
+            if (node != null)
+                txt = node.InnerText;
+            return txt;
+        }
+        private void setReplaceValue(ComboBox combo, string theval)
+        {
+            if (combo != null)
+            {
+                for (int i = 0; i < combo.Items.Count; i++)
+                {
+                    object obj = combo.Items.GetItemAt(i);
+                    ComboBoxItem item = obj as ComboBoxItem;
+                    if (item != null)
+                    {
+                        string comp = item.Content.ToString();
+                        if (comp == theval)
+                            combo.SelectedIndex = i;
+                    }
+                    else
+                    {
+                        System.Xml.XmlElement elem = obj as System.Xml.XmlElement;
+                        if (elem != null)
+                        {
+                            string comp = elem.InnerText;
+                            if (comp == theval)
+                                combo.SelectedIndex = i;
+                        }
+                        else
+                        {
+                            System.Xml.XmlAttribute attr = obj as System.Xml.XmlAttribute;
+                            if (attr != null)
+                            {
+                                string comp = attr.InnerText;
+                                if (comp == theval)
+                                    combo.SelectedIndex = i;
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
         private void saveFieldGrid()
         {
             if(this.IsInitialized)
@@ -68,11 +182,11 @@ namespace ShareGISData
                 XmlDataProvider dp = new XmlDataProvider();
                 dp = this.FieldGrid.DataContext as XmlDataProvider;
                 dp.IsAsynchronous = false;
-                filename = FileName.Text;
-                dp.Document.Save(filename);
+                //setXmlFileName(FileName.Text);
+                dp.Document.Save(getXmlFileName());
             }           
         }
-        private void setXmlDataProvider(object ctrl,string filename,string xpath)
+        private void setXmlDataProvider(object ctrl,string xpath)
         {
             System.Data.DataSet ds = new DataSet();
             XmlDataProvider dp = new XmlDataProvider();
@@ -81,11 +195,17 @@ namespace ShareGISData
                 try
                 {
                     dp.IsAsynchronous = false;
-                    ds.ReadXml(filename);
-                    dp.Document = xml;
+                    ds.ReadXml(getXmlFileName());
+                    dp.Document = _xml;
                     dp.XPath = xpath;
                     DataGrid uictrl = ctrl as DataGrid;
-                    uictrl.DataContext = dp;
+                    if (uictrl == null)
+                    {
+                        ComboBox cbctrl = ctrl as ComboBox;
+                        cbctrl.DataContext = dp;
+                    }
+                    else
+                        uictrl.DataContext = dp;
                 }
                 catch
                 {
@@ -95,7 +215,7 @@ namespace ShareGISData
         }
         private void FieldGrid_Selected(object sender, SelectedCellsChangedEventArgs e)
         {
-            if (FieldGrid.SelectedIndex == -1 || FieldGrid.SelectedIndex == null)
+            if (FieldGrid.SelectedIndex == -1 || FieldGrid == null)
                 Methods.IsEnabled = false;
             else
                 Methods.IsEnabled = true;
@@ -103,6 +223,8 @@ namespace ShareGISData
         private void FieldGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Need to pull the current configuration values from the config, also need to set the correct panel as visible
+            if (this.skipSelectionChanged)
+                return;
             if(FieldGrid.SelectedIndex == -1)
                 return;
             var cfg = getConfigSettingsForField();
@@ -110,38 +232,11 @@ namespace ShareGISData
             
             setPanelVisibility(methodnum);
         }
-        private void SourceSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var comboBox = sender as ComboBox;
-            var selected = comboBox.SelectedValue;
-            int fieldnum = FieldGrid.SelectedIndex + 1;
-            var nodes = getFieldNodes(fieldnum);
-            if (nodes.Count == 1 && selected != null)
-            { 
-                try 
-                { 
-                        var node = nodes.Item(0).SelectSingleNode("SourceName");
-                        node.InnerText = selected.ToString();
-                        if (comboMethod.SelectedIndex == 0)
-                        {
-                            // source field selection should change to Copy
-                            comboMethod.SelectedIndex = 1;
-                            node = nodes.Item(0).SelectSingleNode("Method");
-                            node.InnerText = "Copy";
-                            setFieldSelectionValues(1);
-                        }
-                        saveFieldGrid();
-                }
-                catch
-                { }
-            }
-            
-        }
         private System.Xml.XmlNodeList getFieldNodes(int fieldnum)
         {
             System.Xml.XmlNodeList nodes = null;
             string xpath = "//Field[position()=" + fieldnum.ToString() + "]"; // Field grid position to set
-            System.Xml.XmlNodeList nodelist = xml.SelectNodes(xpath);
+            System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
             if (nodelist.Count == 1)
                 return nodelist;
             else
@@ -155,8 +250,8 @@ namespace ShareGISData
             int fieldnum = FieldGrid.SelectedIndex + 1;
             System.Xml.XmlNodeList fnodes = getFieldNodes(fieldnum);
             string sname = fnodes.Item(0).SelectSingleNode("SourceName").InnerText;
-            string xpath = "//SourceField[Name='" + sname + "']"; // Source field values
-            System.Xml.XmlNodeList nodelist = xml.SelectNodes(xpath);
+            string xpath = "//SourceField[@Name='" + sname + "']"; // Source field values
+            System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
             if (nodelist.Count == 1)
                 return nodelist;
             else
@@ -165,8 +260,38 @@ namespace ShareGISData
         private System.Xml.XmlNodeList getSourceFields()
         {
             string xpath = "//SourceField"; // Source field values
-            System.Xml.XmlNodeList nodelist = xml.SelectNodes(xpath);
+            System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
             return nodelist;
+        }
+        private string getSourceFieldName()
+        {
+            string fname = "None";
+            if (FieldGrid.SelectedIndex == -1)
+                return fname;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes.Count == 1 && nodes != null)
+            {
+                var node = nodes.Item(0).SelectSingleNode("SourceName");
+                if (node != null)
+                    fname = node.InnerText;
+            }
+            return fname;
+        }
+        private string getTargetFieldName()
+        {
+            string fname = "None";
+            if (FieldGrid.SelectedIndex == -1)
+                return fname;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes.Count == 1 && nodes != null)
+            {
+                var node = nodes.Item(0).SelectSingleNode("TargetName");
+                if (node != null)
+                    fname = node.InnerText;
+            }
+            return fname;
         }
         private int getConfigSettingsForField()
         {
@@ -196,6 +321,9 @@ namespace ShareGISData
         private int setFieldSelectionValues(int methodnum)
         {
             comboMethod.SelectedIndex = methodnum;
+            setMethodVisibility(methodnum);
+            _methodnum = methodnum;
+
             switch(methodnum){ // fill in the values for each stack panel
                 case 0: // None
                     break;
@@ -230,9 +358,7 @@ namespace ShareGISData
                     Method92Value.Text = getPanelValue(92, "Part");
                     break;
                 case 10: // Conditional Value
-                    Method101Value.Text = getPanelValue(101, "If");
-                    Method102Value.Text = getPanelValue(102, "Then");
-                    Method103Value.Text = getPanelValue(103, "Else");
+                    setConditionValues();
                     break;
                 case 11: // Expression
                     Method11Value.Text = getPanelValue(11, "Expression");
@@ -242,6 +368,21 @@ namespace ShareGISData
 
             return methodnum;
         }
+        private void setMethodVisibility(int methodnum)
+        {
+            if (MethodControls == null || ! MethodControls.IsInitialized)
+            {
+                return;
+            }
+            //if (methodnum < 3)
+            //{
+            //    MethodControls.Visibility = System.Windows.Visibility.Hidden;
+            //}
+            //else
+            MethodControls.Visibility = System.Windows.Visibility.Visible;
+            //PreviewText.Text = "";
+        }
+
         private string getPanelValue(int methodnum,string nodename)
         {
             if (FieldGrid.SelectedIndex == -1)
@@ -332,7 +473,7 @@ namespace ShareGISData
             TextBox txt = Method5Value;
             if (txt != null && separator != txt.Text)
             {
-                txt.Text = separator;
+                txt.Text = separator.Replace(_spaceVal," ");
             }
         }
         private void setConcatValues()
@@ -355,8 +496,11 @@ namespace ShareGISData
                     // assume source nodes written in sequence order... and only checked items in the xml
                     System.Xml.XmlNode cnode = cnodes.Item(c);
                     string cname = cnode.SelectSingleNode("Name").InnerText;
-                    grid.Items.Add(new ConcatRow() { Checked = true, Name = cname });
-                    _concat.Add(cname);
+                    if (cname != _noneField)
+                    {
+                        grid.Items.Add(new ConcatRow() { Checked = true, Name = cname });
+                        _concat.Add(cname);
+                    }
                 }
             }
             else
@@ -374,7 +518,7 @@ namespace ShareGISData
             {
                 // add the unchecked items in row order
                 System.Xml.XmlNode sourcenode = sourcenodes.Item(i);
-                string sourcename = sourcenode.SelectSingleNode("Name").InnerText;
+                string sourcename = sourcenode.Attributes.GetNamedItem("Name").InnerText;
                 bool found = false;
                 for (int c = 0; c < _concat.Count; c++)
                 {
@@ -383,7 +527,7 @@ namespace ShareGISData
                     if (cname == sourcename)
                         found = true;
                 }
-                if(!found)
+                if(!found && sourcename != _noneField)
                     grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
             }
             
@@ -395,7 +539,7 @@ namespace ShareGISData
             {
                 setSliderValue(81, start);
                 System.Xml.XmlNodeList source = getSourceFieldNodes();
-                int max = Int32.Parse(source.Item(0).SelectSingleNode("Length").InnerText);
+                int max = Int32.Parse(source.Item(0).Attributes.GetNamedItem("Length").InnerText);
                 Method82Slider.Maximum = max;
                 setSliderValue(82, length);
             }
@@ -403,12 +547,34 @@ namespace ShareGISData
             { }
         }
  
+        private void setConditionValues()
+        {
+            string source = getPanelValue(101, "SourceName");
+            if(source != _noneField)
+                Method10Label.Content = "If (" + source + ") is";
+            else
+                Method10Label.Content = "If ";
+            string iff = getPanelValue(101, "If");
+            string oper = getPanelValue(10, "Oper");
+            for (int i = 0; i < Method10Value.Items.Count; i++)
+            {
+                ComboBoxItem item = Method10Value.Items[i] as ComboBoxItem;
+                if(item.Content.ToString() == oper)
+                    Method10Value.SelectedIndex = i;
+            }
+            Method101Value.Text = iff;
+            Method102Value.Text = getPanelValue(102, "Then");
+            Method103Value.Text = getPanelValue(103, "Else");
+
+        }
         private void FieldGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
         }
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (this.skipSelectionChanged)
+                return;
             setFieldSelectionValues(comboMethod.SelectedIndex);
             setPanelVisibility(comboMethod.SelectedIndex);
         }
@@ -465,16 +631,6 @@ namespace ShareGISData
             return true;
         }
 
-        private void Method3Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void Method3Grid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
-        {
-
-        }
-
         private void Method5ClearAll_Click(object sender, RoutedEventArgs e)
         {
             setAllConcat(false,5);
@@ -499,10 +655,11 @@ namespace ShareGISData
             for (int i = 0; i < sourcenodes.Count; i++)
             {
                 System.Xml.XmlNode sourcenode = sourcenodes.Item(i);
-                string sourcename = sourcenode.SelectSingleNode("Name").InnerText;
-                if (val == true)
+                string sourcename = sourcenode.Attributes.GetNamedItem("Name").InnerText;
+                if (val == true && sourcename != _noneField)
                     _concat.Add(sourcename);
-                grid.Items.Add(new ConcatRow() { Checked = val, Name = sourcename});
+                if (sourcename != _noneField)
+                    grid.Items.Add(new ConcatRow() { Checked = val, Name = sourcename});
             }
             if (val == false)
                 Method5ClearAll.IsEnabled = false;
@@ -625,9 +782,8 @@ namespace ShareGISData
                 System.Windows.Forms.DialogResult result = dlg.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
-                    this.FileName.Text = dlg.FileName;
-                    filename = dlg.FileName;
-                    loadFile();
+                    //this.FileName.Text = dlg.FileName;
+                    loadFile(dlg.FileName);
                 }
             }
 
@@ -636,8 +792,7 @@ namespace ShareGISData
         private void FileName_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
-            if(filename != txt.Text)
-                loadFile();
+            loadFile(txt.Text);
         }
         /// <summary>
         /// SCRAP Heap
@@ -689,8 +844,105 @@ namespace ShareGISData
             if (Method3Grid.SelectedIndex > -1 && Method3Grid.Items.Count > 0)
                 Method3Grid.Items.RemoveAt(Method3Grid.SelectedIndex);
         }
+
+        private void Method5Value_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt.Text.IndexOf(" ") > -1)
+                txt.Text = txt.Text.Replace(" ", _spaceVal);
+
+        }
+
+        private void SourceField_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (this.skipSelectionChanged)
+                return;
+
+            var comboBox = sender as ComboBox;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes != null && comboBox != null) 
+            {
+                try
+                {
+                    string selected = comboBox.SelectedValue.ToString();
+                    if (nodes.Count == 1)
+                    {
+                        // source field selection should change to Copy
+                        var node = nodes.Item(0).SelectSingleNode("Method");
+                        var nodeField = nodes.Item(0).SelectSingleNode("SourceName");
+                        if (selected == _noneField && comboMethod.SelectedIndex != 0)
+                        {
+                            node.InnerText = "None";
+                            nodeField.InnerText = selected;
+                            comboMethod.SelectedIndex = 0;
+                            saveFieldGrid();
+                        }
+                        else if (selected != _noneField)
+                        {
+                            node.InnerText = "Copy";
+                            nodeField.InnerText = selected;
+                            comboMethod.SelectedIndex = 1;
+                            saveFieldGrid();
+                        }
+                    }
+                }
+                catch
+                { }
+            }
+
+        }
+
+        private void TargetLayer_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
+            if (node != null && node.InnerText != txt.Text)
+                node.InnerText = txt.Text;
+
+        }
+
+        private void SourceLayer_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null && txt.Text != "")
+            {
+                System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
+                if (node != null && node.InnerText != txt.Text)
+                    node.InnerText = txt.Text;
+            }
+        }
+
+        private void ReplaceField_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox combo = sender as ComboBox;
+            if (combo != null && combo.SelectedIndex != -1)
+            {
+                System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/FieldName");
+                if (node == null || node.InnerText != combo.SelectionBoxItem.ToString())
+                    updateReplaceNodes();
+            }
+        }
+
+        private void ReplaceOperator_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox combo = sender as ComboBox;
+            if (combo != null && combo.SelectedIndex != -1)
+            {
+                System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/Operator");
+                if (node == null || node.InnerText != combo.SelectionBoxItem.ToString())
+                    updateReplaceNodes();
+            }
+        }
+        private void ReplaceValue_SelectionChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null && txt.Text != "")
+            {
+                System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/Value");
+                if (node == null || node.InnerText != txt.Text)
+                    updateReplaceNodes();
+            }
+        }
     }
-
-
-
 }

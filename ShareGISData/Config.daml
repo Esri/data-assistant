@@ -2,26 +2,26 @@
   <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="1.0" desktopVersion="1.1.3308">
     <Name>ShareGISData</Name>
     <Description>Tools to configure and run data sharing processes</Description>
-    <Image>Images\AddinDesktop32.png</Image>
+    <Image>Images\Icon0.png</Image>
     <Author>Steve</Author>
     <Company>Vertex3 for Esri</Company>
-    <Date>10/10/2015 10:08:35 AM, 2015</Date>
-    <Subject>Content,Framework,Data</Subject>
+    <Date>12/12/2015</Date>
+    <Subject>Content,Framework,Data Loading Assistant</Subject>
   </AddInInfo>
   <modules>
     <insertModule id="ShareGISData_Module" className="Module1" autoLoad="false" caption="Module1">
       <tabs>
-        <tab id="ShareGISData_Tab1" caption="Share Data">
-          <group refID="ShareGISData_Group1"/>
-          <group refID="ShareGISData_Group2"/>
+        <tab id="ShareGISData_Tab1" caption="Data Assistant">
+          <group refID="DataAssistant1"/>
+          <group refID="DataAssistant2"/>
         </tab>
       </tabs>
       <groups>
-        <group id="ShareGISData_Group1" caption="Configure" appearsOnAddInTab="true">
-          <button refID="ShareGISData_Wizard" size="large" />
-        </group>
-        <group id="ShareGISData_Group2" caption="Share" appearsOnAddInTab="true">
+        <group id="DataAssistant1" caption="Configure">
+          <button refID="ShareGISData_Dockpane1_CreateFile" size="large"/>
           <button refID="ShareGISData_Dockpane1_ShowButton" size="large" />
+        </group>
+        <group id="DataAssistant2" caption="Share">
           <button refID="ShareGISData_Dockpane1_PreviewButton" size="large"/>
           <button refID="ShareGISData_Dockpane1_PublishButton" size="large" />
           <button refID="ShareGISData_Dockpane1_AggregateButton" size="large" />
@@ -29,30 +29,36 @@
       </groups>
       <controls>
         <!-- add your controls here -->
-        <button id="ShareGISData_Wizard" caption="Data Sharing Wizard" className="ShareWizard" loadOnClick="true" smallImage="Images\AddInDesktop16.png" largeImage="Images\AddInDesktop32.png">
+<!--        <button id="ShareGISData_Wizard" caption="Data Sharing Wizard" className="ShareWizard" loadOnClick="true" smallImage="Images\AddInDesktop16.png" largeImage="Images\AddInDesktop32.png">
           <tooltip heading="Configure Data Sharing">Tooltip text<disabledText /></tooltip>
         </button>
-        <button id="ShareGISData_Dockpane1_ShowButton" caption="Field Mapper" className="Dockpane1_ShowButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
-          <tooltip heading="Field Mapper">Field Mapper<disabledText /></tooltip>
+ -->
+        <button id="ShareGISData_Dockpane1_CreateFile" caption="New File" className="Dockpane1_CreateFile" loadOnClick="true" smallImage="Images\Icon4.png" largeImage="Images\Icon4.png">
+          <tooltip heading="New Source-Target File">
+            New Source-Target File<disabledText />
+          </tooltip>
         </button>
-        <button id="ShareGISData_Dockpane1_PreviewButton" caption="Preview" className="Dockpane1_PreviewButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+        <button id="ShareGISData_Dockpane1_ShowButton" caption="Data Mapper" className="Dockpane1_ShowButton" loadOnClick="true" smallImage="Images\Icon0.png" largeImage="Images\Icon0.png">
+          <tooltip heading="Data Mapper">Data Mapper<disabledText /></tooltip>
+        </button>
+        <button id="ShareGISData_Dockpane1_PreviewButton" caption="Preview" className="Dockpane1_PreviewButton" loadOnClick="true" smallImage="Images\Icon1.png" largeImage="Images\Icon1.png">
           <tooltip heading="Preview Results">
             Preview Results<disabledText />
           </tooltip>
         </button>
-        <button id="ShareGISData_Dockpane1_PublishButton" caption="Publish" className="Dockpane1_PublishButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+        <button id="ShareGISData_Dockpane1_PublishButton" caption="Publish" className="Dockpane1_PublishButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
           <tooltip heading="Publish Data">
             Publish Data<disabledText />
           </tooltip>
         </button>
-        <button id="ShareGISData_Dockpane1_AggregateButton" caption="Aggregate" className="Dockpane1_AggregateButton" loadOnClick="true" smallImage="Images\GenericButtonPurple16.png" largeImage="Images\GenericButtonPurple32.png">
+      <!--  <button id="ShareGISData_Dockpane1_AggregateButton" caption="Aggregate" className="Dockpane1_AggregateButton" loadOnClick="true" smallImage="Images\Icon3.png" largeImage="Images\Icon3.png">
           <tooltip heading="Aggregate Data">
             Aggregate Data<disabledText />
           </tooltip>
-        </button>
+        </button>-->
       </controls>
       <dockPanes>
-        <dockPane id="ShareGISData_Dockpane1" caption="Field Mapper" className="Dockpane1ViewModel" dock="group" dockWith="esri_core_contentsDockPane">
+        <dockPane id="ShareGISData_Dockpane1" caption="Configure Data Mapping" className="Dockpane1ViewModel" dock="group" dockWith="esri_core_contentsDockPane">
           <content className="Dockpane1View" />
         </dockPane>
       </dockPanes>

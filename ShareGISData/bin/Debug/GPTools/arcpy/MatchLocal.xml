@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<SourceTargetMatch version="1.1" xmlns:esri="http://www.esri.com">
+  <Fields>
+    <Field count="1">
+      <SourceName>UNIQUEID</SourceName>
+      <TargetName>SITEADDID</TargetName>
+      <Method>Copy</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>NUMSUF</SourceName>
+      <TargetName>PREADDRNUM</TargetName>
+      <Method>Copy</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>DATASETID</SourceName>
+      <TargetName>ADDRNUMSUF</TargetName>
+      <Method>Copy</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>ADDNUM</SourceName>
+      <TargetName>ADDRNUM</TargetName>
+      <Method>Copy</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>PARCELID</SourceName>
+      <TargetName>ADDRRANGE</TargetName>
+      <Method>Copy</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>NUMSUF</SourceName>
+      <TargetName>UNITTYPE</TargetName>
+      <Method>ConditionalValue</Method>
+      <Oper>==</Oper>
+      <If>None</If>
+      <Then>"Test"</Then>
+      <Else>"Junk"</Else>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>UNITID</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>ALTUNITTYPE</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>ALTUNITID</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>FULLROADNAME</SourceName>
+      <TargetName>FULLNAME</TargetName>
+      <Method>Concatenate</Method>
+      <Separator>_</Separator>
+      <cFields>
+        <cField>
+          <Name>DATASETID</Name>
+        </cField>
+        <cField>
+          <Name>PARCELID</Name>
+        </cField>
+      </cFields>
+    </Field>
+    <Field count="1">
+      <SourceName>ADDNUM</SourceName>
+      <TargetName>FULLADDR</TargetName>
+      <Method>Concatenate</Method>
+      <Separator>(space)</Separator>
+      <cFields>
+        <cField>
+          <Name>ADDNUM</Name>
+        </cField>
+        <cField>
+          <Name>PROVIDERID</Name>
+        </cField>
+        <cField>
+          <Name>UNIQUEID</Name>
+        </cField>
+      </cFields>
+    </Field>
+    <Field count="1">
+      <SourceName>COMMUNITY</SourceName>
+      <TargetName>PLACENAME</TargetName>
+      <Method>Right</Method>
+      <Right>5</Right>
+    </Field>
+    <Field count="1">
+      <SourceName>ROADNAME</SourceName>
+      <TargetName>LOCALFIPS</TargetName>
+      <Method>ConditionalValue</Method>
+      <Oper>==</Oper>
+      <If>None</If>
+      <Then>123</Then>
+      <Else>2222</Else>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>STCOFIPS</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>MUNICIPALITY</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>USNGCOORD</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>STRUCTTYPE</SourceName>
+      <TargetName>ADDRCLASS</TargetName>
+      <Method>ConditionalValue</Method>
+      <Oper>!=</Oper>
+      <If>None</If>
+      <Then>1</Then>
+      <Else>2</Else>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>POINTTYPE</TargetName>
+      <Method>Expression</Method>
+      <Expression>1000/2 + ADDNUM if ADDNUM != None else 1000/2</Expression>
+    </Field>
+    <Field count="1">
+      <SourceName>(None)</SourceName>
+      <TargetName>CAPTUREMETH</TargetName>
+      <Method>None</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>LASTEDIT</SourceName>
+      <TargetName>LASTUPDATE</TargetName>
+      <Method>Copy</Method>
+    </Field>
+    <Field count="1">
+      <SourceName>EDITOR</SourceName>
+      <TargetName>LASTEDITOR</TargetName>
+      <Method>Copy</Method>
+    </Field>
+  </Fields>
+
+</SourceTargetMatch>

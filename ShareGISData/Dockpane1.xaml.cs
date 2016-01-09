@@ -20,6 +20,9 @@ using System.Windows.Controls.Primitives;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
+using System.Xml;
+using System.Xml.Xsl;
+using System.Xml.XPath;
 
 namespace ShareGISData
 {
@@ -35,9 +38,12 @@ namespace ShareGISData
                               Uri.UnescapeDataString(
                                       new Uri(asm.CodeBase).LocalPath));
         }
-        public string getXmlFileName()
+        public static string getXmlFileName()
         {
-            return _filename;
+            if (_filename != null)
+                return _filename;
+            else
+                return "";
         }
         public void setXmlFileName(string fname)
         {
@@ -46,7 +52,7 @@ namespace ShareGISData
                 _filename = fname;
             this.FileName.Text = _filename;
         }
-        private string _filename = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
+        private static string _filename;// = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
         System.Xml.XmlNodeList _datarows;
 
         string fieldXPath = "/SourceTargetMatrix/Fields/Field";
@@ -58,6 +64,8 @@ namespace ShareGISData
         string _spaceVal = "(space)";
         private bool skipSelectionChanged = false;
         int _methodnum = -1;
+        string _xsltFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\FieldMatcher.xsl");
+        string _matchFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\MatchLocal.xml");
 
         public Dockpane1View()
         {
@@ -85,6 +93,7 @@ namespace ShareGISData
             SourceStack.Visibility = System.Windows.Visibility.Visible;
             TargetStack.Visibility = System.Windows.Visibility.Visible;
             ReplaceStack.Visibility = System.Windows.Visibility.Visible;
+            AutomatchStack.Visibility = System.Windows.Visibility.Visible;
 
             SourceLayer.Text = _xml.SelectSingleNode("//Datasets/Source").InnerText;
             TargetLayer.Text = _xml.SelectSingleNode("//Datasets/Target").InnerText;
@@ -898,18 +907,23 @@ namespace ShareGISData
             TextBox txt = sender as TextBox;
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
             if (node != null && node.InnerText != txt.Text)
+            {
                 node.InnerText = txt.Text;
-
+                saveFieldGrid();
+            }
         }
 
         private void SourceLayer_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
-            if (txt != null && txt.Text != "")
+            if (txt != null)
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
                 if (node != null && node.InnerText != txt.Text)
+                {
                     node.InnerText = txt.Text;
+                    saveFieldGrid();
+                }
             }
         }
 
@@ -943,6 +957,96 @@ namespace ShareGISData
                 if (node == null || node.InnerText != txt.Text)
                     updateReplaceNodes();
             }
+        }
+
+        private void UpdateAutomatchButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (System.Windows.Forms.MessageBox.Show("Update Automatch Values?", "Update Automatch", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                XsltArgumentList argList = new XsltArgumentList();
+                argList.AddParam("configFile", "", _filename);
+                string outfile = _matchFile.Replace(".xml", "1.xml");
+
+                runTransform(_matchFile, _xsltFile, outfile, argList);
+                copyXml(outfile, _matchFile);
+            }
+        }
+
+        private void ResetAutomatchButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (System.Windows.Forms.MessageBox.Show("Clear all Automatch Values?", "Clear Automatch", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                XsltArgumentList argList = new XsltArgumentList();
+                argList.AddParam("configFile", "",_matchFile );
+                string outfile = _matchFile.Replace(".xml", "1.xml");
+                runTransform(_filename, _xsltFile, outfile, argList);
+                copyXml(outfile, _matchFile);
+            }
+
+        }
+        public static bool runTransform(string xmlPath, string xsltPath, string outputPath, XsltArgumentList argList)
+        {
+            XmlTextReader reader = null;
+            XmlWriter writer = null;
+            try
+            {
+                XsltSettings xslt_set = new XsltSettings();
+                xslt_set.EnableScript = true;
+                xslt_set.EnableDocumentFunction = true;
+
+                // Load the XML source file.
+                reader = new XmlTextReader(xmlPath);
+
+                // Create an XmlWriter.
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Indent = true;
+                settings.Encoding = new UTF8Encoding();
+                settings.OmitXmlDeclaration = false;
+
+                writer = XmlWriter.Create(outputPath, settings);
+
+                XslCompiledTransform xslt = new XslCompiledTransform();
+                xslt.Load(xsltPath, xslt_set, new XmlUrlResolver());
+                if (argList == null)
+                    xslt.Transform(reader, writer);
+                else
+                    xslt.Transform(reader, argList, writer);
+                reader.Close();
+                writer.Close();
+
+                return true;
+            }
+            catch (Exception err)
+            {
+                try
+                {
+                    if (reader != null)
+                        reader.Close();
+                    if (writer != null)
+                        writer.Close();
+                    throw (err);
+                }
+                catch (Exception err2)
+                {
+                    MessageBox.Show(err2.ToString());
+                    return false;
+                }
+            }
+        }
+        private bool copyXml(string fName1, string fName2)
+        {
+            System.IO.FileInfo fp1 = new System.IO.FileInfo(fName1);
+            try
+            {
+                fp1.CopyTo(fName2, true);
+            }
+            catch (Exception e)
+            {
+                string errStr = e.Message;
+                return false;
+            }
+            return true;
         }
     }
 }

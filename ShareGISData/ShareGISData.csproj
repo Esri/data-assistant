@@ -100,13 +100,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Config\ConfigData.xml">
-      <SubType>Designer</SubType>
-    </Content>
     <Content Include="GPTools\arcpy\dla.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="GPTools\arcpy\dlaAggregate.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dlaCreateSourceTarget.py">
@@ -131,6 +125,12 @@
     <Content Include="GPTools\arcpy\dlaPublish.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="GPTools\arcpy\FieldMatcher.xsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GPTools\arcpy\MatchLocal.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="GPTools\DataLoadingAssistant.tbx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -146,12 +146,6 @@
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\GenericButtonPurple32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ConfigData.xml">
-      <SubType>Designer</SubType>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

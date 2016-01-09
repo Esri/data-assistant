@@ -404,11 +404,13 @@ namespace ShareGISData
         private void SourceButton_Click(object sender, RoutedEventArgs e)
         {
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
-            string fileloc = getSourceTargetLocation("", "Select Target");
-            if (fileloc != null && fileloc != "")
+            string fileloc = getSourceTargetLocation("", "Select Target Dataset");
+            if (fileloc != null)
             {
-                node.InnerText = fileloc;
-                saveFieldGrid();
+                if (System.Windows.Forms.MessageBox.Show("You should only Change the source dataset if the schemas match", "Update Source Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    SourceLayer.Text = fileloc;
+                }
             }
         }
 
@@ -416,10 +418,12 @@ namespace ShareGISData
         {
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
             string fileloc = getSourceTargetLocation("", "Select Target");
-            if (fileloc != null && fileloc != "")
+            if (fileloc != null)
             {
-                node.InnerText = fileloc;
-                saveFieldGrid();
+                if (System.Windows.Forms.MessageBox.Show("You should only Change the target dataset if the schemas match", "Update Source Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    TargetLayer.Text = fileloc;
+                }
             }
         }
         private string getSourceTargetLocation(string initialLocation, string title)

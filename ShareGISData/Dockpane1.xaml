@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"                                             
              xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="ShareGISData.Dockpane1View"                                             
-             mc:Ignorable="d" MinHeight="400" MinWidth="480" d:DesignHeight="500" d:DesignWidth="480">
+             mc:Ignorable="d" MinHeight="300" MinWidth="280" d:DesignHeight="500" d:DesignWidth="480">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -14,6 +14,32 @@
     </UserControl.Resources>
 
     <TabControl x:Name="DataAssistantTab">
+        <TabControl.Resources>
+            <Style TargetType="TabItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Grid Name="Panel">
+                                <ContentPresenter x:Name="ContentSite"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="10,2" TextElement.FontSize="18" TextElement.FontFamily="Trebuchet MS"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="TextElement.Foreground" TargetName="Panel" Value="Blue"/>
+                                    
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="False">
+                                    <Setter Property="TextElement.Foreground" TargetName="Panel" Value="Gray"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </TabControl.Resources>
         <TabItem x:Name="FileTab" Header="File" BorderThickness="1" IsSelected="True">
             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" 
           MinHeight="400" MinWidth="300" x:Name="FileGrid">
@@ -21,7 +47,8 @@
                     <RowDefinition Height="65"/>
                     <RowDefinition Height="65"/>
                     <RowDefinition Height="65"/>
-                    <RowDefinition Height="150*"/>
+                    <RowDefinition Height="130"/>
+                    <RowDefinition Height="65*"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -49,7 +76,7 @@
                 </StackPanel>
 
                 <StackPanel x:Name="ReplaceStack" Grid.Row="3" IsEnabled="False" Visibility="Hidden">
-                <Label x:Name="ReplaceLabel" Margin="0,5,5,0" Content="Replace By" VerticalAlignment="Top"/>
+                <Label x:Name="ReplaceLabel" Margin="0,5,5,0" Content="'Replace By Field' Settings" VerticalAlignment="Top"/>
                 <ComboBox x:Name="ReplaceField" MinWidth="100" ItemsSource="{Binding XPath=//TargetField/@Name}" Margin="5,5,5,5"  VerticalAlignment="Top" Width="200" HorizontalAlignment="Left"
                           SelectionChanged="ReplaceField_SelectionChanged"/>
                     <ComboBox x:Name="ReplaceOperator" MinWidth="20"  Margin="5,5,5,5"  VerticalAlignment="Top" Width="50" HorizontalAlignment="Left"
@@ -62,7 +89,12 @@
                 <TextBox x:Name="ReplaceValue" HorizontalAlignment="Left" Margin="5,5,5,5" TextWrapping="NoWrap"  
                  Text="" MinWidth="100" Width="110" VerticalAlignment="Top" TextChanged="ReplaceValue_SelectionChanged"/>
                 </StackPanel>
-
+                
+                <StackPanel x:Name="AutomatchStack" Grid.Row="4" IsEnabled="True" Visibility="Hidden">
+                    <Label x:Name="AutomatchLabel" Margin="0,5,5,0" Content="Automatch Settings" VerticalAlignment="Top" ToolTip="Automatch remembers your configuration patterns and applies to new field settings"/>
+                    <Button x:Name="UpdateAutomatchButton" Content="Update Automatch..." HorizontalAlignment="left" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="UpdateAutomatchButton_Click" ToolTip="Use the settings in your current configuration file to update Automatch values" Width="125"/>
+                    <Button x:Name="ResetAutomatchButton" Content="Reset Automatch..." HorizontalAlignment="left" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="ResetAutomatchButton_Click" ToolTip="This button will clear all saved Automatch values" Width="125"/>
+                </StackPanel>
             </Grid>
         </TabItem>
         <TabItem x:Name="FieldsTab" Header="Fields" BorderThickness="1">
@@ -192,7 +224,7 @@ SelectionChanged="SourceSelectionChanged"
                         <ComboBoxItem Content="Title"/>
                         <ComboBoxItem Content="Capitalize"/>
                     </ComboBox>
-                   <!-- <Button x:Name="Method4Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method4Preview_Click"/>-->
+                    <!-- <Button x:Name="Method4Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method4Preview_Click"/>-->
                 </StackPanel>
                 <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method5" Visibility="Hidden" ScrollViewer.CanContentScroll="True">
                     <Label Content="Select Fields" Margin="5,5,5,5"/>
@@ -274,28 +306,28 @@ SelectionChanged="SourceSelectionChanged"
                     <TextBox x:Name="Method11Value" Margin="5,0,5,5" Text="" ToolTip="Enter the expression" Height="100"/>
                     <!-- <Button x:Name="Method11Preview" Content="Preview Result..." ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="Method11Preview_Click"/>-->
                 </StackPanel>
-               
-                    <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="2" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="100">
-                        <Button x:Name="MethodPanelApply" Content="Apply" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-75,5,5,5" Click="MethodPanelApply_Click"/>
-                        <Button x:Name="MethodPanelCancel" Content="Cancel" Width="50" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="75,-50,5,5" Click="MethodPanelCancel_Click"/>
-                        <!--<Label Content="Preview:" VerticalAlignment="Stretch" MouseDown="ClickLabel" ToolTip="Preview the result"/>-->
-                        <!--<Button x:Name="PreviewButton" Content="Preview" ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="ClickPreviewButton"/>-->
+
+                <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="2" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="100">
+                    <Button x:Name="MethodPanelApply" Content="Apply" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-75,5,5,5" Click="MethodPanelApply_Click"/>
+                    <Button x:Name="MethodPanelCancel" Content="Cancel" Width="50" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="75,-50,5,5" Click="MethodPanelCancel_Click"/>
+                    <!--<Label Content="Preview:" VerticalAlignment="Stretch" MouseDown="ClickLabel" ToolTip="Preview the result"/>-->
+                    <!--<Button x:Name="PreviewButton" Content="Preview" ToolTip="Preview Result" HorizontalAlignment="Left" Margin="5,15,5,5" MinWidth="60" Click="ClickPreviewButton"/>-->
                     <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Preview Results" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False"/>
-                        <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  
+                    <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  
                       AutoGenerateColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       Height="0" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged" Margin="0,0,0,0">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="100" IsReadOnly="True" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="100" IsReadOnly="True" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
 
-                        <!--                    <Border BorderBrush="LightGray" BorderThickness="1" Margin="5,5,10,5">
+                    <!--                    <Border BorderBrush="LightGray" BorderThickness="1" Margin="5,5,10,5">
                         <TextBlock x:Name="PreviewText" Margin="5,5,10,5" Text="This is a test of the display for this thing" TextWrapping="WrapWithOverflow" Height="80" HorizontalAlignment="Stretch"></TextBlock>
                     </Border>
 -->
-                    </StackPanel>
-              
+                </StackPanel>
+
             </Grid>
         </TabItem>
-        </TabControl>
+    </TabControl>
 </UserControl>

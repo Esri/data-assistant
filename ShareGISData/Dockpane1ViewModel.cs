@@ -91,10 +91,7 @@ namespace ShareGISData
         protected override void OnClick()
         {
             setupGP.init();
-            string source = "";
-            string target = "";
-            string file = System.IO.Path.Combine(Project.Current.HomeFolderPath, "SourceTarget.xml");
-            var param_values = Geoprocessing.MakeValueArray(file, source, target);
+            var param_values = Geoprocessing.MakeValueArray(ShareGISData.Dockpane1View.getXmlFileName());
 
             Geoprocessing.OpenToolDialog(setupGP.getToolbox("Preview"), param_values);
         }
@@ -104,25 +101,9 @@ namespace ShareGISData
         protected override void OnClick()
         {
             setupGP.init();
-            string source = "";
-            string target = "";
-            string file = System.IO.Path.Combine(Project.Current.HomeFolderPath, "SourceTarget.xml");
-            var param_values = Geoprocessing.MakeValueArray(file, source, target);
+            var param_values = Geoprocessing.MakeValueArray(ShareGISData.Dockpane1View.getXmlFileName());
 
             Geoprocessing.OpenToolDialog(setupGP.getToolbox("Publish"), param_values);
-        }
-    }
-    internal class Dockpane1_AggregateButton : Button
-    {
-        protected override void OnClick()
-        {
-            setupGP.init();
-            string source = "";
-            string target = "";
-            string file = System.IO.Path.Combine(Project.Current.HomeFolderPath, "SourceTarget.xml");
-            var param_values = Geoprocessing.MakeValueArray(file, source, target);
-            
-            Geoprocessing.OpenToolDialog(setupGP.getToolbox("Aggregate"), param_values);
         }
     }
     internal class setupGP : Button

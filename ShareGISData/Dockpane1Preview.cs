@@ -33,6 +33,10 @@ namespace ShareGISData
         {
             setPreviewRows(Method2Value.Text);
         }
+        private void Method3Preview_Click()
+        {
+            setPreviewValueMapRows(getSourceFieldName());
+        }
         private void Method4Preview_Click()
         {
             DataGrid grid = PreviewGrid;
@@ -70,7 +74,6 @@ namespace ShareGISData
                 }
                 catch { textval = targName + "=" + "None"; }
                 grid.Items.Add(new PreviewRow() { Value = textval });
-
             }
         }
         private void Method5Preview_Click()
@@ -230,7 +233,7 @@ namespace ShareGISData
                     Method2Preview_Click();
                     break;
                 case 3: // ValueMap
-                    //Method3Preview_Click();
+                    Method3Preview_Click();
                     break;
                 case 4: // ChangeCase
                     Method4Preview_Click();
@@ -362,7 +365,50 @@ namespace ShareGISData
                 grid.Items.Add(new PreviewRow() { Value = textval });
             }
         }
-        private string replaceFieldValues(string expr,int rownum)
+        private void setPreviewValueMapRows(string attrName)
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                string textval = "";
+                try
+                {
+                    if (attrName == null)
+                        textval = targName + "=None";
+                    else
+                    {
+                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                        if (att != null)
+                        {
+                            try
+                            {
+                                textval = att.InnerText;
+                                for (int r = 0; r < Method3Grid.Items.Count; r++)
+                                {
+                                    // value map replace function
+                                    ValueMapRow row = Method3Grid.Items.GetItemAt(r) as ValueMapRow;
+                                    if(att.InnerText.ToString() == row.Source.ToString())
+                                    {
+                                        textval = textval.Replace(row.Source, row.Target);                 
+                                    }
+                                    else if(Method3Otherwise.Text != "" && Method3Otherwise.Text != null)
+                                    { 
+                                        textval = Method3Otherwise.Text; 
+                                    }
+                                }
+                                textval = targName + "=" + textval;
+                            }
+                            catch { textval = targName + "=" + "None"; }
+                        }
+                    }
+                }
+                catch { textval = targName + "=" + "None"; }
+                grid.Items.Add(new PreviewRow() { Value = textval });
+            }
+        }
+        private string replaceFieldValues(string expr, int rownum)
         {
             for (int i = 0; i < _datarows.Count; i++)
             {
@@ -374,8 +420,6 @@ namespace ShareGISData
                         try
                         {
                             string val = att.InnerText;
-                            //if (val != "None")// && int.TryParse(val, out i) == false)
-                            //    val = val;
                             expr = expr.Replace(att.Name, val);
                         }
                         catch {  }

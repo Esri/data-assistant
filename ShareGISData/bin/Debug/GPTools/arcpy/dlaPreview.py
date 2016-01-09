@@ -2,7 +2,7 @@
 
 import arcpy,os,dlaExtractLayerToGDB,dlaFieldCalculator,dla,xml.dom.minidom,datetime
 
-arcpy.AddMessage("Data Assistant - Publish")
+arcpy.AddMessage("Data Assistant - Preview")
 
 xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
 _success = 2 # the last param is the derived output layer
@@ -41,11 +41,11 @@ def preview(xmlFileName):
     if sourceLayer == "" or sourceLayer == None:
         sourceLayer = dla.getNodeValue(xmlDoc,"Source")
     if targetLayer == "" or targetLayer == None:
-        #targetLayer = dla.getNodeValue(xmlDoc,"Target")
+        targetLayer = dla.getNodeValue(xmlDoc,"Target")
         dte = datetime.datetime.now().strftime("%Y%m%d%H%M")
         targetName = dla.getTargetName(xmlDoc) + dte
-        targetLayer = os.path.join(dla.workspace,targetName)
-    res = dlaExtractLayerToGDB.extract(xmlFileName,rowLimit,dla.workspace,sourceLayer,targetLayer)
+        targetFC = os.path.join(dla.workspace,targetName)
+    res = dlaExtractLayerToGDB.extract(xmlFileName,rowLimit,dla.workspace,sourceLayer,targetFC)
     if res == True:
         res = dlaFieldCalculator.calculate(xmlFileName,dla.workspace,targetName,False)
         if res == True:
@@ -54,9 +54,9 @@ def preview(xmlFileName):
             layertmp = targetName + "tmp"
             if arcpy.Exists(layertmp):
                 arcpy.Delete_management(layertmp)               
-            arcpy.MakeFeatureLayer_management(targetLayer,layertmp)
+            arcpy.MakeFeatureLayer_management(targetFC,layertmp)
             fieldInfo = dla.getLayerVisibility(layertmp,xmlFileName)
-            arcpy.MakeFeatureLayer_management(targetLayer,layer,None,dla.workspace,fieldInfo)
+            arcpy.MakeFeatureLayer_management(targetFC,layer,None,dla.workspace,fieldInfo)
             # should make only the target fields visible
             arcpy.SetParameter(_success,layer)
 

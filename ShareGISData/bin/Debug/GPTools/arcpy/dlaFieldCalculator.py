@@ -107,96 +107,99 @@ def calcValue(row,names,calcString):
 def setFieldValues(table,fields,names):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
-    
     try:
         updateCursor = arcpy.da.UpdateCursor(table,names)
-    except:
-        dla.addMessage( "Unable to update the Dataset, Python error is: ")
-        dla.showTraceback()
-        row = None
 
-    result = arcpy.GetCount_management(table)
-    numFeat = int(result.getOutput(0))
-    dla.addMessage(table + ", " + str(numFeat) + " features")
-    i = 0
-    arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
-    
-    for row in updateCursor:
-        global errCount
-        success = True
-        if errCount > dla.maxErrorCount:
-            dla.addMessage("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
-            return False
-        if i > dla.maxrows:
-            dla.addMessage("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
-            return True
-        i = i + 1
-        setProgressor(i,numFeat)
-        for field in fields:
-            method = "None"
-            sourceName = dla.getNodeValue(field,"SourceName")
-            targetName = dla.getNodeValue(field,"TargetName")
-                
-            targetValue = getTargetValue(row,field,names,sourceName,targetName)
-            sourceValue = getSourceValue(row,names,sourceName)
-            method = dla.getNodeValue(field,"Method").replace(" ","")
-            if method == "None" or (method == "Copy" and sourceName == '(None)'):
-                method = "None"
-                val = None
-            elif method == "Copy":
-                val = sourceValue
-            elif method == "DefaultValue":
-                val = dla.getNodeValue(field,"DefaultValue")
-            elif method == "ValueMap":
-                val = getValueMap(row,names,sourceValue,field)
-            elif method == "ChangeCase":
-                case = dla.getNodeValue(field,method)                    
-                expression = getChangeCase(sourceValue,case)
-                val = getExpression(row,names,expression)
-            elif method == "Concatenate":
-                val = getConcatenate(row,names,field)
-            elif method == "Left":
-                chars = dla.getNodeValue(field,"Left")
-                val = getSubstring(sourceValue,"0",chars)
-            elif method == "Right":
-                chars = dla.getNodeValue(field,"Right")
-                val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
-            elif method == "Substring":
-                start = dla.getNodeValue(field,"Start")
-                length = dla.getNodeValue(field,"Length")
-                val = getSubstring(sourceValue,start,length)
-            elif method == "Split":
-                splitter = dla.getNodeValue(field,"SplitAt")
-                part = dla.getNodeValue(field,"Part")
-                val = getSplit(sourceValue,splitter,part)
-            elif method == "ConditionalValue":
-                sname = dla.getNodeValue(field,"SourceName")
-                oper = dla.getNodeValue(field,"Oper")
-                iif = dla.getNodeValue(field,"If")
-                tthen = dla.getNodeValue(field,"Then")
-                eelse = dla.getNodeValue(field,"Else")
-                expression = tthen + " if |" + sname + "| " + oper + " " + iif + " else " + eelse
-                val = getExpression(row,names,expression)
-            elif method == "Expression":
-                expression = dla.getNodeValue(field,method)
-                for name in names:
-                    expression = expression.replace(name,"|" + name + "|")
-                val = getExpression(row,names,expression)
-            # set field value
-            setValue(row,names,targetName,targetValue,val)
-        try:
-            updateCursor.updateRow(row)
-        except:
-            errCount += 1
-            success = False
-            err = "Exception caught: unable to update row"
-            printRow(row,names)
-            dla.showTraceback()
-            dla.addError(err)
+        result = arcpy.GetCount_management(table)
+        numFeat = int(result.getOutput(0))
+        dla.addMessage(table + ", " + str(numFeat) + " features")
+        i = 0
+        arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
         
-    del updateCursor
-    dla.cleanupGarbage()
-    arcpy.ResetProgressor()
+        for row in updateCursor:
+            global errCount
+            success = True
+            if errCount > dla.maxErrorCount:
+                dla.addMessage("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
+                return False
+            if i > dla.maxrows:
+                dla.addMessage("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
+                return True
+            i = i + 1
+            setProgressor(i,numFeat)
+            for field in fields:
+                method = "None"
+                sourceName = dla.getNodeValue(field,"SourceName")
+                targetName = dla.getNodeValue(field,"TargetName")
+                    
+                targetValue = getTargetValue(row,field,names,sourceName,targetName)
+                sourceValue = getSourceValue(row,names,sourceName)
+                method = dla.getNodeValue(field,"Method").replace(" ","")
+                if method == "None" or (method == "Copy" and sourceName == '(None)'):
+                    method = "None"
+                    val = None
+                elif method == "Copy":
+                    val = sourceValue
+                elif method == "DefaultValue":
+                    val = dla.getNodeValue(field,"DefaultValue")
+                elif method == "ValueMap":
+                    val = getValueMap(row,names,sourceValue,field)
+                elif method == "ChangeCase":
+                    case = dla.getNodeValue(field,method)                    
+                    expression = getChangeCase(sourceValue,case)
+                    val = getExpression(row,names,expression)
+                elif method == "Concatenate":
+                    val = getConcatenate(row,names,field)
+                elif method == "Left":
+                    chars = dla.getNodeValue(field,"Left")
+                    val = getSubstring(sourceValue,"0",chars)
+                elif method == "Right":
+                    chars = dla.getNodeValue(field,"Right")
+                    val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
+                elif method == "Substring":
+                    start = dla.getNodeValue(field,"Start")
+                    length = dla.getNodeValue(field,"Length")
+                    val = getSubstring(sourceValue,start,length)
+                elif method == "Split":
+                    splitter = dla.getNodeValue(field,"SplitAt")
+                    part = dla.getNodeValue(field,"Part")
+                    val = getSplit(sourceValue,splitter,part)
+                elif method == "ConditionalValue":
+                    sname = dla.getNodeValue(field,"SourceName")
+                    oper = dla.getNodeValue(field,"Oper")
+                    iif = dla.getNodeValue(field,"If")
+                    tthen = dla.getNodeValue(field,"Then")
+                    eelse = dla.getNodeValue(field,"Else")
+                    expression = tthen + " if |" + sname + "| " + oper + " " + iif + " else " + eelse
+                    val = getExpression(row,names,expression)
+                elif method == "Expression":
+                    expression = dla.getNodeValue(field,method)
+                    for name in names:
+                        expression = expression.replace(name,"|" + name + "|")
+                    val = getExpression(row,names,expression)
+                # set field value
+                setValue(row,names,targetName,targetValue,val)
+            try:
+                updateCursor.updateRow(row)
+            except:
+                errCount += 1
+                success = False
+                err = "Exception caught: unable to update row"
+                printRow(row,names)
+                dla.showTraceback()
+                dla.addError(err)
+    except:
+        errCount += 1
+        success = False
+        err = "Exception caught: unable to update dataset"
+        printRow(row,names)
+        dla.showTraceback()
+        dla.addError(err)
+
+    finally:
+        del updateCursor
+        dla.cleanupGarbage()
+        arcpy.ResetProgressor()
 
     return success
 
@@ -280,9 +283,11 @@ def getValueMap(row,names,sourceValue,field):
     valueMaps = field.getElementsByTagName("ValueMap")
     newValue = None
     found = False
+    otherwise = None
     for valueMap in valueMaps:
         try:
-            otherwise = valueMap.getElementsByTagName("Otherwise")
+            otherwise = valueMap.getElementsByTagName("Otherwise")[0]
+            otherwise = dla.getTextValue(otherwise)
         except:
             otherwise = None
         sourceValues = []
@@ -290,8 +295,8 @@ def getValueMap(row,names,sourceValue,field):
         targetValues = []
         targetValues = valueMap.getElementsByTagName("tValue")
         i = 0
-        for sourceValue in sourceValues:
-            sValue = dla.getTextValue(sourceValue)
+        for val in sourceValues:
+            sValue = dla.getTextValue(val)
             try:
                 sourceTest = float(sValue)
             except ValueError:
@@ -313,11 +318,8 @@ def getValueMap(row,names,sourceValue,field):
                     print(err)
             i = i + 1
     if not found:
-        if otherwise and str(otherwise) != "None" and otherwise != []:
-            otherwise = str(otherwise)
-            #if otherwise.count(" ") > 2 or otherwise.count("!") > 1:
-            newValue = calcValue(row,names,otherwise)
-            # setValue(row,targetName,sourceValue,otherval,idx)
+        if str(otherwise) != "None":
+            newValue = otherwise
         else:
             errCount += 1
             success = False
@@ -340,7 +342,7 @@ def getExpression(row,names,expression):
     return calcNew
 
 def setProgressor(i,numFeat):
-    if i % 1000 == 0:
+    if i % 100 == 0:
         dla.addMessage("Feature " + str(i) + " processed")
     if i % getProgressUpdate(numFeat) == 0:
         arcpy.SetProgressorPosition(i)
@@ -348,15 +350,17 @@ def setProgressor(i,numFeat):
 
 def getProgressUpdate(numFeat):
     if numFeat > 500:
-        progressUpdate = int(numFeat/500)
+        progressUpdate = 1000 #int(numFeat/500)
     else:
-        progressUpdate = 10
+        progressUpdate = 250
     return progressUpdate
 
 def printRow(row,names):
     r = 0
     for item in row:
-        print(str(names[r]) + ": " + str(item))
+        msg = str(names[r]) + ": " + str(item)
+        print(msg)
+        arcpy.AddMessage(msg)
         r += 1
 
 def getTargetValue(row,field,names,sourceName,targetName):

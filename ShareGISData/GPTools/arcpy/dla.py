@@ -174,7 +174,11 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
         desc = arcpy.Describe(sourceFC)
         fields = arcpy.ListFields(sourceFC)
         fStr = getViewString(fields,xmlFields)
-        arcpy.MakeFeatureLayer_management(sourceFC, viewName , whereClause, workspace, fStr)
+        try:
+            arcpy.MakeFeatureLayer_management(sourceFC, viewName , whereClause, workspace, fStr)
+        except:
+            showTraceback()
+            addMessage("Error occured, where clause: " + whereClause)
         #addMessageLocal("Feature Layer " + viewName + " created for " + str(whereClause))
     else:
         addError(sourceFC + " does not exist, exiting")
@@ -201,16 +205,16 @@ def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
 
 def makeFeatureViewForLayer(workspace,sourceLayer,viewName,whereClause,xmlFields):
     # Process: Make Feature Layers - drop prefixes as needed
-    if arcpy.Exists(sourceLayer):
-        if arcpy.Exists(viewName):
-            arcpy.Delete_management(viewName) # delete view if it exists
+    #if arcpy.Exists(sourceLayer):
+    if arcpy.Exists(viewName):
+        arcpy.Delete_management(viewName) # delete view if it exists
 
-        desc = arcpy.Describe(sourceLayer)
-        fields = arcpy.ListFields(sourceLayer)
-        fLayerStr = getViewString(fields,xmlFields)
-        arcpy.MakeFeatureLayer_management(sourceLayer, viewName, whereClause, workspace,fLayerStr)
-    else:
-        addError(sourceFC + " does not exist, exiting")
+    desc = arcpy.Describe(sourceLayer)
+    fields = arcpy.ListFields(sourceLayer)
+    fLayerStr = getViewString(fields,xmlFields)
+    arcpy.MakeFeatureLayer_management(sourceLayer, viewName, whereClause, workspace,fLayerStr)
+    #else:
+    #addError(sourceLayer + " does not exist, exiting")
 
     if not arcpy.Exists(viewName):
         exit(-1)
@@ -241,36 +245,35 @@ def getWhereClause(dataset):
         whereClause = getNodeValue(dataset,"WhereClause")
     except:
         whereClause = ''
-    if whereClause != '' and whereClause != '' and whereClause != None:
-        addMessageLocal("Where \"" + whereClause + "\"")
+    if whereClause != '' and whereClause != ' ' and whereClause != None:
+        addMessageLocal("Where '" + whereClause + "'")
     else:
         addMessageLocal("No Where Clause")
 
     return whereClause
 
-def deleteRows(workspace,fClassName,expr):
-    # delete rows in feature class
-    arcpy.env.workspace = workspace # keep setting the workspace to force load activities
-    tableName = workspace + os.sep + fClassName
+def deleteRows(table,expr):
+    # delete rows in dataset with an expression
     if debug:
-        addMessageLocal(tableName)
+        addMessageLocal(table)
     retcode = False
-    if arcpy.Exists(tableName):
-        viewName = fClassName + "_View"
-        if arcpy.Exists(viewName):
-            arcpy.Delete_management(viewName) # delete view if it exists
+    tname = table[table.rfind(os.sep) + 1:]
+    #if arcpy.Exists(table):
+    vname = tname + "_View"
+    if arcpy.Exists(vname):
+        arcpy.Delete_management(vname) # delete view if it exists
 
-        arcpy.MakeTableView_management(tableName, viewName ,  expr)
-        arcpy.DeleteRows_management(viewName)
-        addMessageLocal("Existing " + fClassName + " rows deleted ")
-        try:
-            arcpy.Delete_management(viewName) # delete view if it exists
-        except:
-            addMessageLocal("Could not delete view, continuing...")
+    arcpy.MakeTableView_management(table, vname ,  expr)
+    arcpy.DeleteRows_management(vname)
+    addMessageLocal("Existing " + tname + " rows deleted ")
+    try:
+        arcpy.Delete_management(vname) # delete view if it exists
         retcode = True
-    else:
-        addMessageLocal( "Feature class " + fClassName + " does not exist, skipping " + fClassName)
-        retcode = False
+    except:
+        addMessageLocal("Could not delete view, continuing...")
+    #else:
+    #    addMessageLocal( "Dataset " + tname + " does not exist, skipping ")
+    #    retcode = False
     return retcode
 
 def appendRows(sourceTable,targetTable,expr):
@@ -285,9 +288,24 @@ def appendRows(sourceTable,targetTable,expr):
     viewName = sTable + "_View"
     desc = arcpy.Describe(targetTable)
     viewName = makeView(desc.dataElementType,workspace,sourceTable,viewName,expr,[])
-    arcpy.Append_management(viewName,targetTable,"NO_TEST")
+
+    numSourceFeat = arcpy.GetCount_management(viewName).getOutput(0)
+    addMessage("Appending " + sTable + " TO " + targTable)
+    result = arcpy.Append_management(viewName,targetTable,"NO_TEST")
     addMessageLocal(targTable + " rows Appended ")
+
+    numTargetFeat = arcpy.GetCount_management(targetTable).getOutput(0)
+    addMessage(numSourceFeat + " features in source dataset")
+    addMessage(numTargetFeat + " features in target dataset")
+    msgs = arcpy.GetMessages()
+    arcpy.AddMessage(msgs)
     retcode = True
+
+    if int(numTargetFeat) != int(numSourceFeat):
+        arcpy.AddMessage("WARNING: Different number of rows in target dataset, " + numTargetFeat )
+    if int(numTargetFeat) == 0:
+        arcpy.AddError("ERROR: 0 Features in target dataset")
+        retcode = False
 
     return retcode
 
@@ -543,7 +561,6 @@ def exportDataset(sourceWorkspace,sourceName,targetName,dataset,xmlFields):
     sourceTable = os.path.join(sourceWorkspace,sourceName)
     targetTable = os.path.join(workspace,targetName)
     addMessageLocal("Exporting dataset " + sourceTable)
-
     try:
         desc = arcpy.Describe(sourceTable)
         deType = desc.dataElementType
@@ -635,21 +652,36 @@ def repairName(name):
 
     return nname
 
-def getTargetName(xmlDoc):
-    target = getNodeValue(xmlDoc,"Target")
-    fullname = target[target.rfind(os.sep)+1:]
-    trimname = nameTrimmer(fullname)    
-    targetName = repairName(trimname)
-
-    return targetName
 
 def getSourceName(xmlDoc):
-    source = getNodeValue(xmlDoc,"Source")
-    fullname = source[source.rfind(os.sep)+1:]
+    name = getDatasetName(xmlDoc,"Source")
+    return name
+
+def getTargetName(xmlDoc):
+    name = getDatasetName(xmlDoc,"Target")
+    return name
+
+def getDatasetName(xmlDoc,doctype):
+    layer = getNodeValue(xmlDoc,doctype)
+    fullname = ''
+    if layer.find("/") > -1:
+        parts = layer.split("/")
+        fullname = parts[len(parts)-2]
+    else:
+        fullname = layer[layer.rfind(os.sep)+1:]
     trimname = nameTrimmer(fullname)    
     name = repairName(trimname)
 
     return name
+
+def getLayerSourceUrl(targetLayer):
+
+    if targetLayer.startswith('GIS Servers\\'):
+        targetLayer = targetLayer.replace("GIS Servers\\","http://")
+    if targetLayer.find('\\') > -1:
+        targetLayer = targetLayer.replace("\\",'/')
+        
+    return targetLayer
 
 
 def getTempTable(name):
@@ -660,11 +692,24 @@ def doInlineAppend(source,target):
     # perform the append from a source table to a target table
     success = False
     if arcpy.Exists(target):
-        addMessage("Deleting rows from  "  + target)
-        arcpy.DeleteRows_management(target)
+        numSourceFeat = arcpy.GetCount_management(source).getOutput(0)
+        addMessage("Truncating  "  + target)
+        arcpy.TruncateTable_management(target)
         addMessage("Appending " + source + " TO " + target)
-        arcpy.Append_management(source,target, "NO_TEST",'','')
+        result = arcpy.Append_management(source,target, "NO_TEST")
+        numTargetFeat = arcpy.GetCount_management(target).getOutput(0)
+        addMessage(numSourceFeat + " features in source dataset")
+        addMessage(numTargetFeat + " features in target dataset")
+        msgs = arcpy.GetMessages()
+        arcpy.AddMessage(msgs)
         success = True
+
+        if int(numTargetFeat) != int(numSourceFeat):
+            arcpy.AddMessage("WARNING: Different number of rows in Target table, " + numTargetFeat )
+        if int(numTargetFeat) == 0:
+            arcpy.AddError("ERROR: 0 Features in target dataset")
+            success = False
+                       
         if debug:
             addMessage("completed")
     else:

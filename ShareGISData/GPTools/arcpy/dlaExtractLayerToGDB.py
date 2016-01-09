@@ -36,7 +36,7 @@ def main(argv = None):
     success = extract(xmlFileName,rowLimit,dla.workspace,sourceLayer,targetLayer)
     arcpy.SetParameter(SUCCESS, success)
 
-def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetLayer):          
+def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):          
 
     xmlDoc = xml.dom.minidom.parse(xmlFileName)
     if workspace == "" or workspace == "#" or workspace == None:  
@@ -57,23 +57,22 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetLayer):
                 source = dla.getNodeValue(xmlDoc,"Datasets/Source")
             else:
                 source = sourceLayer
-            if targetLayer == '' or targetLayer == '#':
-                target = dla.getNodeValue(xmlDoc,"Datasets/Target")
+            if targetFC == '' or targetFC == '#':
+                targetName = dla.getTargetName(xmlDoc)
             else:
-                target = targetLayer
-            sourceName = source[source.rfind(os.sep)+1:]
-            targetName = target[target.rfind(os.sep)+1:]
+                targetName = targetFC[targetFC.rfind(os.sep)+1:]
+
+            sourceName = dla.getSourceName(xmlDoc)
             arcpy.SetProgressorLabel("Loading " + sourceName + " to " + targetName +"...")
-            if not arcpy.Exists(sourceLayer):
-                dla.addError("Layer " + sourceLayer + " does not exist, exiting")
-                return
+            #if not arcpy.Exists(sourceLayer):
+            #    dla.addError("Layer " + sourceLayer + " does not exist, exiting")
+            #    return
             
             target = dla.getTempTable(targetName)
             if arcpy.Exists(target):
                 arcpy.Delete_management(target)
 
-            xmlFields = xmlDoc.getElementsByTagName("Field")
-            retVal = exportDataset(sourceLayer,target,xmlFields,rowLimit)
+            retVal = exportDataset(xmlDoc,sourceLayer,target,targetName,rowLimit)
             if retVal == False:
                 success = False
 
@@ -89,22 +88,27 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetLayer):
 
     return success
     
-def exportDataset(sourceLayer,target,xmlFields,rowLimit):
+def exportDataset(xmlDoc,sourceLayer,target,targetName,rowLimit):
     result = True
+    xmlFields = xmlDoc.getElementsByTagName("Field")
     dla.addMessage("Exporting Layer from " + sourceLayer)
     whereClause = ""
     try:
         if rowLimit != None:
-            whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
-        dla.addMessage("Where " + str(whereClause))
-        sourceName = sourceLayer[sourceLayer.rfind(os.sep)+1:sourceLayer.lower().rfind(".lyr")]
+            try:
+                whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
+            except:
+                pass
+        if whereClause != '' and whereClause != ' ':
+            dla.addMessage("Where " + str(whereClause))
+        sourceName = dla.getSourceName(xmlDoc)
         viewName = sourceName + "_View"
         dla.addMessage(viewName)
         
         view = dla.makeFeatureViewForLayer(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
         count = arcpy.GetCount_management(view).getOutput(0)
         dla.addMessage(str(count) + " source rows exported to " + target)
-        arcpy.FeatureClassToFeatureClass_conversion(view,dla.workspace,target[target.rfind(os.sep)+1:])
+        arcpy.FeatureClassToFeatureClass_conversion(view,dla.workspace,targetName)
     except:
         err = "Failed to create new dataset " + target
         dla.showTraceback()

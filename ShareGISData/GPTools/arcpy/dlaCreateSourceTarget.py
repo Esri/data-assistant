@@ -2,8 +2,9 @@
 ## December 2015
 ## Loop through the source and target datasets and write an xml document
 
-import os, sys, traceback, time, xml.dom.minidom, arcpy
-from xml.dom.minidom import Document
+import os, sys, traceback, time, xml.dom.minidom, arcpy, dla
+from xml.dom.minidom import Document, parse, parseString
+import xml.etree.ElementTree as etree
 import re
 
 # Local variables...
@@ -12,22 +13,43 @@ debug = False
 sourceDataset = arcpy.GetParameterAsText(0) # source dataset to analyze
 targetDataset = arcpy.GetParameterAsText(1) # target dataset to analyze
 xmlFileName = arcpy.GetParameterAsText(2) # output file name argument
+automatch = arcpy.GetParameterAsText(3)
 
 if not xmlFileName.lower().endswith(".xml"):
     xmlFileName = xmlFileName + ".xml"
-successParameterNumber = 3
+
+if automatch.lower() == 'true':
+    automatch = True
+else:
+    automatch = False
+
 xmlStr = ""
+dir = os.path.dirname(os.path.realpath(__file__))
+arcpy.AddMessage(dir)
+matchxslt = os.path.join(dir,"FieldMatcher.xsl")
+matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
     global sourceDataset,targetDataset,xmlFileName   
     print(sourceDataset)
     print(targetDataset)
     print(xmlFileName)
+    if not os.path.exists(matchxslt):
+        msg = matchxslt + " does not exist, exiting"
+        arcpy.AddError(msg)
+        print(msg)
+        return
+    if not os.path.exists(matchfile):
+        msg = matchfile + " does not exist, exiting"
+        arcpy.AddError(msg)
+        print(msg)
+        return
     createDlaFile(sourceDataset,targetDataset,xmlFileName)
 
 def createDlaFile(sourceDataset,targetDataset,xmlFileName):
 
     writeDocument(sourceDataset,targetDataset,xmlFileName)
+    #automatchDocument(xmlFileName)
     return True
 
 def writeDocument(sourceDataset,targetDataset,xmlFileName):
@@ -55,18 +77,11 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
     #try:
     for field in fields:
+        
         fNode = xmlDoc.createElement("Field")
         fieldroot.appendChild(fNode)
         fieldName = field.name[field.name.rfind(".")+1:]
-        method = 'None'
-        if fieldName in sourceNames:
-            addFieldElement(xmlDoc,fNode,"SourceName",fieldName)
-            method = 'Copy'
-        else:
-            addFieldElement(xmlDoc,fNode,"SourceName","(None)") #"*"+fieldName+"*") magic needed here...
-
-        addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
-        addFieldElement(xmlDoc,fNode,"Method",method)
+        matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames)       
 
     # write the source field values
     setSourceFields(root,xmlDoc,sourceFields)
@@ -80,6 +95,51 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     xmlStr = xmlDoc.toprettyxml()
     xmlDoc.writexml( open(xmlFileName, 'w'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
+
+def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames):
+    # match source field names - with and without automap
+    enode = None
+    count = 0
+    if automatch == True: # only do this if automatch parameter is True
+        doc = etree.parse(matchfile)
+        nodes = doc.findall(".//Field[TargetName='"+fieldName+"']")
+        for node in nodes:
+            try: # get the highest count value for this target name where the source name is valid
+                nodecount = int(node.get('count'))
+                if nodecount > count:
+                    sname = node.find("SourceName").text
+                    if sname in sourceNames or sname == '' or sname == None or sname == '(None)':
+                        enode = node
+                        count = nodecount
+            except:
+                pass
+
+    if count > 0 and enode != None:
+        addElements(xmlDoc,fNode,enode,fieldName)
+    elif fieldName in sourceNames and enode == None:
+        addFieldElement(xmlDoc,fNode,"SourceName",fieldName)
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
+        addFieldElement(xmlDoc,fNode,"Method",'Copy')
+    else:
+        addFieldElement(xmlDoc,fNode,"SourceName","(None)")
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
+        addFieldElement(xmlDoc,fNode,"Method",'None')
+
+def addElements(xmlDoc,fNode,enode,fieldName):
+    for item in enode:
+        strval = etree.tostring(item)
+        xml = parseString(strval)
+        removeBlanks(xml)
+        xml.normalize()
+        fNode.appendChild(xml.documentElement)
+
+def removeBlanks(node):
+    for x in node.childNodes:
+        if x.nodeType == node.TEXT_NODE:
+            if x.nodeValue:
+                x.nodeValue = x.nodeValue.strip()
+        elif x.nodeType == node.ELEMENT_NODE:
+            removeBlanks(x)
 
 def setSourceTarget(root,xmlDoc,name,dataset):
     # set source and target elements
@@ -172,3 +232,25 @@ def writeDataSample(xmlDoc,root,sourceFields,sourceDataset,rowLimit):
 
 if __name__ == "__main__":
     main()
+
+
+##def automatchDocument(xmlFileName): couldn't get this to work in ArcGIS Pro
+    
+##    xml_input = etree.XML(open(xmlFileName, 'r').read())
+##   xslt_root = etree.XML(open(matchxslt, 'r').read())
+##    transform = etree.XSLT(xslt_root)
+##   print(str(transform(xml_input)))
+##    import win32com.client.dynamic
+##    xslt = win32com.client.dynamic.Dispatch("Msxml2.DOMDocument.6.0")
+##    xslt.async = 0
+##    xslt.load(matchxslt)
+##    xml = win32com.client.dynamic.Dispatch("Msxml2.DOMDocument.6.0")
+##    xml.async = 0
+##    xml.load(xmlFileName)
+##    xml.setProperty("AllowDocumentFunction",True)
+##    xslt.setProperty("AllowDocumentFunction",True)
+##    output = ''
+##    output = xml.transformNode(xslt)
+##    xmlFile = xmlFileName.replace(".xml","1.xml")
+##    xml.loadXML(output)
+##    xml.save(xmlFileName)

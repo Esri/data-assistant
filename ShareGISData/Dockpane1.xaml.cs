@@ -42,6 +42,8 @@ namespace ShareGISData
         {
             if (_filename != null)
                 return _filename;
+            if (_filename != null)
+                return _filename;
             else
                 return "";
         }
@@ -50,7 +52,11 @@ namespace ShareGISData
             // set to default/current value if null
             if(fname != null)
                 _filename = fname;
-            this.FileName.Text = _filename;
+            if (this.FileName.Text != _filename)
+            {
+                this.FileName.Text = _filename;
+                copyXml(_filename,_revertname);
+            }
         }
         private static string _filename;// = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
         System.Xml.XmlNodeList _datarows;
@@ -66,6 +72,7 @@ namespace ShareGISData
         int _methodnum = -1;
         string _xsltFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\FieldMatcher.xsl");
         string _matchFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\MatchLocal.xml");
+        string _revertname = System.IO.Path.Combine(AddinAssemblyLocation(), "RevertFile.xml");
 
         public Dockpane1View()
         {
@@ -74,7 +81,7 @@ namespace ShareGISData
         public void loadFile(string fname)
         {
             // load the selected file
-            if (fname != _filename && System.IO.File.Exists(fname))
+            if (System.IO.File.Exists(fname))
             {
                 setXmlFileName(fname);
                 _xml.Load(_filename);
@@ -90,10 +97,11 @@ namespace ShareGISData
             SourceStack.IsEnabled = true;
             TargetStack.IsEnabled = true;
             ReplaceStack.IsEnabled = true;
+            
             SourceStack.Visibility = System.Windows.Visibility.Visible;
             TargetStack.Visibility = System.Windows.Visibility.Visible;
             ReplaceStack.Visibility = System.Windows.Visibility.Visible;
-            AutomatchStack.Visibility = System.Windows.Visibility.Visible;
+            AutomatchStack.IsEnabled = true;
 
             SourceLayer.Text = _xml.SelectSingleNode("//Datasets/Source").InnerText;
             TargetLayer.Text = _xml.SelectSingleNode("//Datasets/Target").InnerText;
@@ -105,37 +113,76 @@ namespace ShareGISData
             setPreviewValues(false);
             
         }
+        private void setRevertButton()
+        {
+            if (RevertButton.Visibility != System.Windows.Visibility.Visible)
+            {
+                RevertButton.Visibility = System.Windows.Visibility.Visible;
+                if (FileGrid.RowDefinitions[0].ActualHeight < 70)
+                {
+                    System.Windows.GridLength len = new System.Windows.GridLength(FileGrid.RowDefinitions[0].ActualHeight + 25);
+                    FileGrid.RowDefinitions[0].Height = len;
+                }
+            }
+        }
         private void setReplaceValues(System.Xml.XmlNodeList nodes)
         {
-            if (nodes[0] != null)
+            if (nodes != null)
             {
                 try
                 {
+                    bool hasValue = false;
                     string field = getReplaceValue(nodes, "FieldName");
                     string op = getReplaceValue(nodes, "Operator");
                     string value = getReplaceValue(nodes, "Value");
                     if (field != null)
+                    {
                         setReplaceValue(ReplaceField, field);
-                    else
-                        ReplaceField.SelectedIndex = -1;
+                        hasValue = true;
+                    }
                     if (op != null)
+                    {
                         setReplaceValue(ReplaceOperator, op);
-                    else
-                        ReplaceOperator.SelectedIndex = -1;
+                        hasValue = true;
+                    }
                     if (value != null)
+                    {
                         ReplaceValue.Text = value;
+                        hasValue = true;
+                    }
+                    if (hasValue == true)
+                    {
+                        ReplaceByCheckBox.IsChecked = true;
+                        ReplaceByCheckBox_Checked(ReplaceByCheckBox, null);
+                    }
                     else
-                        ReplaceValue.Text = "";
+                    {
+                        clearReplaceValues();
+                    }
                 }
                 catch { MessageBox.Show("Error setting replace"); }
             }
             else
             {
-                ReplaceField.SelectedIndex = -1;
-                ReplaceOperator.SelectedIndex = -1;
-                ReplaceValue.Text = "";
+                clearReplaceValues();
             }
 
+        }
+        private void clearReplaceValues()
+        {
+            ReplaceField.SelectedIndex = -1;
+            ReplaceOperator.SelectedIndex = -1;
+            ReplaceValue.Text = "";
+            ReplaceByCheckBox.IsChecked = false;
+            System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy");
+            if (node != null)
+            {
+                node.RemoveAll();
+                saveFieldGrid();
+            }
+            skipSelectionChanged = true;
+            ReplaceByCheckBox_Unchecked(ReplaceByCheckBox, null);
+            skipSelectionChanged = false;
         }
 
         private string getReplaceValue(System.Xml.XmlNodeList replace,string nodeName)
@@ -150,6 +197,7 @@ namespace ShareGISData
         {
             if (combo != null)
             {
+                skipSelectionChanged = true;
                 for (int i = 0; i < combo.Items.Count; i++)
                 {
                     object obj = combo.Items.GetItemAt(i);
@@ -182,6 +230,7 @@ namespace ShareGISData
                         }
                     }
                 }
+                skipSelectionChanged = false;
             }
         }
         private void saveFieldGrid()
@@ -193,6 +242,7 @@ namespace ShareGISData
                 dp.IsAsynchronous = false;
                 //setXmlFileName(FileName.Text);
                 dp.Document.Save(getXmlFileName());
+                setRevertButton();
             }           
         }
         private void setXmlDataProvider(object ctrl,string xpath)
@@ -787,7 +837,8 @@ namespace ShareGISData
         {
             using (var dlg = new System.Windows.Forms.OpenFileDialog())
             {
-                //dlg.Description = "Browse for a Source-Target File (.xml)";
+                dlg.Filter = "Data Loading Assistant Xml files|*.xml";//.Description = "Browse for a Source-Target File (.xml)";
+                dlg.Multiselect = false;
                 System.Windows.Forms.DialogResult result = dlg.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
@@ -801,7 +852,11 @@ namespace ShareGISData
         private void FileName_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
-            loadFile(txt.Text);
+            if (getXmlFileName() != txt.Text)
+            {
+                setXmlFileName(txt.Text);
+                loadFile(txt.Text);
+            }
         }
         /// <summary>
         /// SCRAP Heap
@@ -934,7 +989,8 @@ namespace ShareGISData
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/FieldName");
                 if (node == null || node.InnerText != combo.SelectionBoxItem.ToString())
-                    updateReplaceNodes();
+                    if(skipSelectionChanged != true)
+                        updateReplaceNodes();
             }
         }
 
@@ -945,7 +1001,8 @@ namespace ShareGISData
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/Operator");
                 if (node == null || node.InnerText != combo.SelectionBoxItem.ToString())
-                    updateReplaceNodes();
+                    if (skipSelectionChanged != true)
+                        updateReplaceNodes();
             }
         }
         private void ReplaceValue_SelectionChanged(object sender, TextChangedEventArgs e)
@@ -955,7 +1012,8 @@ namespace ShareGISData
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/Value");
                 if (node == null || node.InnerText != txt.Text)
-                    updateReplaceNodes();
+                    if (skipSelectionChanged != true)
+                        updateReplaceNodes();
             }
         }
 
@@ -1047,6 +1105,49 @@ namespace ShareGISData
                 return false;
             }
             return true;
+        }
+
+        private void ReplaceByCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            CheckBox chk = sender as CheckBox;
+            if (chk != null)
+            {
+                //ReplaceStackSettings.Height = 110;
+                ReplaceStackSettings.Visibility = System.Windows.Visibility.Visible;
+                System.Windows.GridLength len = new System.Windows.GridLength(110);
+                //System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
+                //setReplaceValues(nodes);
+                FileGrid.RowDefinitions[3].Height = len;
+                FileGrid.InvalidateArrange();
+                FileGrid.UpdateLayout();
+            }
+
+        }
+
+        private void ReplaceByCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            CheckBox chk = sender as CheckBox;
+            if (chk != null)
+            {
+                if(!skipSelectionChanged)
+                    setReplaceValues(null);
+                ReplaceStackSettings.Visibility = System.Windows.Visibility.Hidden;
+                System.Windows.GridLength len = new System.Windows.GridLength(0);
+                FileGrid.RowDefinitions[3].Height = len;
+                FileGrid.InvalidateArrange();
+                FileGrid.UpdateLayout();
+            }
+
+        }
+
+        private void RevertButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (System.Windows.Forms.MessageBox.Show("Are you sure you want to re-open this file?", "Revert/Re-Open File", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                copyXml(_revertname, _filename);
+                loadFile(_filename);
+            }
+
         }
     }
 }

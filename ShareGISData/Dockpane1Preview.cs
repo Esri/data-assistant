@@ -267,20 +267,19 @@ namespace ShareGISData
             CheckBox chk = sender as CheckBox;
             if (chk != null) 
             {
-                //MessageBox.Show(chk.IsChecked.ToString());
                 setPreviewValues(chk.IsChecked);
             }
         }
 
         private void setPreviewValues(bool? onoff)
         {
-            if(onoff == false)
+            if (onoff == false && PreviewCheckBox.IsChecked == false)
             {
                 PreviewGrid.Items.Clear();
                 PreviewGrid.Height = 0;
                 PreviewGrid.InvalidateArrange();
             }
-            else
+            else if (onoff == true || PreviewCheckBox.IsChecked == true)
             {
                 PreviewGrid.Height = 100;
                 setPreviewRowsInit();

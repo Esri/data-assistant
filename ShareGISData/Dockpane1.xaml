@@ -25,6 +25,8 @@
                                         HorizontalAlignment="Center"
                                         ContentSource="Header"
                                         Margin="10,2" TextElement.FontSize="18" TextElement.FontFamily="Trebuchet MS"/>
+                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="12" Background="Gray" Width="1" HorizontalAlignment="Right"/>
+
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
@@ -40,6 +42,7 @@
                 </Setter>
             </Style>
         </TabControl.Resources>
+
         <TabItem x:Name="FileTab" Header="File" BorderThickness="1" IsSelected="True">
             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" 
           MinHeight="400" MinWidth="300" x:Name="FileGrid">

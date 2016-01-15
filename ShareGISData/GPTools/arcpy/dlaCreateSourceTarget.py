@@ -67,6 +67,10 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     root.appendChild(dataset)
     setSourceTarget(dataset,xmlDoc,"Source",desc.catalogPath)
     setSourceTarget(dataset,xmlDoc,"Target",descT.catalogPath)
+    
+    setSpatialReference(dataset,xmlDoc,desc,"Source")
+    setSpatialReference(dataset,xmlDoc,descT,"Target")    
+
     setSourceTarget(dataset,xmlDoc,"ReplaceBy","")
     
     fieldroot = xmlDoc.createElement("Fields")
@@ -95,6 +99,16 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     xmlStr = xmlDoc.toprettyxml()
     xmlDoc.writexml( open(xmlFileName, 'w'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
+
+def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
+    try:
+        spref = desc.spatialReference.factoryCode
+        setSourceTarget(dataset,xmlDoc,lyrtype + "FactoryCode",desc.spatialReference.factoryCode)
+    except:
+        try:
+            setSourceTarget(dataset,xmlDoc,lyrtype + "SpatialReference",desc.spatialReference.exportToString())
+        except:
+            arcpy.AddError("Could not set Spatial Reference for " + lyrtype + " Layer")
 
 def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames):
     # match source field names - with and without automap

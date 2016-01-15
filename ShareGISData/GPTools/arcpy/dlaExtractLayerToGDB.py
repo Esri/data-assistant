@@ -27,9 +27,9 @@ def main(argv = None):
     if dla.workspace == "" or dla.workspace == "#" or dla.workspace == None:  
         dla.workspace = arcpy.env.scratchGDB
     if sourceLayer == "" or sourceLayer == None:
-        sourceLayer = dla.getNodeValue(xmlDoc,"Datasets/Source")
+        sourceLayer = dla.getNodeValue(xmlDoc,"Source")
     if targetLayer == "" or targetLayer == None:
-        targetLayer = dla.getNodeValue(xmlDoc,"Datasets/Target")
+        targetLayer = dla.getNodeValue(xmlDoc,"Target")
     if success == False:
         dla.addError("Errors occurred during process")
 
@@ -105,16 +105,45 @@ def exportDataset(xmlDoc,sourceLayer,target,targetName,rowLimit):
         viewName = sourceName + "_View"
         dla.addMessage(viewName)
         
-        view = dla.makeFeatureViewForLayer(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+        try:
+            view = dla.makeFeatureViewForLayer(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+        except:
+            arcpy.AddError("Unabled to create feature View " + viewName)
         count = arcpy.GetCount_management(view).getOutput(0)
-        dla.addMessage(str(count) + " source rows exported to " + target)
-        arcpy.FeatureClassToFeatureClass_conversion(view,dla.workspace,targetName)
+        #sourceRef = getSpatialReference(xmlDoc,"Source")
+        targetRef = getSpatialReference(xmlDoc,"Target")
+        if targetRef != '':
+            if arcpy.Exists(target):
+                arcpy.Delete_management(target)
+            arcpy.CreateFeatureclass_management(target[:target.rfind(os.sep)],targetName,template=sourceLayer,spatial_reference=targetRef)
+            arcpy.Append_management(inputs=view,target=target)
+            #arcpy.FeatureClassToFeatureClass_conversion(view,dla.workspace,targetName) OLD
+            dla.addMessage(str(count) + " source rows exported to " + target)
     except:
         err = "Failed to create new dataset " + target
         dla.showTraceback()
         dla.addError(err)
         result = False
     return result
+
+def getSpatialReference(xmlDoc,lyrtype):
+    spref = ''
+    # try factoryCode first
+    sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "FactoryCode")
+    if sprefstr != '':
+        arcpy.AddMessage(lyrtype + ":" + sprefstr)
+        spref = arcpy.SpatialReference(sprefstr)
+    else:    
+        sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "SpatialReference")
+        if sprefstr != '':
+            arcpy.AddMessage(lyrtype + ":" + sprefstr)
+            spref = arcpy.SpatialReference()
+            spref.loadFromString(sprefstr)
+
+    if spref == '' and spref != None:
+        arcpy.AddError("Unable to retrieve Spatial Reference for " + lyrtype + " layer")
+
+    return spref
 
 def getObjectIdWhereClause(table,rowLimit):
     # build a where clause, assume that oids are sequential or at least in row order...

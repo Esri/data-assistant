@@ -56,6 +56,7 @@ def addMessageLocal(val):
 def addError(val):
     # add an error to the screen output
     arcpy.AddMessage("Error: " + str(val))
+    arcpy.AddError(str(val))
 
 def strToBool(s):
     # return a boolean for values like 'true'

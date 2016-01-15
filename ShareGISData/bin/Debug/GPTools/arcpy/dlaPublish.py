@@ -5,11 +5,11 @@ import json, urllib
 import urllib.parse as parse
 import urllib.request as request
 uselib2 = False
-try:
-    import urllib2
-    uselib2 = True
-except:
-    pass    
+#try: looks like just import urllib parts the 'new' python way works best. lib2 is old python 2 approach
+#    import urllib2
+#    uselib2 = True
+#except:
+#    pass    
 
 arcpy.AddMessage("Data Assistant - Publish")
 
@@ -35,7 +35,9 @@ try:
         targetLayer = None
 except:
     targetLayer = None
-    
+
+_chunkSize = 500
+
 def main(argv = None):
     publish(xmlFileName)
 
@@ -78,25 +80,28 @@ def publish(xmlFileName):
         if res == False:
             arcpy.AddError("Publish Failed, see messages for details")
 
-def doPublish(xmlDoc,sourceLayer,targetLayer):
+def doPublish(xmlDoc,dlaTable,targetLayer):
     # either truncate and replace or replace by field value
     # run locally or update agol
     success = False
     expr = ''
-    if useReplaceSettings == True:
-        expr = getWhereClause(xmlDoc)
+    dlaTable = handleGeometryChanges(dlaTable,targetLayer)
+
+    #if useReplaceSettings == True:
+    expr = getWhereClause(xmlDoc)
 
     if targetLayer.startswith("GIS Servers\\") == True:
         targetLayer = dla.getLayerSourceUrl(targetLayer)
-        success = doPublishAgo(sourceLayer,targetLayer,expr)
+        success = doPublishAgo(dlaTable,targetLayer,expr)
     else:
+        dlaTable = handleGeometryChanges(dlaTable,targetLayer)
         if expr != '':
             if dla.deleteRows(targetLayer,expr) == True:
-                success = dla.appendRows(sourceLayer,targetLayer,expr)
+                success = dla.appendRows(dlaTable,targetLayer,expr)
             else:
                 success = False       
         else:
-            success = dla.doInlineAppend(sourceLayer,targetLayer)
+            success = dla.doInlineAppend(dlaTable,targetLayer)
 
     return success
 
@@ -127,25 +132,62 @@ def getToken():
         token = data['token']
     return token
 
-def doPublishAgo(sourceLayer,targelUrl,expr):
-    token = getToken()
-    if token == None:
-        arcpy.AddError("Unable to retrieve token, exiting")
-        return False
+def getOIDs(targelUrl,expr,token):
+    ids = []
+    arcpy.SetProgressor("default","Querying Existing Features")
+    arcpy.SetProgressorLabel("Querying Existing Features")
+    url = targelUrl + '/query'
+    arcpy.AddMessage("Url:"+url)
+    where = expr
+    params = {'f': 'pjson', 'where': expr,'token':token,'returnIdsOnly':'true'}
+    arcpy.AddMessage("Params:"+json.dumps(params))
+    response = openRequest(url,params)            
+    val = response.readall().decode('utf-8')
+    result = json.loads(val)
+    try:
+        if result['error'] != None:
+            retval = False
+            arcpy.AddMessage("Query features from Feature Service failed")
+            arcpy.AddMessage(json.dumps(result))
+            error = True
+    except:
+        ids = result['objectIds']
+        lenFound = len(ids)
+        msg = str(lenFound) + " features found in existing Service"
+        print(msg)
+        arcpy.AddMessage(msg)
+        retval = True
 
+    return ids    
+    
+
+
+def deleteFeatures(sourceLayer,targelUrl,expr,token):
     retval = False
-
+    error = False
     # delete section
+    ids = getOIDs(targelUrl,expr,token)
     try:
         lenDeleted = 100
-        while lenDeleted > 0:
+        #Chunk deletes using _chunkSize at a time
+        #minId = min(ids)
+        #maxId = max(ids)
+        featuresProcessed = 0
+        numFeat = len(ids)
+        if numFeat > _chunkSize:
+            chunk = _chunkSize
+        else:
+            chunk = numFeat
+        while featuresProcessed < numFeat and error == False:
+            #Chunk deletes using chunk size at a time
+            oids = ",".join(str(e) for e in ids[featuresProcessed:featuresProcessed + chunk])
             arcpy.SetProgressor("default","Deleting Features")
             arcpy.SetProgressorLabel("Deleting Features")
             url = targelUrl + '/deleteFeatures'
             arcpy.AddMessage("Url:"+url)
             where = expr
-            params = {'f': 'pjson', 'where': expr,'token':token}
-            arcpy.AddMessage("Params:"+json.dumps(params))
+            params = {'f': 'pjson', 'objectIds': oids,'token':token}
+            #print("Params:"+json.dumps(params))
             response = openRequest(url,params)            
             val = response.readall().decode('utf-8')
             result = json.loads(val)
@@ -154,29 +196,45 @@ def doPublishAgo(sourceLayer,targelUrl,expr):
                     retval = False
                     arcpy.AddMessage("Delete features from Feature Service failed")
                     arcpy.AddMessage(json.dumps(result))
+                    error = True
             except:
                 lenDeleted = len(result['deleteResults'])
                 msg = str(lenDeleted) + " features deleted"
                 print(msg)
                 arcpy.AddMessage(msg)
                 retval = True
+                featuresProcessed += chunk
     except:
         retval = False
+        error = True
         dla.showTraceback()
         arcpy.AddMessage("Delete features from Feature Service failed")
         pass
-    if retval == True:
-        retval = False
-        # add section
-        try:
-            arcpy.SetProgressor("default","Adding Features")
-            arcpy.SetProgressorLabel("Adding Features")
-            featurejs = featureclass_to_json(sourceLayer)
-            #print(featurejs['features'][1])
-            url = targelUrl + '/addFeatures'  
-            arcpy.AddMessage(url)
-            params = {'rollbackonfailure': 'true','f':'json', 'token':token, 'features': json.dumps(featurejs['features'])}
-            #arcpy.AddMessage(json.dumps(params))
+
+    return retval
+
+
+def addFeatures(sourceLayer,targelUrl,expr,token):
+    retval = False
+    error = False
+    # add section
+    try:
+        arcpy.SetProgressor("default","Adding Features")
+        arcpy.SetProgressorLabel("Adding Features")
+        featurejs = featureclass_to_json(sourceLayer)
+        #print(featurejs['features'][1])
+        url = targelUrl + '/addFeatures'  
+        arcpy.AddMessage(url)
+        numFeat = len(featurejs['features'])
+        if numFeat > _chunkSize:
+            chunk = _chunkSize
+        else:
+            chunk = numFeat
+        featuresProcessed = 0
+        while featuresProcessed < numFeat  and error == False:
+            features = featurejs['features'][featuresProcessed: featuresProcessed + chunk]
+            arcpy.AddMessage("Processing features " + str(featuresProcessed) + ":" + str(featuresProcessed + chunk))
+            params = {'rollbackonfailure': 'true','f':'json', 'token':token, 'features': json.dumps(features)}
             response = openRequest(url,params)            
             val = response.readall().decode('utf-8')
             result = json.loads(val)
@@ -185,18 +243,31 @@ def doPublishAgo(sourceLayer,targelUrl,expr):
                     retval = False
                     arcpy.AddMessage("Add features to Feature Service failed")
                     arcpy.AddMessage(json.dumps(result))
+                    error = True
             except:
                 msg = str(len(result['addResults'])) + " features added"
                 print(msg)
                 arcpy.AddMessage(msg)
                 retval = True
-                        
-        except:
-            retval = False
-            arcpy.AddMessage("Add features to Feature Service failed")
-            dla.showTraceback()
-            pass
+            featuresProcessed += chunk
+    except:
+        retval = False
+        arcpy.AddMessage("Add features to Feature Service failed")
+        dla.showTraceback()
+        error = True
+        pass
 
+    return retval
+    
+
+def doPublishAgo(sourceLayer,targelUrl,expr):
+    token = getToken()
+    if token == None:
+        arcpy.AddError("Unable to retrieve token, exiting")
+        return False
+    retval = deleteFeatures(sourceLayer,targelUrl,expr,token)
+    if retval == True:
+        retval = addFeatures(sourceLayer,targelUrl,expr,token)
 
     return retval
 
@@ -204,19 +275,19 @@ def openRequest(url,params):
     response = None
     if uselib2 == True:
         data = urllib2.urlencode(params)
-        arcpy.AddMessage("Encode data")
+        #arcpy.AddMessage("Encode data")
         data = data.encode('utf8')
-        arcpy.AddMessage("Prep request")
+        #arcpy.AddMessage("Prep request")
         req = urllib2.Request(url,data)  
-        arcpy.AddMessage("Opening request...")
+        #arcpy.AddMessage("Opening request...")
         response = urllib2.urlopen(req)
     else:
         data = parse.urlencode(params)
-        arcpy.AddMessage("Encode data")
+        #arcpy.AddMessage("Encode data")
         data = data.encode('utf8')
-        arcpy.AddMessage("Prep request")
+        #arcpy.AddMessage("Prep request")
         req = request.Request(url,data)
-        arcpy.AddMessage("Opening request...")
+        #arcpy.AddMessage("Opening request...")
         response = request.urlopen(req)
     return response
 
@@ -226,6 +297,34 @@ def featureclass_to_json(fc):
     desc = arcpy.Describe(featureSet)# use the json property of the feature set
     return json.loads(desc.json)
 
+def handleGeometryChanges(sourceDataset,targetLayer):
+    desc = arcpy.Describe(sourceDataset) # assuming local file gdb
+    #descT = arcpy.Describe(targetLayer)
+    #except:
+    #    tmp = 'tmp'
+    #    if arcpy.Exists(tmp):
+    #        arcpy.Delete_management(tmp)            
+    #    arcpy.MakeFeatureLayer_management(targetLayer,'tmp')
+    #    descT = arcpy.Describe('tmp')
+    dataset = sourceDataset
+    if desc.ShapeType == "Polygon" and (targetLayer.lower().startswith("gis servers") == True or targetLayer.lower().startswith("http://") == True):
+        dataset = simplifyPolygons(sourceDataset)
+    else:
+        dataset = sourceDataset    
+
+    return dataset
+
+def simplifyPolygons(sourceDataset):
+    arcpy.AddMessage("Simplifying (densifying) Parcel Geometry")
+    arcpy.Densify_edit(sourceDataset)
+    simplify = sourceDataset + '_simplified'
+    if arcpy.Exists(simplify):
+        arcpy.Delete_management(simplify)
+    if arcpy.Exists(simplify + '_Pnt'):
+        arcpy.Delete_management(simplify + '_Pnt')
+        
+    arcpy.SimplifyPolygon_cartography(sourceDataset, simplify, "POINT_REMOVE", "1 Meters")
+    return simplify
 
 def getWhereClause(xmlDoc):
 
@@ -242,6 +341,8 @@ def getWhereClause(xmlDoc):
         
     elif operator == 'Where':
         expr = value
+    else:
+        expr = '1=1'
     return expr
 
 def getTargetType(xmlDoc,fname):

@@ -25,7 +25,7 @@
                                         HorizontalAlignment="Center"
                                         ContentSource="Header"
                                         Margin="10,2" TextElement.FontSize="18" TextElement.FontFamily="Trebuchet MS"/>
-                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="12" Background="Gray" Width="1" HorizontalAlignment="Right"/>
+                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="14" Background="Gray" Width="1" HorizontalAlignment="Right"/>
 
                             </Grid>
                             <ControlTemplate.Triggers>

@@ -68,7 +68,8 @@ namespace ShareGISData
         private List<string> _concat = new List<string> { };
         string _noneField = "(None)";
         string _spaceVal = "(space)";
-        private bool skipSelectionChanged = false;
+        private bool _skipSelectionChanged = false;
+        private int _selectedRowNum = -1;
         int _methodnum = -1;
         string _xsltFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\FieldMatcher.xsl");
         string _matchFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\MatchLocal.xml");
@@ -85,9 +86,9 @@ namespace ShareGISData
             {
                 setXmlFileName(fname);
                 _xml.Load(_filename);
-                this.skipSelectionChanged = true;
+                this._skipSelectionChanged = true;
                 setXmlDataProvider(this.FieldGrid, fieldXPath);
-                this.skipSelectionChanged = false;
+                this._skipSelectionChanged = false;
                 setDatasetUI();
                 _datarows = _xml.SelectNodes("//Data/Row");
             }
@@ -180,9 +181,9 @@ namespace ShareGISData
                 node.RemoveAll();
                 saveFieldGrid();
             }
-            skipSelectionChanged = true;
+            _skipSelectionChanged = true;
             ReplaceByCheckBox_Unchecked(ReplaceByCheckBox, null);
-            skipSelectionChanged = false;
+            _skipSelectionChanged = false;
         }
 
         private string getReplaceValue(System.Xml.XmlNodeList replace,string nodeName)
@@ -197,7 +198,7 @@ namespace ShareGISData
         {
             if (combo != null)
             {
-                skipSelectionChanged = true;
+                _skipSelectionChanged = true;
                 for (int i = 0; i < combo.Items.Count; i++)
                 {
                     object obj = combo.Items.GetItemAt(i);
@@ -230,7 +231,7 @@ namespace ShareGISData
                         }
                     }
                 }
-                skipSelectionChanged = false;
+                _skipSelectionChanged = false;
             }
         }
         private void saveFieldGrid()
@@ -282,10 +283,11 @@ namespace ShareGISData
         private void FieldGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Need to pull the current configuration values from the config, also need to set the correct panel as visible
-            if (this.skipSelectionChanged)
+            if (this._skipSelectionChanged || (_selectedRowNum == FieldGrid.SelectedIndex))
                 return;
             if(FieldGrid.SelectedIndex == -1)
                 return;
+            _selectedRowNum = FieldGrid.SelectedIndex;
             var cfg = getConfigSettingsForField();
             int methodnum = setFieldSelectionValues(cfg); // just use the int for now.
             
@@ -632,7 +634,7 @@ namespace ShareGISData
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.skipSelectionChanged)
+            if (this._skipSelectionChanged)
                 return;
             setFieldSelectionValues(comboMethod.SelectedIndex);
             setPanelVisibility(comboMethod.SelectedIndex);
@@ -858,43 +860,41 @@ namespace ShareGISData
                 loadFile(txt.Text);
             }
         }
-        /// <summary>
-        /// SCRAP Heap
-        /// </summary>
-        private DataRowView rowBeingEdited = null;
 
-        private void Method3Grid_CurrentCellChanged(object sender, EventArgs e)
-        {
+        //private DataRowView rowBeingEdited = null;
 
-            DataGrid dataGrid = sender as DataGrid;
-            DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(0);
-            DataGridCell rowColumn = dataGrid.Columns[0].GetCellContent(row).Parent as DataGridCell;
+        //private void Method3Grid_CurrentCellChanged(object sender, EventArgs e)
+        //{
 
-            DataGridCell cell = GetCell(Method3Grid, row, 1);
-            var cellValue = rowColumn.Content;
-            if (cellValue != null)
-            {
-                ValueMapRow vmrow = rowColumn.Content as ValueMapRow;
-                //string currValue = vmrow.Target;
-            }
-        }
-        private void Method3Grid_CellEditEndingx(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            DataRowView rowView = e.Row.Item as DataRowView;
-            rowBeingEdited = rowView;
+        //    DataGrid dataGrid = sender as DataGrid;
+        //    DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(0);
+        //    DataGridCell rowColumn = dataGrid.Columns[0].GetCellContent(row).Parent as DataGridCell;
 
-        }
-        private bool isManualEditCommit;
-        private void Method3Grid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            if (!isManualEditCommit)
-            {
-                isManualEditCommit = true;
-                DataGrid grid = (DataGrid)sender;
-                grid.CommitEdit(DataGridEditingUnit.Row, true);
-                isManualEditCommit = false;
-            }
-        }
+        //    DataGridCell cell = GetCell(Method3Grid, row, 1);
+        //    var cellValue = rowColumn.Content;
+        //    if (cellValue != null)
+        //    {
+        //        ValueMapRow vmrow = rowColumn.Content as ValueMapRow;
+        //        //string currValue = vmrow.Target;
+        //    }
+        //}
+        //private void Method3Grid_CellEditEndingx(object sender, DataGridCellEditEndingEventArgs e)
+        //{
+        //    DataRowView rowView = e.Row.Item as DataRowView;
+        //    rowBeingEdited = rowView;
+
+        //}
+        //private bool isManualEditCommit;
+        //private void Method3Grid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        //{
+        //    if (!isManualEditCommit)
+        //    {
+        //        isManualEditCommit = true;
+        //        DataGrid grid = (DataGrid)sender;
+        //        grid.CommitEdit(DataGridEditingUnit.Row, true);
+        //        isManualEditCommit = false;
+        //    }
+        //}
 
         private void ValueMapAdd_Click(object sender, RoutedEventArgs e)
         {
@@ -919,17 +919,49 @@ namespace ShareGISData
 
         private void SourceField_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.skipSelectionChanged)
-                return;
-
             var comboBox = sender as ComboBox;
+            if (this._skipSelectionChanged || comboBox.IsLoaded == false)
+                return;
+            int temp = _selectedRowNum;
+            bool doSave = false;
+            
+            if (((ComboBox)sender).IsLoaded && (e.AddedItems.Count > 0 || e.RemovedItems.Count > 0) && FieldGrid.SelectedIndex != -1)
+            { // disregard SelectionChangedEvent fired on population from binding
+                
+                for (Visual visual = (Visual)sender; visual != null; visual = (Visual)VisualTreeHelper.GetParent(visual))
+                { // Traverse tree to find correct selected item
+                    if (visual is DataGridRow)
+                    {
+                        DataGridRow row = visual as DataGridRow;
+                        object val = row.Item;
+                        System.Xml.XmlElement xml = val as System.Xml.XmlElement;
+                        if(xml != null)
+                        {
+                            try
+                            {
+                                string nm = xml.GetElementsByTagName("TargetName")[0].InnerText;
+                                string xmlname = _xml.SelectSingleNode("//Field[position()=" + (_selectedRowNum + 1).ToString() + "]/TargetName").InnerText;
+
+                                if (nm == xmlname)
+                                {
+                                    doSave = true;
+                                    break;
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }            
+            
             int fieldnum = FieldGrid.SelectedIndex + 1;
             var nodes = getFieldNodes(fieldnum);
-            if (nodes != null && comboBox != null) 
+            if (nodes != null && comboBox != null && comboBox.SelectedValue != null && doSave == true) 
             {
                 try
                 {
                     string selected = comboBox.SelectedValue.ToString();
+                    this._skipSelectionChanged = true;
                     if (nodes.Count == 1)
                     {
                         // source field selection should change to Copy
@@ -949,12 +981,13 @@ namespace ShareGISData
                             comboMethod.SelectedIndex = 1;
                             saveFieldGrid();
                         }
+                        _selectedRowNum = fieldnum;
+                        this._skipSelectionChanged = false;
                     }
                 }
                 catch
                 { }
             }
-
         }
 
         private void TargetLayer_TextChanged(object sender, TextChangedEventArgs e)
@@ -989,7 +1022,7 @@ namespace ShareGISData
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/FieldName");
                 if (node == null || node.InnerText != combo.SelectionBoxItem.ToString())
-                    if(skipSelectionChanged != true)
+                    if(_skipSelectionChanged != true)
                         updateReplaceNodes();
             }
         }
@@ -1001,7 +1034,7 @@ namespace ShareGISData
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/Operator");
                 if (node == null || node.InnerText != combo.SelectionBoxItem.ToString())
-                    if (skipSelectionChanged != true)
+                    if (_skipSelectionChanged != true)
                         updateReplaceNodes();
             }
         }
@@ -1012,7 +1045,7 @@ namespace ShareGISData
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/ReplaceBy/Value");
                 if (node == null || node.InnerText != txt.Text)
-                    if (skipSelectionChanged != true)
+                    if (_skipSelectionChanged != true)
                         updateReplaceNodes();
             }
         }
@@ -1129,7 +1162,7 @@ namespace ShareGISData
             CheckBox chk = sender as CheckBox;
             if (chk != null)
             {
-                if(!skipSelectionChanged)
+                if(!_skipSelectionChanged)
                     setReplaceValues(null);
                 ReplaceStackSettings.Visibility = System.Windows.Visibility.Hidden;
                 System.Windows.GridLength len = new System.Windows.GridLength(0);

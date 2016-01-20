@@ -25,7 +25,7 @@
                                         HorizontalAlignment="Center"
                                         ContentSource="Header"
                                         Margin="10,2" TextElement.FontSize="18" TextElement.FontFamily="Trebuchet MS"/>
-                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="14" Background="Gray" Width="1" HorizontalAlignment="Right"/>
+                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="12" Background="Gray" Width="1" HorizontalAlignment="Right"/>
 
                             </Grid>
                             <ControlTemplate.Triggers>
@@ -117,8 +117,8 @@
 
                 <DataGrid x:Name="FieldGrid" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" ItemsSource="{Binding XPath=/SourceTargetMatrix/Fields/Field}" 
                   Width="Auto" MinHeight="250" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="200" 
-                  AutoGenerateColumns="False" AutoGeneratingColumn="FieldGrid_AutoGeneratingColumn"
-                  CanUserResizeColumns="True" SelectedCellsChanged="FieldGrid_Selected" 
+                  AutoGenerateColumns="False" 
+                  CanUserResizeColumns="True" SelectedCellsChanged="FieldGrid_Selected"  
                       ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                       ScrollViewer.CanContentScroll="True" 
                       SelectionChanged="FieldGrid_SelectionChanged" Margin="5,5,5,5">
@@ -232,7 +232,7 @@ SelectionChanged="SourceSelectionChanged"
                 </StackPanel>
                 <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method5" Visibility="Hidden" ScrollViewer.CanContentScroll="True">
                     <Label Content="Select Fields" Margin="5,5,5,5"/>
-                    <Button x:Name="Method5ClearAll" Content="Clear" IsEnabled="False"  Width="60" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="Method5ClearAll_Click"/>
+                    <Button x:Name="Method5ClearAll" Content="Clear" IsEnabled="False"  Width="60" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10,5" Click="Method5ClearAll_Click"/>
                     <!--<Button x:Name="ConcatNone" Content="None" Width="60" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,15,5" Click="ConcatNone_Click"/>-->
                     <DataGrid x:Name="Method5Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" 

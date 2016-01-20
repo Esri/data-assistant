@@ -36,7 +36,7 @@ try:
 except:
     targetLayer = None
 
-_chunkSize = 500
+_chunkSize = 100
 
 def main(argv = None):
     publish(xmlFileName)
@@ -75,6 +75,8 @@ def publish(xmlFileName):
                     arcpy.MakeFeatureLayer_management(targetLayer,layer,None,dla.workspace,fieldInfo)
                     # should make only the target fields visible
                     arcpy.SetParameter(_success,layer)
+                else:
+                    arcpy.SetParameter(_success,res)
 
         arcpy.ResetProgressor()
         if res == False:
@@ -87,8 +89,8 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
     expr = ''
     dlaTable = handleGeometryChanges(dlaTable,targetLayer)
 
-    #if useReplaceSettings == True:
-    expr = getWhereClause(xmlDoc)
+    if useReplaceSettings == True:
+        expr = getWhereClause(xmlDoc)
 
     if targetLayer.startswith("GIS Servers\\") == True:
         targetLayer = dla.getLayerSourceUrl(targetLayer)
@@ -138,8 +140,11 @@ def getOIDs(targelUrl,expr,token):
     arcpy.SetProgressorLabel("Querying Existing Features")
     url = targelUrl + '/query'
     arcpy.AddMessage("Url:"+url)
-    where = expr
-    params = {'f': 'pjson', 'where': expr,'token':token,'returnIdsOnly':'true'}
+    if expr != '':
+        params = {'f': 'pjson', 'where': expr,'token':token,'returnIdsOnly':'true'}
+    else:
+        params = {'f': 'pjson', 'where': '1=1','token':token,'returnIdsOnly':'true'}
+        
     arcpy.AddMessage("Params:"+json.dumps(params))
     response = openRequest(url,params)            
     val = response.readall().decode('utf-8')
@@ -169,25 +174,26 @@ def deleteFeatures(sourceLayer,targelUrl,expr,token):
     ids = getOIDs(targelUrl,expr,token)
     try:
         lenDeleted = 100
-        #Chunk deletes using _chunkSize at a time
-        #minId = min(ids)
-        #maxId = max(ids)
+        #Chunk deletes using chunk size at a time
         featuresProcessed = 0
         numFeat = len(ids)
+        if numFeat == 0:
+            arcpy.AddMessage("0 Features to Delete, exiting")            
+            return True # nothing to delete is OK
         if numFeat > _chunkSize:
             chunk = _chunkSize
         else:
             chunk = numFeat
+        arcpy.SetProgressor("default","Deleting Features")
         while featuresProcessed < numFeat and error == False:
             #Chunk deletes using chunk size at a time
-            oids = ",".join(str(e) for e in ids[featuresProcessed:featuresProcessed + chunk])
-            arcpy.SetProgressor("default","Deleting Features")
-            arcpy.SetProgressorLabel("Deleting Features")
+            next = featuresProcessed + chunk
+            msg = "Deleting features " + str(featuresProcessed) + ":" + str(next)
+            arcpy.AddMessage(msg)
+            arcpy.SetProgressorLabel(msg)
+            oids = ",".join(str(e) for e in ids[featuresProcessed:next])
             url = targelUrl + '/deleteFeatures'
-            arcpy.AddMessage("Url:"+url)
-            where = expr
             params = {'f': 'pjson', 'objectIds': oids,'token':token}
-            #print("Params:"+json.dumps(params))
             response = openRequest(url,params)            
             val = response.readall().decode('utf-8')
             result = json.loads(val)
@@ -199,7 +205,7 @@ def deleteFeatures(sourceLayer,targelUrl,expr,token):
                     error = True
             except:
                 lenDeleted = len(result['deleteResults'])
-                msg = str(lenDeleted) + " features deleted"
+                msg = str(lenDeleted) + " features deleted, " + str(featuresProcessed + chunk) + "/" + str(numFeat)
                 print(msg)
                 arcpy.AddMessage(msg)
                 retval = True
@@ -222,18 +228,22 @@ def addFeatures(sourceLayer,targelUrl,expr,token):
         arcpy.SetProgressor("default","Adding Features")
         arcpy.SetProgressorLabel("Adding Features")
         featurejs = featureclass_to_json(sourceLayer)
-        #print(featurejs['features'][1])
         url = targelUrl + '/addFeatures'  
-        arcpy.AddMessage(url)
         numFeat = len(featurejs['features'])
+        if numFeat == 0:
+            arcpy.AddMessage("0 Features to Add, exiting")            
+            return True # nothing to add is OK
         if numFeat > _chunkSize:
             chunk = _chunkSize
         else:
             chunk = numFeat
         featuresProcessed = 0
         while featuresProcessed < numFeat  and error == False:
-            features = featurejs['features'][featuresProcessed: featuresProcessed + chunk]
-            arcpy.AddMessage("Processing features " + str(featuresProcessed) + ":" + str(featuresProcessed + chunk))
+            next = featuresProcessed + chunk
+            features = featurejs['features'][featuresProcessed:next]
+            msg = "Adding features " + str(featuresProcessed) + ":" + str(next)
+            arcpy.AddMessage(msg)
+            arcpy.SetProgressorLabel(msg)
             params = {'rollbackonfailure': 'true','f':'json', 'token':token, 'features': json.dumps(features)}
             response = openRequest(url,params)            
             val = response.readall().decode('utf-8')
@@ -245,7 +255,8 @@ def addFeatures(sourceLayer,targelUrl,expr,token):
                     arcpy.AddMessage(json.dumps(result))
                     error = True
             except:
-                msg = str(len(result['addResults'])) + " features added"
+                lenAdded = len(result['addResults']) 
+                msg = str(lenAdded) + " features added, " + str(featuresProcessed + chunk) + "/" + str(numFeat)
                 print(msg)
                 arcpy.AddMessage(msg)
                 retval = True
@@ -275,19 +286,13 @@ def openRequest(url,params):
     response = None
     if uselib2 == True:
         data = urllib2.urlencode(params)
-        #arcpy.AddMessage("Encode data")
         data = data.encode('utf8')
-        #arcpy.AddMessage("Prep request")
         req = urllib2.Request(url,data)  
-        #arcpy.AddMessage("Opening request...")
         response = urllib2.urlopen(req)
     else:
         data = parse.urlencode(params)
-        #arcpy.AddMessage("Encode data")
         data = data.encode('utf8')
-        #arcpy.AddMessage("Prep request")
         req = request.Request(url,data)
-        #arcpy.AddMessage("Opening request...")
         response = request.urlopen(req)
     return response
 
@@ -299,13 +304,6 @@ def featureclass_to_json(fc):
 
 def handleGeometryChanges(sourceDataset,targetLayer):
     desc = arcpy.Describe(sourceDataset) # assuming local file gdb
-    #descT = arcpy.Describe(targetLayer)
-    #except:
-    #    tmp = 'tmp'
-    #    if arcpy.Exists(tmp):
-    #        arcpy.Delete_management(tmp)            
-    #    arcpy.MakeFeatureLayer_management(targetLayer,'tmp')
-    #    descT = arcpy.Describe('tmp')
     dataset = sourceDataset
     if desc.ShapeType == "Polygon" and (targetLayer.lower().startswith("gis servers") == True or targetLayer.lower().startswith("http://") == True):
         dataset = simplifyPolygons(sourceDataset)

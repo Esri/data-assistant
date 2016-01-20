@@ -107,6 +107,8 @@ def calcValue(row,names,calcString):
 def setFieldValues(table,fields,names):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
+    global errCount
+    errCount = 0
     try:
         updateCursor = arcpy.da.UpdateCursor(table,names)
 
@@ -117,13 +119,14 @@ def setFieldValues(table,fields,names):
         arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
         
         for row in updateCursor:
-            global errCount
             success = True
             if errCount > dla.maxErrorCount:
                 dla.addMessage("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
+                arcpy.AddError("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
                 return False
             if i > dla.maxrows:
                 dla.addMessage("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
+                arcpy.AddError("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
                 return True
             i = i + 1
             setProgressor(i,numFeat)

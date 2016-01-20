@@ -32,6 +32,7 @@ namespace ShareGISData
         private void MethodPanelApply_Click(object sender, RoutedEventArgs e)
         {
             // Figure out which panel is visible and then write the document section for the panel
+            _skipSelectionChanged = true;
             if(Method0.IsVisible)
                 saveM0();
             else if(Method1.IsVisible)
@@ -57,6 +58,7 @@ namespace ShareGISData
             else if (Method11.IsVisible)
                 saveM11();
             ClickPreviewButton(sender, e);
+            _skipSelectionChanged = false;
         }
         private void saveM0()
         {

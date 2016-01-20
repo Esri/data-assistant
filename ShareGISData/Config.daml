@@ -1,11 +1,11 @@
 ﻿<ArcGIS defaultAssembly="ShareGISData.dll" defaultNamespace="ShareGISData" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="1.0" desktopVersion="1.1.3308">
+  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="1.1" desktopVersion="1.1.3308">
     <Name>ShareGISData</Name>
     <Description>Tools to configure and run data sharing processes</Description>
     <Image>Images\Icon0.png</Image>
     <Author>Steve</Author>
     <Company>Vertex3 for Esri</Company>
-    <Date>12/12/2015</Date>
+    <Date>01/20/2016</Date>
     <Subject>Content,Framework,Data Loading Assistant</Subject>
   </AddInInfo>
   <modules>
@@ -28,11 +28,6 @@
         </group>
       </groups>
       <controls>
-        <!-- add your controls here -->
-<!--        <button id="ShareGISData_Wizard" caption="Data Sharing Wizard" className="ShareWizard" loadOnClick="true" smallImage="Images\AddInDesktop16.png" largeImage="Images\AddInDesktop32.png">
-          <tooltip heading="Configure Data Sharing">Tooltip text<disabledText /></tooltip>
-        </button>
- -->
         <button id="ShareGISData_Dockpane1_CreateFile" caption="New File" className="Dockpane1_CreateFile" loadOnClick="true" smallImage="Images\Icon4.png" largeImage="Images\Icon4.png">
           <tooltip heading="New Source-Target File">
             New Source-Target File<disabledText />

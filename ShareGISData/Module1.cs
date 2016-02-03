@@ -7,7 +7,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using System.Threading.Tasks;
 
-namespace ShareGISData
+namespace DataAssistant
 {
     internal class Module1 : Module
     {
@@ -20,7 +20,7 @@ namespace ShareGISData
         {
             get
             {
-                return _this ?? (_this = (Module1)FrameworkApplication.FindModule("ShareGISData_Module"));
+                return _this ?? (_this = (Module1)FrameworkApplication.FindModule("DataAssistant_Module"));
             }
         }
 

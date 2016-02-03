@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 
-namespace ShareGISData
+namespace DataAssistant
 {
     public class ConcatRow
     {

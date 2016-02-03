@@ -8,8 +8,8 @@
     <ProjectGuid>{D7BC4883-7429-42D7-9A28-7B4C9030CBC1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ShareGISData</RootNamespace>
-    <AssemblyName>ShareGISData</AssemblyName>
+    <RootNamespace>DataAssistant</RootNamespace>
+    <AssemblyName>DataAssistant</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -96,6 +96,10 @@
     <Compile Include="Dockpane1Apply.cs" />
     <Compile Include="Dockpane1ViewModel.cs" />
     <Compile Include="Dockpane1Preview.cs" />
+    <Compile Include="Dockpane2Settings.xaml.cs">
+      <DependentUpon>Dockpane2Settings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dockpane2SettingsViewModel.cs" />
     <Compile Include="Module1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -111,6 +115,7 @@
     <AddInContent Include="Images\Icon2.png" />
     <AddInContent Include="Images\Icon3.png" />
     <AddInContent Include="Images\Icon4.png" />
+    <AddInContent Include="Images\Icon5.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="GPTools\arcpy\dlaExtractLayerToGDB.py">
@@ -137,6 +142,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Dockpane1.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dockpane2Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

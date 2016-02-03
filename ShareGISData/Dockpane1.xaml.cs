@@ -24,7 +24,7 @@ using System.Xml;
 using System.Xml.Xsl;
 using System.Xml.XPath;
 
-namespace ShareGISData
+namespace DataAssistant
 {
     /// <summary>
     /// Interaction logic for Dockpane1View.xaml
@@ -40,8 +40,6 @@ namespace ShareGISData
         }
         public static string getXmlFileName()
         {
-            if (_filename != null)
-                return _filename;
             if (_filename != null)
                 return _filename;
             else
@@ -71,8 +69,6 @@ namespace ShareGISData
         private bool _skipSelectionChanged = false;
         private int _selectedRowNum = -1;
         int _methodnum = -1;
-        string _xsltFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\FieldMatcher.xsl");
-        string _matchFile = System.IO.Path.Combine(AddinAssemblyLocation(), "GPTools\\arcpy\\MatchLocal.xml");
         string _revertname = System.IO.Path.Combine(AddinAssemblyLocation(), "RevertFile.xml");
 
         public Dockpane1View()
@@ -102,7 +98,6 @@ namespace ShareGISData
             SourceStack.Visibility = System.Windows.Visibility.Visible;
             TargetStack.Visibility = System.Windows.Visibility.Visible;
             ReplaceStack.Visibility = System.Windows.Visibility.Visible;
-            AutomatchStack.IsEnabled = true;
 
             SourceLayer.Text = _xml.SelectSingleNode("//Datasets/Source").InnerText;
             TargetLayer.Text = _xml.SelectSingleNode("//Datasets/Target").InnerText;
@@ -121,7 +116,7 @@ namespace ShareGISData
                 RevertButton.Visibility = System.Windows.Visibility.Visible;
                 if (FileGrid.RowDefinitions[0].ActualHeight < 70)
                 {
-                    System.Windows.GridLength len = new System.Windows.GridLength(FileGrid.RowDefinitions[0].ActualHeight + 25);
+                    System.Windows.GridLength len = new System.Windows.GridLength(FileGrid.RowDefinitions[0].ActualHeight + 30);
                     FileGrid.RowDefinitions[0].Height = len;
                 }
             }
@@ -401,7 +396,7 @@ namespace ShareGISData
                     break;
                 case 5: // Concatenate
                     _concat.Clear();
-                    setConcatSeparator(getPanelValue(5,"Separator"));
+                    setSpaceVal(getPanelValue(5,"Separator"),Method5Value);
                     setConcatValues(); 
                     Method5.InvalidateArrange();
                     break;
@@ -415,7 +410,7 @@ namespace ShareGISData
                     setSubstringValues(getPanelValue(81, "Start"), getPanelValue(82, "Length"));
                     break;
                 case 9: // Split
-                    Method91Value.Text = getPanelValue(91, "SplitAt");
+                    setSpaceVal(getPanelValue(91,"SplitAt"),Method91Value);
                     Method92Value.Text = getPanelValue(92, "Part");
                     break;
                 case 10: // Conditional Value
@@ -529,9 +524,8 @@ namespace ShareGISData
                 ValueMapRemove.IsEnabled = false;
         }
  
-        private void setConcatSeparator(string separator)
+        private void setSpaceVal(string separator,TextBox txt)
         {
-            TextBox txt = Method5Value;
             if (txt != null && separator != txt.Text)
             {
                 txt.Text = separator.Replace(_spaceVal," ");
@@ -761,42 +755,42 @@ namespace ShareGISData
 
 
 
-        private DataGridCell GetCell(DataGrid grid, DataGridRow row, int column)
-        {
-            if (row != null)
-            {
-                DataGridCellsPresenter presenter = GetVisualChild<DataGridCellsPresenter>(row);
+        //private DataGridCell GetCell(DataGrid grid, DataGridRow row, int column)
+        //{
+        //    if (row != null)
+        //    {
+        //        DataGridCellsPresenter presenter = GetVisualChild<DataGridCellsPresenter>(row);
 
-                if (presenter == null)
-                {
-                    grid.ScrollIntoView(row, grid.Columns[column]);
-                    presenter = GetVisualChild<DataGridCellsPresenter>(row);
-                }
+        //        if (presenter == null)
+        //        {
+        //            grid.ScrollIntoView(row, grid.Columns[column]);
+        //            presenter = GetVisualChild<DataGridCellsPresenter>(row);
+        //        }
 
-                DataGridCell cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(column);
-                return cell;
-            }
-            return null;
-        }
-        public T GetVisualChild<T>(Visual parent) where T : Visual
-        {
-            T child = default(T);
-            int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
-            for (int i = 0; i < numVisuals; i++)
-            {
-                Visual v = (Visual)VisualTreeHelper.GetChild(parent, i);
-                child = v as T;
-                if (child == null)
-                {
-                    child = GetVisualChild<T>(v);
-                }
-                if (child != null)
-                {
-                    break;
-                }
-            }
-            return child;
-        }
+        //        DataGridCell cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(column);
+        //        return cell;
+        //    }
+        //    return null;
+        //}
+        //public T GetVisualChild<T>(Visual parent) where T : Visual
+        //{
+        //    T child = default(T);
+        //    int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
+        //    for (int i = 0; i < numVisuals; i++)
+        //    {
+        //        Visual v = (Visual)VisualTreeHelper.GetChild(parent, i);
+        //        child = v as T;
+        //        if (child == null)
+        //        {
+        //            child = GetVisualChild<T>(v);
+        //        }
+        //        if (child != null)
+        //        {
+        //            break;
+        //        }
+        //    }
+        //    return child;
+        //}
 
         private void Method3Target_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -915,6 +909,12 @@ namespace ShareGISData
             if (txt.Text.IndexOf(" ") > -1)
                 txt.Text = txt.Text.Replace(" ", _spaceVal);
 
+        }
+        private void Method91Value_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt.Text.IndexOf(" ") > -1)
+                txt.Text = txt.Text.Replace(" ", _spaceVal);
         }
 
         private void SourceField_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1050,32 +1050,6 @@ namespace ShareGISData
             }
         }
 
-        private void UpdateAutomatchButton_Click(object sender, RoutedEventArgs e)
-        {
-
-            if (System.Windows.Forms.MessageBox.Show("Update Automatch Values?", "Update Automatch", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-            {
-                XsltArgumentList argList = new XsltArgumentList();
-                argList.AddParam("configFile", "", _filename);
-                string outfile = _matchFile.Replace(".xml", "1.xml");
-
-                runTransform(_matchFile, _xsltFile, outfile, argList);
-                copyXml(outfile, _matchFile);
-            }
-        }
-
-        private void ResetAutomatchButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (System.Windows.Forms.MessageBox.Show("Clear all Automatch Values?", "Clear Automatch", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-            {
-                XsltArgumentList argList = new XsltArgumentList();
-                argList.AddParam("configFile", "",_matchFile );
-                string outfile = _matchFile.Replace(".xml", "1.xml");
-                runTransform(_filename, _xsltFile, outfile, argList);
-                copyXml(outfile, _matchFile);
-            }
-
-        }
         public static bool runTransform(string xmlPath, string xsltPath, string outputPath, XsltArgumentList argList)
         {
             XmlTextReader reader = null;
@@ -1182,5 +1156,6 @@ namespace ShareGISData
             }
 
         }
+
     }
 }

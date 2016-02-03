@@ -9,11 +9,11 @@ using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
 
-namespace ShareGISData
+namespace DataAssistant
 {
     internal class Dockpane1ViewModel : DockPane
     {
-        private const string _dockPaneID = "ShareGISData_Dockpane1";
+        private const string _dockPaneID = "DataAssistant_Dockpane1";
 
         protected Dockpane1ViewModel() { }
 
@@ -71,7 +71,7 @@ namespace ShareGISData
     
     internal class Dockpane1_ShowButton : Button
     {
-        private const string _dockPaneID = "ShareGISData_Dockpane1";
+        private const string _dockPaneID = "DataAssistant_Dockpane1";
         string fileloc = setupGP.init();
         protected override void OnClick()
         {
@@ -91,7 +91,7 @@ namespace ShareGISData
         protected override void OnClick()
         {
             setupGP.init();
-            var param_values = Geoprocessing.MakeValueArray(ShareGISData.Dockpane1View.getXmlFileName());
+            var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
 
             Geoprocessing.OpenToolDialog(setupGP.getToolbox("Preview"), param_values);
         }
@@ -101,7 +101,7 @@ namespace ShareGISData
         protected override void OnClick()
         {
             setupGP.init();
-            var param_values = Geoprocessing.MakeValueArray(ShareGISData.Dockpane1View.getXmlFileName());
+            var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
 
             Geoprocessing.OpenToolDialog(setupGP.getToolbox("Publish"), param_values);
         }

@@ -17,7 +17,7 @@ using System.Data;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
-namespace ShareGISData
+namespace DataAssistant
 {
     public partial class Dockpane1View : UserControl
     {
@@ -171,13 +171,14 @@ namespace ShareGISData
                     {
                         try
                         {
-                            var split = att.InnerText.Split(Method91Value.Text.ToCharArray());
+                            string txt = Method91Value.Text.Replace(_spaceVal, " ");
+                            var split = att.InnerText.Split(txt.ToCharArray());
                             int num;
                             Int32.TryParse(Method92Value.Text, out num);
                             res = split[num];
                             textval = res;
                         }
-                        catch { }
+                        catch { res = "Error"; }
                     }
                     textval = targName + "=" + res;
                 }

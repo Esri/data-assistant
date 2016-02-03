@@ -19,7 +19,7 @@ using System.Globalization;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
 
-namespace ShareGISData
+namespace DataAssistant
 {
     public partial class Dockpane1View : UserControl
     {

@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # dlaFieldCalculator.py
 
-import os, sys, traceback, time, arcpy,  xml.dom.minidom, dla
+import os, sys, traceback, time, arcpy,  dla
 
 xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
 try:
@@ -16,7 +16,7 @@ if dla.workspace == "" or dla.workspace == "#":
 errCount = 0
 
 def main(argv = None):
-    xmlDoc = xml.dom.minidom.parse(xmlFileName)
+    xmlDoc = dla.getXmlDoc(xmlFileName)
     targetName = dla.getTargetName(xmlDoc)
     success = calculate(xmlFileName,dla.workspace,targetName,False)
     if success == False:
@@ -28,7 +28,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     dla.workspace = workspace    
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)
-    xmlDoc = xml.dom.minidom.parse(xmlFileName)
+    xmlDoc = dla.getXmlDoc(xmlFileName)
     
     arcpy.env.Workspace = dla.workspace
     table = dla.getTempTable(name)
@@ -44,7 +44,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     
     desc = arcpy.Describe(table)
     fields = dla.getXmlElements(xmlFileName,"Field")
-    #sourceFields = dla.getXmlElements(xmlFileName,"SourceField")
+    sourceFields = dla.getXmlElements(xmlFileName,"SourceField")
     targetFields = dla.getXmlElements(xmlFileName,"TargetField")
     attrs = [f.name for f in arcpy.ListFields(table)]
 
@@ -62,9 +62,20 @@ def calculate(xmlFileName,workspace,name,ignore):
                 length = target.getAttributeNode("Length").nodeValue
         dla.addDlaField(table,targetName,field,attrs,type,length)
 
-    names = [f.name for f in arcpy.ListFields(table)]
+    allFields = sourceFields + targetFields
+    names = []
+    types = []
+    lengths = []
+    for field in allFields:
+        nm = field.getAttributeNode("Name").nodeValue
+        if nm != dla.noneName:
+            names.append(nm)
+            typ = field.getAttributeNode("Type").nodeValue
+            leng = field.getAttributeNode("Length").nodeValue      
+            types.append(typ)
+            lengths.append(leng)
 
-    retVal = setFieldValues(table,fields,names)
+    retVal = setFieldValues(table,fields,names,types,lengths)
     if retVal == False:
         success = False
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -104,7 +115,7 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
-def setFieldValues(table,fields,names):
+def setFieldValues(table,fields,names,types,lengths):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
     global errCount
@@ -165,6 +176,7 @@ def setFieldValues(table,fields,names):
                     val = getSubstring(sourceValue,start,length)
                 elif method == "Split":
                     splitter = dla.getNodeValue(field,"SplitAt")
+                    splitter = splitter.replace("(space)"," ")
                     part = dla.getNodeValue(field,"Part")
                     val = getSplit(sourceValue,splitter,part)
                 elif method == "ConditionalValue":
@@ -181,7 +193,7 @@ def setFieldValues(table,fields,names):
                         expression = expression.replace(name,"|" + name + "|")
                     val = getExpression(row,names,expression)
                 # set field value
-                setValue(row,names,targetName,targetValue,val)
+                setValue(row,names,types,lengths,targetName,targetValue,val)
             try:
                 updateCursor.updateRow(row)
             except:
@@ -388,7 +400,7 @@ def getSourceValue(row,names,sourceName):
         sourceValue = None
     return sourceValue
 
-def setValue(row,names,targetName,targetValue,val):
+def setValue(row,names,types,lengths,targetName,targetValue,val):
 
     global errCount
    
@@ -396,10 +408,18 @@ def setValue(row,names,targetName,targetValue,val):
         if val == 'None':
             val = None
         if val != targetValue:
-            row[names.index(targetName)] = val
+            idx = names.index(targetName)
+            # if a string then check length
+            if idx != -1 and len(val) > int(lengths[idx]) and types[idx] == "String":
+                err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
+                dla.addError(err)
+                print(err)
+                errCount += 1
+            else:
+                row[idx] = val
     except:
         success = False
-        err = "Exception caught: unable to set value for value=" + str(val)
+        err = "Exception caught: unable to set value for value=" + str(val) + " fieldname=" + targetName
         dla.showTraceback()
         dla.addError(err)
         print(err)

@@ -3,7 +3,7 @@
 # Description: Import a .lyr file or feature layer to Geodatabase.
 # ---------------------------------------------------------------------------
 
-import os, sys, traceback, time, arcpy, xml.dom.minidom, dla
+import os, sys, traceback, time, arcpy, dla
 
 xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
 try:
@@ -23,7 +23,7 @@ SUCCESS = 4 # parameter number for output success value
 def main(argv = None):
     global sourceLayer,targetLayer
 
-    xmlDoc = xml.dom.minidom.parse(xmlFileName)
+    xmlDoc = dla.getXmlDoc(xmlFileName)
     if dla.workspace == "" or dla.workspace == "#" or dla.workspace == None:  
         dla.workspace = arcpy.env.scratchGDB
     if sourceLayer == "" or sourceLayer == None:
@@ -38,7 +38,7 @@ def main(argv = None):
 
 def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):          
 
-    xmlDoc = xml.dom.minidom.parse(xmlFileName)
+    xmlDoc = dla.getXmlDoc(xmlFileName)
     if workspace == "" or workspace == "#" or workspace == None:  
         dla.workspace = arcpy.env.scratchGDB
     else:
@@ -72,7 +72,7 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
             if arcpy.Exists(target):
                 arcpy.Delete_management(target)
 
-            retVal = exportDataset(xmlDoc,sourceLayer,target,targetName,rowLimit)
+            retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit)
             if retVal == False:
                 success = False
 
@@ -88,39 +88,48 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
 
     return success
     
-def exportDataset(xmlDoc,sourceLayer,target,targetName,rowLimit):
+def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     result = True
     xmlFields = xmlDoc.getElementsByTagName("Field")
     dla.addMessage("Exporting Layer from " + sourceLayer)
     whereClause = ""
     try:
         if rowLimit != None:
-            try:
-                whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
-            except:
-                pass
+            #try:
+            whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
+            #except:
+            #    pass
         if whereClause != '' and whereClause != ' ':
             dla.addMessage("Where " + str(whereClause))
         sourceName = dla.getSourceName(xmlDoc)
         viewName = sourceName + "_View"
         dla.addMessage(viewName)
         
-        try:
-            view = dla.makeFeatureViewForLayer(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
-        except:
-            arcpy.AddError("Unabled to create feature View " + viewName)
-        count = arcpy.GetCount_management(view).getOutput(0)
-        #sourceRef = getSpatialReference(xmlDoc,"Source")
+        #try:
         targetRef = getSpatialReference(xmlDoc,"Target")
+        #sourceRef = getSpatialReference(xmlDoc,"Source")
+        
         if targetRef != '':
-            if arcpy.Exists(target):
-                arcpy.Delete_management(target)
-            arcpy.CreateFeatureclass_management(target[:target.rfind(os.sep)],targetName,template=sourceLayer,spatial_reference=targetRef)
-            arcpy.Append_management(inputs=view,target=target)
-            #arcpy.FeatureClassToFeatureClass_conversion(view,dla.workspace,targetName) OLD
-            dla.addMessage(str(count) + " source rows exported to " + target)
+            if arcpy.Exists(targetName):
+                arcpy.Delete_management(targetName)
+                
+            arcpy.env.workspace = workspace
+            view = dla.makeFeatureViewForLayer(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+            dla.addMessage("View Created")            
+            count = arcpy.GetCount_management(view).getOutput(0)
+            dla.addMessage(str(count) + " source rows")
+            
+            arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+            arcpy.Append_management(inputs=view,target=targetName,schema_type="NO_TEST")
+            dla.addMessage(arcpy.GetMessages(2)) # only serious errors
+            count = arcpy.GetCount_management(targetName).getOutput(0)
+            dla.addMessage(str(count) + " source rows exported to " + targetName)
+            if str(count) == '0':
+                result = False
+                dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
+                dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
     except:
-        err = "Failed to create new dataset " + target
+        err = "Failed to create new dataset " + targetName
         dla.showTraceback()
         dla.addError(err)
         result = False
@@ -152,18 +161,61 @@ def getObjectIdWhereClause(table,rowLimit):
     ids = []
     where = "OBJECTID <= " + str(rowLimit)
     for row in searchCursor:
-        ids.append(row[0])
-        if i == rowLimit:
-            minoid = ids[0]
-            maxoid = ids[i-1]
-            where = "OBJECTID >= " + str(minoid) + " AND OBJECTID <= " + str(maxoid)
-            del searchCursor            
-            return where
+        if i < rowLimit:
+            ids.append(row[0])
+            #arcpy.AddMessage("added oid="+str(row[0]))
+        elif i == rowLimit:
+            break
         i += 1
 
+    if i > 0:
+        minoid = min(ids)
+        maxoid = max(ids)
+        where = "OBJECTID >= " + str(minoid) + " AND OBJECTID <= " + str(maxoid)
+        #arcpy.AddMessage("Features found, where="+where)
+    #else:
+    #    arcpy.AddMessage("No features found, default where clause used="+where)
     del searchCursor
     return where
 
+def theProjectWay():
+    """
+    This function is currently not used. It is an alternative to the create feature class/append approach
+    currently being used. It is slower because the entire dataset is projected first, and it is less
+    straightforward because it adds the transform method that append seems to know how to handle already.
+    It is better though because it will actually raise trappable errors while Append fails silently...
+    The solution in the other function is to count the resulting records and report issues.
+    """
+    if targetRef != '':
+        if arcpy.Exists(targetName):
+            arcpy.Delete_management(targetName)
+        inttable = workspace+os.sep+targetName+"_prj"
+        arcpy.env.workspace = workspace
+        xform = None
+        desc = arcpy.Describe(sourceLayer)
+        xforms = arcpy.ListTransformations(desc.spatialReference, targetRef, desc.extent)            
+        #if sourceRef.exportToString().find("NAD_1983") > -1 and targetRef.exportToString().find("WGS_1984") > -1:
+        xform = xforms[0]
+        #for xform in xforms:
+        dla.addMessage("Transform: " + xform)
+        try:
+            res = arcpy.Project_management(sourceLayer,inttable,out_coor_system=targetRef,transform_method=xform)
+        except:
+            dla.showTraceback()
+            err = "Unable to project the data to the target spatial reference, please check settings and try projecting manually in ArcGIS"
+            dla.addError(err)
+            return False
+        dla.addMessage("Features projected")            
+        view = dla.makeFeatureViewForLayer(dla.workspace,inttable,viewName,whereClause,xmlFields)
+        dla.addMessage("View Created")            
+        #except:
+        #    arcpy.AddError("Unabled to create feature View " + viewName)
+        count = arcpy.GetCount_management(view).getOutput(0)
+        dla.addMessage(str(count) + " source rows")
+        #sourceRef = getSpatialReference(xmlDoc,"Source")
+        #res = arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+        res = arcpy.CopyFeatures_management(view,targetName)
+        dla.addMessage("Features copied")     
 
 if __name__ == "__main__":
     main()

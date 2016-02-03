@@ -3,6 +3,10 @@
 # ---------------------------------------------------------------------------
 
 import sys,os,traceback,xml.dom.minidom,time,datetime,gc,arcpy
+
+import json, urllib
+import urllib.parse as parse
+import urllib.request as request
 from xml.dom.minidom import Document
 
 debug = False
@@ -13,6 +17,7 @@ successParameterNumber = 3 # parameter number to set at end of script to indicat
 maxErrorCount = 100 # max errors before a script will stop
 dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
+noneName = '(None)'
 
 # helper functions
 def timer(input):
@@ -55,7 +60,7 @@ def addMessageLocal(val):
 
 def addError(val):
     # add an error to the screen output
-    arcpy.AddMessage("Error: " + str(val))
+    #arcpy.AddMessage("Error: " + str(val))
     arcpy.AddError(str(val))
 
 def strToBool(s):
@@ -515,7 +520,7 @@ def getRootElement(xmlDoc):
 def getXmlElements(xmlFile,elemName):
     # get Xml elements from a file or files in a playlist
     retDoc = None
-    xmlDoc = xml.dom.minidom.parse(xmlFile)
+    xmlDoc = getXmlDoc(xmlFile)
     if isDlaDocument(xmlDoc):
         retDoc = xmlDoc.getElementsByTagName(elemName)
     elif isPlaylistDocument(xmlDoc):
@@ -525,7 +530,7 @@ def getXmlElements(xmlFile,elemName):
             folder = xmlFile[:xmlFile.rfind(os.sep)]
             theFile = os.path.join(folder,fileName)
             if os.path.exists(theFile):
-                xmlDoc2 = xml.dom.minidom.parse(theFile)
+                xmlDoc2 = getXmlDoc(theFile)
                 xmlNodes = xmlDoc2.getElementsByTagName(elemName)
                 if retDoc == None:
                     retDoc = xmlNodes
@@ -730,7 +735,7 @@ def setWorkspace():
 
 def getLayerVisibility(layer,xmlFileName):
     fieldInfo = None
-    xmlDoc = xml.dom.minidom.parse(xmlFileName)
+    xmlDoc = getXmlDoc(xmlFileName)
     targets = xmlDoc.getElementsByTagName("TargetName")
     names = [collect_text(node).upper() for node in targets]
     esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH']
@@ -743,3 +748,81 @@ def getLayerVisibility(layer,xmlFileName):
                 addMessage("Hiding Field: " + name)
                 fieldInfo.setVisible(index,"HIDDEN")
     return fieldInfo
+
+def sendRequest(url, qDict=None, headers=None):
+    """Robust request maker - from github https://github.com/khibma/ArcGISProPythonAssignedLicensing/blob/master/ProLicense.py"""
+    #Need to handle chunked response / incomplete reads. 2 solutions here: http://stackoverflow.com/questions/14442222/how-to-handle-incompleteread-in-python
+    #This function sends a request and handles incomplete reads. However its found to be very slow. It adds 30 seconds to chunked
+    #responses. Forcing the connection to HTTP 10 (1.0) at the top, for some reason makes it faster.         
+    
+    qData = parse.urlencode(qDict).encode('UTF-8') if qDict else None    
+    reqObj = request.Request(url)
+    
+    if headers != None:
+        for k, v in headers.items():
+            reqObj.add_header(k, v)
+            
+    try:
+        if qDict == None:  #GET            
+            r = request.urlopen(reqObj)
+        else:  #POST            
+            r = request.urlopen(reqObj, qData)
+        responseJSON=""
+        while True:
+            try:                            
+                responseJSONpart = r.read()                
+            except client.IncompleteRead as icread:                
+                responseJSON = responseJSON + icread.partial.decode('utf-8')
+                continue
+            else:                
+                responseJSON = responseJSON + responseJSONpart.decode('utf-8')
+                break       
+        
+        return (json.loads(responseJSON))
+       
+    except Exception as RESTex:
+        print("Exception occurred making REST call: " + RESTex.__str__()) 
+
+def openRequest(url,params):
+    """
+    Open an http request, handles the difference between urllib and urllib2 implementations if the includes are
+    done correctly in the imports section of this file. Currently disabled.
+    """
+    response = None
+    if uselib2 == True:
+        data = urllib.urlencode(params)
+        data = data.encode('utf8')
+        req = urllib2.Request(url,data)  
+        response = urllib2.urlopen(req)
+    else:
+        data = parse.urlencode(params)
+        data = data.encode('utf8')
+        req = request.Request(url,data)
+        response = request.urlopen(req)
+    
+    return response
+
+def getSigninToken():
+    data = arcpy.GetSigninToken()
+    token = None
+    if data is not None:
+        token = data['token']
+        #expires = data['expires']
+        #referer = data['referer']
+    else:
+        arcpy.AddMessage("Error: No token - Please sign in to ArcGIS Online or your Portal to continue")
+    return token
+
+def getXmlDoc(xmlFile):
+    # open the xmldoc and return contents
+    xmlDoc = None
+    try:
+        xmlFile = xmlFile.strip("'")
+        xmlFile = xmlFile.replace("\\","/")
+        xmlDoc = xml.dom.minidom.parse(xmlFile) # parse from string
+        #xmlFile = os.path.normpath(xmlFile)
+    except:
+        arcpy.AddError("Unable to open the xmlFile: " + xmlFile)
+
+    return xmlDoc
+

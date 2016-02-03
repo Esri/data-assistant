@@ -13,15 +13,16 @@ debug = False
 sourceDataset = arcpy.GetParameterAsText(0) # source dataset to analyze
 targetDataset = arcpy.GetParameterAsText(1) # target dataset to analyze
 xmlFileName = arcpy.GetParameterAsText(2) # output file name argument
-automatch = arcpy.GetParameterAsText(3)
+matchLibrary = 'true' # arcpy.GetParameterAsText(3) always use automatch now. When starting the match library is blank anyway
+#  so this will have no effect until the user starts working with it.
 
 if not xmlFileName.lower().endswith(".xml"):
     xmlFileName = xmlFileName + ".xml"
 
-if automatch.lower() == 'true':
-    automatch = True
+if matchLibrary.lower() == 'true':
+    matchLibrary = True
 else:
-    automatch = False
+    matchLibrary = False
 
 xmlStr = ""
 dir = os.path.dirname(os.path.realpath(__file__))
@@ -49,7 +50,7 @@ def main(argv = None):
 def createDlaFile(sourceDataset,targetDataset,xmlFileName):
 
     writeDocument(sourceDataset,targetDataset,xmlFileName)
-    #automatchDocument(xmlFileName)
+    
     return True
 
 def writeDocument(sourceDataset,targetDataset,xmlFileName):
@@ -114,7 +115,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames):
     # match source field names - with and without automap
     enode = None
     count = 0
-    if automatch == True: # only do this if automatch parameter is True
+    if matchLibrary == True: # only do this if matchLibrary parameter is True
         doc = etree.parse(matchfile)
         nodes = doc.findall(".//Field[TargetName='"+fieldName+"']")
         for node in nodes:
@@ -175,6 +176,7 @@ def setSourceFields(root,xmlDoc,fields):
         sourceFields.appendChild(fNode)
         fieldName = field.name[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
+        fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
         #if field.length != None:
         fNode.setAttribute("Length",str(field.length))
@@ -190,6 +192,7 @@ def setTargetFields(root,xmlDoc,fields):
         targetFields.appendChild(fNode)
         fieldName = field.name[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
+        fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
         #if field.length != None:
         fNode.setAttribute("Length",str(field.length))

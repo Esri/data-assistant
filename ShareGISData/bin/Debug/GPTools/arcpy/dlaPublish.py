@@ -1,19 +1,13 @@
 ## dlaPublish.py - Publish one source to a target
 
-import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dla,xml.dom.minidom
+import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dla,xml.dom.minidom, os
 import json, urllib
 import urllib.parse as parse
 import urllib.request as request
-uselib2 = False
-#try: looks like just import urllib parts the 'new' python way works best. lib2 is old python 2 approach
-#    import urllib2
-#    uselib2 = True
-#except:
-#    pass    
 
 arcpy.AddMessage("Data Assistant - Publish")
 
-xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
+xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
 useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
 _success = 2 # the last param is the derived output layer
 
@@ -39,24 +33,50 @@ except:
 _chunkSize = 100
 
 def main(argv = None):
-    publish(xmlFileName)
+    # this approach makes it easier to call publish from other python scripts with using GP tool method
+    publish(xmlFileNames)
 
-def publish(xmlFileName):
-    
+def publish(xmlFileNames):
+    # use one 
     global sourceLayer,targetLayer,_success
+
     arcpy.SetProgressor("default","Publishing")
     arcpy.SetProgressorLabel("Publishing")
-    for xmlfile in xmlFileName.split(";"): # multi value parameter
-        xmlDoc = xml.dom.minidom.parse(xmlfile)
+    xmlFiles = xmlFileNames.split(";")
+    for xmlFile in xmlFiles: # multi value parameter, loop for each file
+        arcpy.AddMessage("Configuration file: " + xmlFile)
+        xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
+        if xmlDoc == None:
+            return
+        token = dla.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
+        if token == None:
+            return
+        svceS = False
+        svceT = False
         if sourceLayer == "" or sourceLayer == None:
             sourceLayer = dla.getNodeValue(xmlDoc,"Source")
+            svceS = checkLayerIsService(sourceLayer)
         if targetLayer == "" or targetLayer == None:
             targetLayer = dla.getNodeValue(xmlDoc,"Target")
+            svceT = checkLayerIsService(targetLayer)
+
+        if token == None and (svceS or SvceT):
+            arcpy.AddError("User must be signed in for this tool to work with services")
+            return
+
         dla.setWorkspace()
         targetName = dla.getTargetName(xmlDoc)
-        res = dlaExtractLayerToGDB.extract(xmlfile,None,dla.workspace,sourceLayer,targetName)
-        if res == True:
-            res = dlaFieldCalculator.calculate(xmlfile,dla.workspace,targetName,False)
+        res = dlaExtractLayerToGDB.extract(xmlFile,None,dla.workspace,sourceLayer,targetName)
+        if res != True:
+            table = dla.getTempTable(targetName)
+            msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
+            if arcpy.TestSchemaLock(table) != True:
+                msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
+            arcpy.AddError(msg)
+            print(msg)
+            return
+        else:
+            res = dlaFieldCalculator.calculate(xmlFile,dla.workspace,targetName,False)
             if res == True:
                 #arcpy.env.addOutputsToMap = True
                 dlaTable = dla.getTempTable(targetName)
@@ -67,7 +87,7 @@ def publish(xmlFileName):
                     if arcpy.Exists(layertmp):
                         arcpy.Delete_management(layertmp)
                     arcpy.MakeFeatureLayer_management(dlaTable,layertmp)
-                    fieldInfo = dla.getLayerVisibility(layertmp,xmlfile)
+                    fieldInfo = dla.getLayerVisibility(layertmp,xmlFile)
                     arcpy.Delete_management(layertmp)
                     if arcpy.Exists(layer):
                         arcpy.Delete_management(layer)
@@ -79,6 +99,8 @@ def publish(xmlFileName):
                     arcpy.SetParameter(_success,res)
 
         arcpy.ResetProgressor()
+        sourceLayer = None # set source and target back to None for multiple file processing
+        targetLayer = None
         if res == False:
             arcpy.AddError("Publish Failed, see messages for details")
 
@@ -94,7 +116,7 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
 
     if targetLayer.startswith("GIS Servers\\") == True:
         targetLayer = dla.getLayerSourceUrl(targetLayer)
-        success = doPublishAgo(dlaTable,targetLayer,expr)
+        success = doPublishPro(dlaTable,targetLayer,expr)
     else:
         dlaTable = handleGeometryChanges(dlaTable,targetLayer)
         if expr != '':
@@ -107,48 +129,20 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
 
     return success
 
-def getToken():
-    
-    data = arcpy.GetSigninToken()
-
-    token = None
-    if data is not None:
-        token = data['token']
-        arcpy.AddMessage("Using current token")
-    else:
-        arcpy.AddMessage("Error: No token - creating one")
-        username = "***"  # Should never need this section in ArcGIS Pro...
-        password = "***"  
-          
-        portal = arcpy.GetActivePortalURL()
-        tokenURL = portal + '/sharing/rest/generateToken'  
-        params = {'f': 'pjson', 'username': username, 'password': password, 'referer': portal}  
-        params = urllib2.urlencode(params)
-        params = params.encode('utf8')
-        req = urllib.request.Request(tokenURL, params)
-        #url = tokenURL + "?" + str(params)
-        response = urllib.request.urlopen(req)
-        result = response.readall().decode('utf-8')
-        
-        data = json.loads(result)  
-        token = data['token']
-    return token
-
-def getOIDs(targelUrl,expr,token):
+def getOIDs(targelUrl,expr):
     ids = []
     arcpy.SetProgressor("default","Querying Existing Features")
     arcpy.SetProgressorLabel("Querying Existing Features")
     url = targelUrl + '/query'
     arcpy.AddMessage("Url:"+url)
+    token = dla.getSigninToken()
     if expr != '':
         params = {'f': 'pjson', 'where': expr,'token':token,'returnIdsOnly':'true'}
     else:
         params = {'f': 'pjson', 'where': '1=1','token':token,'returnIdsOnly':'true'}
         
     arcpy.AddMessage("Params:"+json.dumps(params))
-    response = openRequest(url,params)            
-    val = response.readall().decode('utf-8')
-    result = json.loads(val)
+    result = dla.sendRequest(url,params)            
     try:
         if result['error'] != None:
             retval = False
@@ -167,11 +161,11 @@ def getOIDs(targelUrl,expr,token):
     
 
 
-def deleteFeatures(sourceLayer,targelUrl,expr,token):
+def deleteFeatures(sourceLayer,targelUrl,expr):
     retval = False
     error = False
     # delete section
-    ids = getOIDs(targelUrl,expr,token)
+    ids = getOIDs(targelUrl,expr)
     try:
         lenDeleted = 100
         #Chunk deletes using chunk size at a time
@@ -193,10 +187,9 @@ def deleteFeatures(sourceLayer,targelUrl,expr,token):
             arcpy.SetProgressorLabel(msg)
             oids = ",".join(str(e) for e in ids[featuresProcessed:next])
             url = targelUrl + '/deleteFeatures'
+            token = dla.getSigninToken()
             params = {'f': 'pjson', 'objectIds': oids,'token':token}
-            response = openRequest(url,params)            
-            val = response.readall().decode('utf-8')
-            result = json.loads(val)
+            result = dla.sendRequest(url,params)            
             try:
                 if result['error'] != None:
                     retval = False
@@ -220,7 +213,7 @@ def deleteFeatures(sourceLayer,targelUrl,expr,token):
     return retval
 
 
-def addFeatures(sourceLayer,targelUrl,expr,token):
+def addFeatures(sourceLayer,targelUrl,expr):
     retval = False
     error = False
     # add section
@@ -244,8 +237,9 @@ def addFeatures(sourceLayer,targelUrl,expr,token):
             msg = "Adding features " + str(featuresProcessed) + ":" + str(next)
             arcpy.AddMessage(msg)
             arcpy.SetProgressorLabel(msg)
+            token = dla.getSigninToken()
             params = {'rollbackonfailure': 'true','f':'json', 'token':token, 'features': json.dumps(features)}
-            response = openRequest(url,params)            
+            response = dla.sendRequest(url,params)            
             val = response.readall().decode('utf-8')
             result = json.loads(val)
             try:
@@ -271,30 +265,17 @@ def addFeatures(sourceLayer,targelUrl,expr,token):
     return retval
     
 
-def doPublishAgo(sourceLayer,targelUrl,expr):
-    token = getToken()
+def doPublishPro(sourceLayer,targelUrl,expr):
+    
+    token = dla.getSigninToken()
     if token == None:
         arcpy.AddError("Unable to retrieve token, exiting")
         return False
-    retval = deleteFeatures(sourceLayer,targelUrl,expr,token)
+    retval = deleteFeatures(sourceLayer,targelUrl,expr)
     if retval == True:
-        retval = addFeatures(sourceLayer,targelUrl,expr,token)
+        retval = addFeatures(sourceLayer,targelUrl,expr)
 
     return retval
-
-def openRequest(url,params):
-    response = None
-    if uselib2 == True:
-        data = urllib2.urlencode(params)
-        data = data.encode('utf8')
-        req = urllib2.Request(url,data)  
-        response = urllib2.urlopen(req)
-    else:
-        data = parse.urlencode(params)
-        data = data.encode('utf8')
-        req = request.Request(url,data)
-        response = request.urlopen(req)
-    return response
 
 def featureclass_to_json(fc):
     """ converts a feature class to a json dictionary representation """
@@ -348,6 +329,13 @@ def getTargetType(xmlDoc,fname):
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")
+
+def checkLayerIsService(layerStr):
+    if layerStr.find("http:") > -1 or layerStr.startswith("GIS Servers") == True:
+        return True
+    else:
+        return False
+
 
 if __name__ == "__main__":
     main()

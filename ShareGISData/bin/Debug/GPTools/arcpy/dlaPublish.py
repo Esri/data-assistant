@@ -239,9 +239,7 @@ def addFeatures(sourceLayer,targelUrl,expr):
             arcpy.SetProgressorLabel(msg)
             token = dla.getSigninToken()
             params = {'rollbackonfailure': 'true','f':'json', 'token':token, 'features': json.dumps(features)}
-            response = dla.sendRequest(url,params)            
-            val = response.readall().decode('utf-8')
-            result = json.loads(val)
+            result = dla.sendRequest(url,params)            
             try:
                 if result['error'] != None:
                     retval = False

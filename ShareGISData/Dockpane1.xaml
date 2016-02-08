@@ -191,7 +191,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged" FontStyle="{DynamicResource H6TextBlock}"/>
+                                            <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged"/>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -201,7 +201,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <TextBox x:Name="Method3Target" Text="{Binding Path=Target}" TextChanged="Method3Target_TextChanged" FontStyle="{DynamicResource H6TextBlock}"/>
+                                            <TextBox x:Name="Method3Target" Text="{Binding Path=Target}" TextChanged="Method3Target_TextChanged"/>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

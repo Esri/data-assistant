@@ -438,17 +438,23 @@ def getFieldValues(mode,fields,datasets):
 
 def addDlaField(table,targetName,field,attrs,type,length):
     # add a field to a dla Geodatabase
-    retcode = False   
+    retcode = False
     try:
-        attrs.index(targetName) # check if field exists
+        attrs.index(targetName) # check if field exists, compare uppercase
         retcode = True
     except:
         try:
-            table = table.replace("\\","\\\\")
-            #callStr = "arcpy.AddField_management('" + table + "','" + targetName + "'," + "'" + type + "','',''," + str(length) + ")"
-            #eval(callStr)
-            retcode = addField(table,targetName,type,length)
-            addMessageLocal("Field added: " + targetName)
+            upfield = False
+            for nm in attrs:
+                if targetName.upper() == nm.upper():
+                    nm2 = nm + "_1"
+                    retcode = arcpy.AlterField_management(table,nm,nm2)
+                    retcode = arcpy.AlterField_management(table,nm2,targetName)
+                    addMessageLocal("Field altered: " + nm + " to " + targetName)
+                    upfield = True
+            if upfield == False:
+                retcode = addField(table,targetName,type,length)
+                addMessageLocal("Field added: " + targetName)
         except :
             showTraceback()
             for attr in attrs: # drop any field prefix from the source layer (happens with map joins)

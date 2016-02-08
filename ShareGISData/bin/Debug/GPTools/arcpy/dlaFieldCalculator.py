@@ -60,6 +60,8 @@ def calculate(xmlFileName,workspace,name,ignore):
             if  nm == targetName:
                 type = target.getAttributeNode("Type").nodeValue
                 length = target.getAttributeNode("Length").nodeValue
+        # uppercase compare, later need to check for orig/upper name for calc
+        #ups = [nm.upper() for nm in attrs]
         dla.addDlaField(table,targetName,field,attrs,type,length)
 
     allFields = sourceFields + targetFields
@@ -120,6 +122,7 @@ def setFieldValues(table,fields,names,types,lengths):
     success = False
     global errCount
     errCount = 0
+    row = None
     try:
         updateCursor = arcpy.da.UpdateCursor(table,names)
 
@@ -147,7 +150,7 @@ def setFieldValues(table,fields,names,types,lengths):
                 targetName = dla.getNodeValue(field,"TargetName")
                     
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
-                sourceValue = getSourceValue(row,names,sourceName)
+                sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
                 if method == "None" or (method == "Copy" and sourceName == '(None)'):
                     method = "None"
@@ -193,7 +196,8 @@ def setFieldValues(table,fields,names,types,lengths):
                         expression = expression.replace(name,"|" + name + "|")
                     val = getExpression(row,names,expression)
                 # set field value
-                setValue(row,names,types,lengths,targetName,targetValue,val)
+                if method != "None":
+                    setValue(row,names,types,lengths,targetName,targetValue,val)
             try:
                 updateCursor.updateRow(row)
             except:
@@ -207,7 +211,8 @@ def setFieldValues(table,fields,names,types,lengths):
         errCount += 1
         success = False
         err = "Exception caught: unable to update dataset"
-        printRow(row,names)
+        if row != None:
+            printRow(row,names)
         dla.showTraceback()
         dla.addError(err)
 
@@ -278,17 +283,7 @@ def concatRepair(concat,sep):
     for item in concat:
         if item not in stripvals:
             items.append(item)  
-        
-##    for val in stripvals:
-##        nothing = False
-##        while nothing == False:
-##            try:
-##                if(concat[i] 
-##                concat.remove(val)
-##                nothing = False
-##            except:
-##                nothing = True
-                
+                    
     concatStr = sep.join(items)
     return concatStr
 
@@ -393,11 +388,14 @@ def getTargetValue(row,field,names,sourceName,targetName):
 
     return targetValue    
 
-def getSourceValue(row,names,sourceName):
+def getSourceValue(row,names,sourceName,targetName):
     try:
         sourceValue = row[names.index(sourceName)]    
     except:
-        sourceValue = None
+        if sourceName != targetName and sourceName.upper() == targetName.upper():
+            sourceValue = row[names.index(targetName)]    
+        else:        
+            sourceValue = None
     return sourceValue
 
 def setValue(row,names,types,lengths,targetName,targetValue,val):
@@ -409,12 +407,32 @@ def setValue(row,names,types,lengths,targetName,targetValue,val):
             val = None
         if val != targetValue:
             idx = names.index(targetName)
-            # if a string then check length
-            if idx != -1 and len(val) > int(lengths[idx]) and types[idx] == "String":
-                err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
-                dla.addError(err)
-                print(err)
-                errCount += 1
+            if types[idx] == 'Integer' or types[idx] == 'Double':
+                # if the type is numeric then try to cast to float
+                try:
+                    valTest = float(val)
+                    row[idx] = val
+                except:
+                    err = "Exception caught: unable to cast " + targetName + " to " + types[idx] + "  : '" + str(val) + "'"
+                    dla.addError(err)
+                    print(err)
+                    errCount += 1
+            elif types[idx] == 'String':
+                # if a string then check length
+                if len(val) > int(lengths[idx]):
+                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
+                    dla.addError(err)
+                    print(err)
+                    errCount += 1
+                else:
+                    try:
+                        # make sure value is a string when the target is string
+                        valTest = str(val)
+                        if valTest != val:
+                            val = str(val)
+                        row[idx] = val
+                    except:
+                        val = str(val)
             else:
                 row[idx] = val
     except:

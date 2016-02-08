@@ -62,5 +62,6 @@ def preview(xmlFileName):
             arcpy.SetParameter(_success,layer)
     else:
         dla.addError("Failed to Extract data")
+        print("Failed to Extract data")
 if __name__ == "__main__":
     main()

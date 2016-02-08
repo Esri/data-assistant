@@ -45,6 +45,14 @@ namespace DataAssistant
             else
                 return "";
         }
+        public static System.Xml.XmlDocument getXmlDocument()
+        {
+            return _xml;
+        }
+        public static string getNoneFieldName()
+        {
+            return _noneField;
+        }
         public void setXmlFileName(string fname)
         {
             // set to default/current value if null
@@ -60,12 +68,12 @@ namespace DataAssistant
         System.Xml.XmlNodeList _datarows;
 
         string fieldXPath = "/SourceTargetMatrix/Fields/Field";
-        System.Xml.XmlDocument _xml = new System.Xml.XmlDocument();
+        static System.Xml.XmlDocument _xml = new System.Xml.XmlDocument();
         TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
         //public int concatSequence = 0;
         private List<string> _concat = new List<string> { };
-        string _noneField = "(None)";
-        string _spaceVal = "(space)";
+        static string _noneField = "(None)";
+        static string _spaceVal = "(space)";
         private bool _skipSelectionChanged = false;
         private int _selectedRowNum = -1;
         int _methodnum = -1;

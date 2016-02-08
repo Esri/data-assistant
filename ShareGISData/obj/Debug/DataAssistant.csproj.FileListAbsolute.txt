@@ -9,7 +9,6 @@ C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\GPTools\
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\GPTools\DataLoadingAssistant.tbx
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\DataAssistant.dll
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\DataAssistant.pdb
-C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssistant.csprojResolveAssemblyReference.cache
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane1.baml
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane1.g.cs
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssistant_MarkupCompile.cache
@@ -18,4 +17,6 @@ C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssi
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssistant.pdb
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane2Settings.baml
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane2Settings.g.cs
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\GeneratedInternalTypeHelper.g.cs
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssistant_MarkupCompile.lref
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\DataAssistant.esriAddInX

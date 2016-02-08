@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"                                             
+             xmlns:local="clr-namespace:DataAssistant"                                             
              xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="DataAssistant.Dockpane1View"                                             
              mc:Ignorable="d" MinHeight="300" MinWidth="400" d:DesignHeight="500" d:DesignWidth="480">
     <UserControl.Resources>
@@ -10,6 +11,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!--<local:gridTooltipCreator x:Key="gridTooltipCreator"/>-->
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -25,13 +27,11 @@
                                         HorizontalAlignment="Center"
                                         ContentSource="Header"
                                         Margin="10,2" TextElement.FontSize="18"  TextElement.FontWeight="Light"/>
-                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="18" Background="Gray" Width="1" HorizontalAlignment="Right"/>
-
+                                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Height="18" Background="Gray" Width="1" HorizontalAlignment="Right"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter Property="TextElement.Foreground" TargetName="Panel" Value="{DynamicResource Esri_Blue}"/>
-                                    
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="False">
                                     <Setter Property="TextElement.Foreground" TargetName="Panel" Value="{DynamicResource Esri_Grey155}"/>
@@ -102,6 +102,7 @@
                 </Grid>
             </ScrollViewer>
         </TabItem>
+        
         <TabItem x:Name="FieldsTab" Header="Fields" BorderThickness="1">
 
             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" MinHeight="400" MinWidth="300" 
@@ -126,18 +127,32 @@
                     <DataGrid.DataContext>
                         <XmlDataProvider Source="ConfigData.xml" XPath="/SourceTargetMatrix/Fields/Field"/>
                     </DataGrid.DataContext>
+                    <!--<Style TargetType="ComboBox">
+                        <Setter Property="ToolTip" Value="{Binding Value,Converter={StaticResource gridTooltipCreator}}"/>
+                    </Style>-->
+                    <!--<Style TargetType="DataGridRow">
+                        <Setter Property="ToolTip">
+                            <Setter.Value>
+                                <Label Content="{Binding Value, Converter={StaticResource gridTooltipCreator}}"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>-->
                     <DataGrid.Columns>
                         <DataGridTemplateColumn x:Name="aSourceFieldName" MinWidth="100" Header="Source">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <ComboBox x:Name="SourceField" ItemsSource="{Binding XPath=//SourceField/@Name}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" />
+                                        <ComboBox x:Name="SourceField" ItemsSource="{Binding XPath=//SourceField/@Name}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" 
+                                                >
+                                                  <!--="{Binding XPath=//SourceField[@Name\=\'{Binding XPath\=SourceName}\']/@AliasName}">-->
+                                        </ComboBox>
+                                        <!--="{Binding XPath=//SourceField[Name\={Binding XPath\=SourceName}]/@AliasName}" />-->
                                     </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}" 
-                                    ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="100" Width="*"/>
+                        <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}"  
+                                    ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="100" Width="*" /><!--ToolTipService.ToolTip="{Binding Value, Converter={StaticResource gridTooltipCreator}}"/>-->
                     </DataGrid.Columns>
                 </DataGrid>
                 <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="0" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Visibility="Visible" IsEnabled="False">

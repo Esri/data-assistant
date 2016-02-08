@@ -11,14 +11,6 @@ namespace DataAssistant
     {
         public bool Checked { get; set; }  
         public string Name  { get; set; }
-        //        public static ObservableCollection<ConcatRow> ConcatValues()  
-        //     {  
-        //          ObservableCollection<ConcatRow> concatrows = new ObservableCollection<ConcatRow>()  
-        //          {  
-        //              new ConcatRow{ Checked=false, Name="Test"} 
-        //          };  
-        //         return concatrows;     
-        //     }
     }
     public class ValueMapRow
     {

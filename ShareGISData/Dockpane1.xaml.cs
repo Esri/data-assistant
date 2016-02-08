@@ -243,14 +243,12 @@ namespace DataAssistant
         }
         private void setXmlDataProvider(object ctrl,string xpath)
         {
-            System.Data.DataSet ds = new DataSet();
             XmlDataProvider dp = new XmlDataProvider();
             if (this.IsInitialized)
             {
                 try
                 {
                     dp.IsAsynchronous = false;
-                    ds.ReadXml(getXmlFileName());
                     dp.Document = _xml;
                     dp.XPath = xpath;
                     DataGrid uictrl = ctrl as DataGrid;

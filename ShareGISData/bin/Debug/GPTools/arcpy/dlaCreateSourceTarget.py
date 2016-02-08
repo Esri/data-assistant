@@ -24,7 +24,6 @@ if matchLibrary.lower() == 'true':
 else:
     matchLibrary = False
 
-xmlStr = ""
 dir = os.path.dirname(os.path.realpath(__file__))
 arcpy.AddMessage(dir)
 matchxslt = os.path.join(dir,"FieldMatcher.xsl")
@@ -97,7 +96,6 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     # add some data to the document
     writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
     # write it out
-    xmlStr = xmlDoc.toprettyxml()
     xmlDoc.writexml( open(xmlFileName, 'w'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
 

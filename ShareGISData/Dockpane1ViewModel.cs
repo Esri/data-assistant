@@ -96,14 +96,24 @@ namespace DataAssistant
             Geoprocessing.OpenToolDialog(setupGP.getToolbox("Preview"), param_values);
         }
     }
-    internal class Dockpane1_PublishButton : Button
+    internal class Dockpane1_AppendDataButton : Button
     {
         protected override void OnClick()
         {
             setupGP.init();
             var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
 
-            Geoprocessing.OpenToolDialog(setupGP.getToolbox("Publish"), param_values);
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("AppendData"), param_values);
+        }
+    }
+    internal class Dockpane1_ReplaceDataButton : Button
+    {
+        protected override void OnClick()
+        {
+            setupGP.init();
+            var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
+
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("ReplaceData"), param_values);
         }
     }
     internal class setupGP : Button

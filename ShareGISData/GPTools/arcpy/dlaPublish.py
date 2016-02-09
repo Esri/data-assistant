@@ -1,6 +1,7 @@
-## dlaPublish.py - Publish one source to a target
+# dlaPublish.py - Publish one source to a target
+# ----------------------------------------------------------------------------------------------------------------------
 
-import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dla,xml.dom.minidom, os
+import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dla,xml.dom.minidom,os
 import json, urllib
 import urllib.parse as parse
 import urllib.request as request
@@ -8,13 +9,13 @@ import urllib.request as request
 arcpy.AddMessage("Data Assistant - Publish")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
-useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
-_success = 2 # the last param is the derived output layer
+#useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
+_success = 1 # the last param is the derived output layer
 
-if useReplaceSettings.lower() == 'true':
-    useReplaceSettings = True
-else:
-    useReplaceSettings = False
+#if useReplaceSettings.lower() == 'true':
+#    useReplaceSettings = True
+#else:
+useReplaceSettings = False # change this from a calling script to make this script replace data.
     
 try:
     sourceLayer = arcpy.GetParameterAsText(2) # Source Layer File to load from
@@ -37,7 +38,7 @@ def main(argv = None):
     publish(xmlFileNames)
 
 def publish(xmlFileNames):
-    # use one 
+    
     global sourceLayer,targetLayer,_success
 
     arcpy.SetProgressor("default","Publishing")
@@ -48,9 +49,6 @@ def publish(xmlFileNames):
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
         if xmlDoc == None:
             return
-        token = dla.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
-        if token == None:
-            return
         svceS = False
         svceT = False
         if sourceLayer == "" or sourceLayer == None:
@@ -60,9 +58,11 @@ def publish(xmlFileNames):
             targetLayer = dla.getNodeValue(xmlDoc,"Target")
             svceT = checkLayerIsService(targetLayer)
 
-        if token == None and (svceS or SvceT):
-            arcpy.AddError("User must be signed in for this tool to work with services")
-            return
+        if svceS == True or svceT == True:
+            token = dla.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
+            if token == None:
+                arcpy.AddError("User must be signed in for this tool to work with services")
+                return
 
         dla.setWorkspace()
         targetName = dla.getTargetName(xmlDoc)
@@ -102,7 +102,9 @@ def publish(xmlFileNames):
         sourceLayer = None # set source and target back to None for multiple file processing
         targetLayer = None
         if res == False:
+            err = "Publish Failed, see messages for details"
             arcpy.AddError("Publish Failed, see messages for details")
+            print(err)
 
 def doPublish(xmlDoc,dlaTable,targetLayer):
     # either truncate and replace or replace by field value
@@ -113,13 +115,17 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
 
     if useReplaceSettings == True:
         expr = getWhereClause(xmlDoc)
+    if useReplaceSettings == True and (expr == '' or expr == None):
+        dla.addError("There must be an expression for replacing by field value, current value = " + str(expr))
+        return False
 
-    if targetLayer.startswith("GIS Servers\\") == True:
+    if targetLayer.startswith("GIS Servers\\") == True or targetLayer.startswith("http") == True:
         targetLayer = dla.getLayerSourceUrl(targetLayer)
         success = doPublishPro(dlaTable,targetLayer,expr)
     else:
         dlaTable = handleGeometryChanges(dlaTable,targetLayer)
-        if expr != '':
+        # logic change - if not replace field settings then only append
+        if expr != '' and useReplaceSettings == True:
             if dla.deleteRows(targetLayer,expr) == True:
                 success = dla.appendRows(dlaTable,targetLayer,expr)
             else:
@@ -158,8 +164,6 @@ def getOIDs(targelUrl,expr):
         retval = True
 
     return ids    
-    
-
 
 def deleteFeatures(sourceLayer,targelUrl,expr):
     retval = False
@@ -269,7 +273,10 @@ def doPublishPro(sourceLayer,targelUrl,expr):
     if token == None:
         arcpy.AddError("Unable to retrieve token, exiting")
         return False
-    retval = deleteFeatures(sourceLayer,targelUrl,expr)
+    if expr != '' and useReplaceSettings == True:
+        retval = deleteFeatures(sourceLayer,targelUrl,expr)
+    else:
+        retval = True
     if retval == True:
         retval = addFeatures(sourceLayer,targelUrl,expr)
 
@@ -318,8 +325,9 @@ def getWhereClause(xmlDoc):
         
     elif operator == 'Where':
         expr = value
-    else:
-        expr = '1=1'
+    else: 
+        expr = '' # empty string by default
+        
     return expr
 
 def getTargetType(xmlDoc,fname):

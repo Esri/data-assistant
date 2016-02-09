@@ -20,4 +20,6 @@ C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\Dockpane
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\GeneratedInternalTypeHelper.g.cs
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssistant_MarkupCompile.lref
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\obj\Debug\DataAssistant.csprojResolveAssemblyReference.cache
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\GPTools\arcpy\dlaAppendData.py
+C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\GPTools\arcpy\dlaReplaceByField.py
 C:\Users\Steve\Documents\GitHub\data-aggregation\ShareGISData\bin\Debug\DataAssistant.esriAddInX

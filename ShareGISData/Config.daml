@@ -20,8 +20,8 @@
           <button refID="DataAssistant_Dockpane1_CreateFile" size="large" />
           <button refID="DataAssistant_Dockpane1_ShowButton" size="large" />
           <button refID="DataAssistant_Dockpane1_PreviewButton" size="large" />
-          <button refID="DataAssistant_Dockpane1_PublishButton" size="large" />
-          <button refID="DataAssistant_Dockpane1_AggregateButton" size="large" />
+          <button refID="DataAssistant_Dockpane1_AppendDataButton" size="large" />
+          <button refID="DataAssistant_Dockpane1_ReplaceDataButton" size="large" />
           <button refID="DataAssistant_Dockpane2Settings_ShowButton" size="large" />
         </group>
       </groups>
@@ -37,12 +37,20 @@
           <tooltip heading="Preview Results">
             Preview Results in a local database using a subset of the records<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane1_PublishButton" caption="Publish" className="Dockpane1_PublishButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
-          <tooltip heading="Publish Data">
-            Publish data to a database or Portal service<disabledText /></tooltip>
+        <button id="DataAssistant_Dockpane1_AppendDataButton" caption="Append Data" className="Dockpane1_AppendDataButton" loadOnClick="true" smallImage="Images\Icon3.png" largeImage="Images\Icon3.png">
+          <tooltip heading="Append Data">
+            Append Data data to a database or Portal service<disabledText /></tooltip>
+        </button>
+        <button id="DataAssistant_Dockpane1_ReplaceDataButton" caption="Replace Data" className="Dockpane1_ReplaceDataButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
+          <tooltip heading="Replace Data">
+            Replace Data by field value in a database or Portal service<disabledText />
+          </tooltip>
         </button>
         <button id="DataAssistant_Dockpane2Settings_ShowButton" caption="Settings" className="Dockpane2Settings_ShowButton" loadOnClick="true" smallImage="Images\Icon5.png" largeImage="Images\Icon5.png">
           <tooltip heading="Change Settings">Change Optional Settings<disabledText /></tooltip>
+        </button>
+        <button id="DataAssistant_ReplaceDataButton" caption="ReplaceDataButton " className="ReplaceDataButton" loadOnClick="true" smallImage="Images\GenericButtonBlue16.png" largeImage="Images\GenericButtonBlue32.png">
+          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
       </controls>
       <dockPanes>

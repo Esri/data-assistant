@@ -363,7 +363,7 @@ def setProgressor(i,numFeat):
         dla.addMessage("Feature " + str(i) + " processed")
     if i % getProgressUpdate(numFeat) == 0:
         arcpy.SetProgressorPosition(i)
-        dla.addMessage("Processing feature " + str(i))
+        #dla.addMessage("Processing feature " + str(i))
 
 def getProgressUpdate(numFeat):
     if numFeat > 500:

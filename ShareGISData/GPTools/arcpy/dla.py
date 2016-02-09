@@ -14,7 +14,7 @@ startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 errorTableName = "dlaError" # errors logged here
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
-maxErrorCount = 100 # max errors before a script will stop
+maxErrorCount = 20 # max errors before a script will stop
 dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 noneName = '(None)'
@@ -265,7 +265,7 @@ def deleteRows(table,expr):
     retcode = False
     tname = table[table.rfind(os.sep) + 1:]
     #if arcpy.Exists(table):
-    vname = tname + "_View"
+    vname = tname + "_ViewDelete"
     if arcpy.Exists(vname):
         arcpy.Delete_management(vname) # delete view if it exists
 
@@ -291,7 +291,7 @@ def appendRows(sourceTable,targetTable,expr):
     retcode = False
     targTable = targetTable[targetTable.rfind("\\")+1:]
     sTable = sourceTable[sourceTable.rfind("\\")+1:]
-    viewName = sTable + "_View"
+    viewName = sTable + "_ViewAppend"
     desc = arcpy.Describe(targetTable)
     viewName = makeView(desc.dataElementType,workspace,sourceTable,viewName,expr,[])
 
@@ -705,8 +705,8 @@ def doInlineAppend(source,target):
     success = False
     if arcpy.Exists(target):
         numSourceFeat = arcpy.GetCount_management(source).getOutput(0)
-        addMessage("Truncating  "  + target)
-        arcpy.TruncateTable_management(target)
+        #addMessage("Truncating  "  + target)
+        #arcpy.TruncateTable_management(target)
         addMessage("Appending " + source + " TO " + target)
         result = arcpy.Append_management(source,target, "NO_TEST")
         numTargetFeat = arcpy.GetCount_management(target).getOutput(0)

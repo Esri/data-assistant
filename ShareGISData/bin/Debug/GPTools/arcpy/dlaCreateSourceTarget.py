@@ -140,7 +140,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
     elif nmupper in upperNames and enode == None:
         # logic for uppercase field name match, later the field will be renamed to essentially force a copy/rename unless something else set by user
         idx = upperNames.index(nmupper)
-        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original name
+        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
         addFieldElement(xmlDoc,fNode,"Method",'Copy')
     else:

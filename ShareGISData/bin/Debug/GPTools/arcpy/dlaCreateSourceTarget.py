@@ -79,13 +79,15 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     fields = getFields(descT,targetDataset)
     sourceFields = getFields(desc,sourceDataset)
     sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
+    upperNames = [nm.upper() for nm in sourceNames]
+
     #try:
     for field in fields:
         
         fNode = xmlDoc.createElement("Field")
         fieldroot.appendChild(fNode)
         fieldName = field.name[field.name.rfind(".")+1:]
-        matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames)       
+        matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)       
 
     # write the source field values
     setSourceFields(root,xmlDoc,sourceFields)
@@ -109,10 +111,11 @@ def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
         except:
             arcpy.AddError("Could not set Spatial Reference for " + lyrtype + " Layer")
 
-def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames):
+def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
     # match source field names - with and without automap
     enode = None
     count = 0
+    nmupper = fieldName.upper()
     if matchLibrary == True: # only do this if matchLibrary parameter is True
         doc = etree.parse(matchfile)
         nodes = doc.findall(".//Field[TargetName='"+fieldName+"']")
@@ -121,7 +124,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames):
                 nodecount = int(node.get('count'))
                 if nodecount > count:
                     sname = node.find("SourceName").text
-                    if sname in sourceNames or sname == '' or sname == None or sname == '(None)':
+                    if sname in sourceNames or sname == '' or sname == None or sname == dla.noneName:
                         enode = node
                         count = nodecount
             except:
@@ -130,11 +133,19 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames):
     if count > 0 and enode != None:
         addElements(xmlDoc,fNode,enode,fieldName)
     elif fieldName in sourceNames and enode == None:
+        # no previous match but match on field name
         addFieldElement(xmlDoc,fNode,"SourceName",fieldName)
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
         addFieldElement(xmlDoc,fNode,"Method",'Copy')
+    elif nmupper in upperNames and enode == None:
+        # logic for uppercase field name match, later the field will be renamed to essentially force a copy/rename unless something else set by user
+        idx = upperNames.index(nmupper)
+        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original name
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
+        addFieldElement(xmlDoc,fNode,"Method",'Copy')
     else:
-        addFieldElement(xmlDoc,fNode,"SourceName","(None)")
+        # otherwise just add None
+        addFieldElement(xmlDoc,fNode,"SourceName",dla.noneName)
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
         addFieldElement(xmlDoc,fNode,"Method",'None')
 
@@ -164,10 +175,10 @@ def setSourceTarget(root,xmlDoc,name,dataset):
 def setSourceFields(root,xmlDoc,fields):
     # Set SourceFields section of document
     sourceFields = xmlDoc.createElement("SourceFields")
-    # add a blank entry at the start for "(None)"
+    # add a blank entry at the start for "dla.noneName"
     fNode = xmlDoc.createElement("SourceField")
     sourceFields.appendChild(fNode)
-    fNode.setAttribute("Name","(None)")
+    fNode.setAttribute("Name",dla.noneName)
         
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")

@@ -95,10 +95,11 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     whereClause = ""
     try:
         if rowLimit != None:
-            #try:
-            whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
-            #except:
-            #    pass
+            try:
+                whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
+            except:
+                dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
+                
         if whereClause != '' and whereClause != ' ':
             dla.addMessage("Where " + str(whereClause))
         sourceName = dla.getSourceName(xmlDoc)
@@ -156,14 +157,15 @@ def getSpatialReference(xmlDoc,lyrtype):
 
 def getObjectIdWhereClause(table,rowLimit):
     # build a where clause, assume that oids are sequential or at least in row order...
+    oidname = arcpy.Describe(table).oidFieldName
     searchCursor = arcpy.da.SearchCursor(table,["OID@"])
     i = 0
     ids = []
-    where = "OBJECTID <= " + str(rowLimit)
+    # use the oidname in the where clause
+    where = oidname + " <= " + str(rowLimit)
     for row in searchCursor:
         if i < rowLimit:
             ids.append(row[0])
-            #arcpy.AddMessage("added oid="+str(row[0]))
         elif i == rowLimit:
             break
         i += 1
@@ -171,10 +173,7 @@ def getObjectIdWhereClause(table,rowLimit):
     if i > 0:
         minoid = min(ids)
         maxoid = max(ids)
-        where = "OBJECTID >= " + str(minoid) + " AND OBJECTID <= " + str(maxoid)
-        #arcpy.AddMessage("Features found, where="+where)
-    #else:
-    #    arcpy.AddMessage("No features found, default where clause used="+where)
+        where = oidname + " >= " + str(minoid) + " AND " + oidname + " <= " + str(maxoid)
     del searchCursor
     return where
 

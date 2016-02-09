@@ -89,7 +89,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     return success
 
 def calcValue(row,names,calcString):
-    # calculate a value based on fields and or other expressions
+    # calculate a value based on source fields and/or other expressions
     outVal = ""
     calcList = calcString.split("|")
     for strVal in calcList:
@@ -186,9 +186,16 @@ def setFieldValues(table,fields,names,types,lengths):
                     sname = dla.getNodeValue(field,"SourceName")
                     oper = dla.getNodeValue(field,"Oper")
                     iif = dla.getNodeValue(field,"If")
+                    if iif != " " and type(iif) == 'str':
+                        for name in names:
+                            if name in iif:
+                                iif = iif.replace(name,"|"+name+"|")
                     tthen = dla.getNodeValue(field,"Then")
                     eelse = dla.getNodeValue(field,"Else")
-                    expression = tthen + " if |" + sname + "| " + oper + " " + iif + " else " + eelse
+                    for name in names:
+                        if name in eelse:
+                            eelse = eelse.replace(name,"|"+name+"|")
+                    expression = "|" + tthen + "| " + " if |" + sname + "| " + oper + " |" + iif + "| else " + eelse
                     val = getExpression(row,names,expression)
                 elif method == "Expression":
                     expression = dla.getNodeValue(field,method)
@@ -418,21 +425,16 @@ def setValue(row,names,types,lengths,targetName,targetValue,val):
                     print(err)
                     errCount += 1
             elif types[idx] == 'String':
-                # if a string then check length
+                # if a string then cast to string and check length
+                if type(val) != 'str':
+                   val = str(val)
                 if len(val) > int(lengths[idx]):
                     err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
                     dla.addError(err)
                     print(err)
                     errCount += 1
                 else:
-                    try:
-                        # make sure value is a string when the target is string
-                        valTest = str(val)
-                        if valTest != val:
-                            val = str(val)
-                        row[idx] = val
-                    except:
-                        val = str(val)
+                    row[idx] = val
             else:
                 row[idx] = val
     except:

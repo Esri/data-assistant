@@ -191,7 +191,7 @@ namespace DataAssistant
         private void Method10Preview_Click()
         {
             string fname = getSourceFieldName();
-            string val = Method102Value.Text + " if " + fname + " " + Method10Value.Text + " " + Method101Value.Text + " else " + Method103Value.Text;
+            string val = "'" + Method102Value.Text + "' if '" + fname + "' " + Method10Value.Text + " '" + Method101Value.Text + "' else '" + Method103Value.Text + "'";
             setPreviewRows(val);
         }
 
@@ -414,7 +414,6 @@ namespace DataAssistant
             {
                 if (i == rownum)
                 {
-
                     foreach (System.Xml.XmlAttribute att in _datarows[i].Attributes)
                     {
                         try

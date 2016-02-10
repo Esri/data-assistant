@@ -9,8 +9,12 @@ import urllib.request as request
 arcpy.AddMessage("Data Assistant - Publish")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
-#useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
 _success = 1 # the last param is the derived output layer
+
+# this section was commented out since Publish is being called from replace and append scripts now. This could
+# be used in the future to also have a GP tool with option to replace/append. Right now it will just do append...
+# unless useReplaceSettings is set to True.
+#useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
 
 #if useReplaceSettings.lower() == 'true':
 #    useReplaceSettings = True
@@ -63,6 +67,11 @@ def publish(xmlFileNames):
             if token == None:
                 arcpy.AddError("User must be signed in for this tool to work with services")
                 return
+
+        expr = getWhereClause(xmlDoc)
+        if useReplaceSettings == True and (expr == '' or expr == None):
+            dla.addError("There must be an expression for replacing by field value, current value = " + str(expr))
+            return False
 
         dla.setWorkspace()
         targetName = dla.getTargetName(xmlDoc)
@@ -269,14 +278,13 @@ def addFeatures(sourceLayer,targelUrl,expr):
 
 def doPublishPro(sourceLayer,targelUrl,expr):
     
+    retval = True
     token = dla.getSigninToken()
     if token == None:
         arcpy.AddError("Unable to retrieve token, exiting")
         return False
     if expr != '' and useReplaceSettings == True:
         retval = deleteFeatures(sourceLayer,targelUrl,expr)
-    else:
-        retval = True
     if retval == True:
         retval = addFeatures(sourceLayer,targelUrl,expr)
 

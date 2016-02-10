@@ -39,7 +39,7 @@
         </button>
         <button id="DataAssistant_Dockpane1_AppendDataButton" caption="Append Data" className="Dockpane1_AppendDataButton" loadOnClick="true" smallImage="Images\Icon3.png" largeImage="Images\Icon3.png">
           <tooltip heading="Append Data">
-            Append Data data to a database or Portal service<disabledText /></tooltip>
+            Append Data to a database or Portal service<disabledText /></tooltip>
         </button>
         <button id="DataAssistant_Dockpane1_ReplaceDataButton" caption="Replace Data" className="Dockpane1_ReplaceDataButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
           <tooltip heading="Replace Data">

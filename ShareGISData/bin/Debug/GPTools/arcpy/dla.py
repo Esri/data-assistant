@@ -12,9 +12,10 @@ from xml.dom.minidom import Document
 debug = False
 startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
-errorTableName = "dlaError" # errors logged here
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
 maxErrorCount = 20 # max errors before a script will stop
+_errCount = 0 # count the errors and only report things > maxRowCount errors...
+
 dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 noneName = '(None)'
@@ -61,7 +62,18 @@ def addMessageLocal(val):
 def addError(val):
     # add an error to the screen output
     #arcpy.AddMessage("Error: " + str(val))
+    global _errCount
+    _errCount += 1
     arcpy.AddError(str(val))
+
+def writeFinalMessage(msg):
+    global _errCount    
+    if msg != None:
+        addMessage(str(msg))
+    addMessage("Process completed with " + str(_errCount) + " errors")
+    if _errCount > 0:
+        addMessage("When any errors are encountered tools will report a general failure - even though the results may be still be satisfactory.")
+        addMessage("Check the Geoprocessing log and errors reported along with the output data to confirm.")
 
 def strToBool(s):
     # return a boolean for values like 'true'
@@ -445,8 +457,10 @@ def addDlaField(table,targetName,field,attrs,type,length):
     except:
         try:
             upfield = False
+            tupper = targetName.upper()
             for nm in attrs:
-                if targetName.upper() == nm.upper():
+                nupper = nm.upper()
+                if tupper == nupper and nupper != 'GLOBALID': # if case insensitive match, note GlobalID cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
@@ -733,10 +747,10 @@ def doInlineAppend(source,target):
 
 def setWorkspace():
     global workspace
-    if arcpy.env.scratchWorkspace == None:
-        workspace = arcpy.env.scratchGDB
-    else:
-        workspace = arcpy.env.scratchWorkspace
+    #if arcpy.env.scratchWorkspace == None:
+    workspace = arcpy.env.scratchGDB # just put it in temp for now - not project gdb
+    #else:
+    #    workspace = arcpy.env.scratchWorkspace
     arcpy.env.workspace = workspace
 
 def getLayerVisibility(layer,xmlFileName):

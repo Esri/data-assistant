@@ -9,16 +9,7 @@ import urllib.request as request
 arcpy.AddMessage("Data Assistant - Publish")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
-_success = 1 # the last param is the derived output layer
 
-# this section was commented out since Publish is being called from replace and append scripts now. This could
-# be used in the future to also have a GP tool with option to replace/append. Right now it will just do append...
-# unless useReplaceSettings is set to True.
-#useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
-
-#if useReplaceSettings.lower() == 'true':
-#    useReplaceSettings = True
-#else:
 useReplaceSettings = False # change this from a calling script to make this script replace data.
     
 try:
@@ -49,7 +40,7 @@ def publish(xmlFileNames):
     arcpy.SetProgressorLabel("Publishing")
     xmlFiles = xmlFileNames.split(";")
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
-        arcpy.AddMessage("Configuration file: " + xmlFile)
+        dla.addMessage("Configuration file: " + xmlFile)
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
         if xmlDoc == None:
             return
@@ -65,7 +56,7 @@ def publish(xmlFileNames):
         if svceS == True or svceT == True:
             token = dla.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
             if token == None:
-                arcpy.AddError("User must be signed in for this tool to work with services")
+                dla.addError("User must be signed in for this tool to work with services")
                 return
 
         expr = getWhereClause(xmlDoc)
@@ -81,38 +72,21 @@ def publish(xmlFileNames):
             msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
             if arcpy.TestSchemaLock(table) != True:
                 msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
-            arcpy.AddError(msg)
+            dla.AddError(msg)
             print(msg)
             return
         else:
             res = dlaFieldCalculator.calculate(xmlFile,dla.workspace,targetName,False)
             if res == True:
-                #arcpy.env.addOutputsToMap = True
                 dlaTable = dla.getTempTable(targetName)
                 res = doPublish(xmlDoc,dlaTable,targetLayer)
-                if res == True and not targetLayer.startswith("GIS Servers\\") == True:
-                    layer = targetName
-                    layertmp = targetName + "tmp"
-                    if arcpy.Exists(layertmp):
-                        arcpy.Delete_management(layertmp)
-                    arcpy.MakeFeatureLayer_management(dlaTable,layertmp)
-                    fieldInfo = dla.getLayerVisibility(layertmp,xmlFile)
-                    arcpy.Delete_management(layertmp)
-                    if arcpy.Exists(layer):
-                        arcpy.Delete_management(layer)
-                    
-                    arcpy.MakeFeatureLayer_management(targetLayer,layer,None,dla.workspace,fieldInfo)
-                    # should make only the target fields visible
-                    arcpy.SetParameter(_success,layer)
-                else:
-                    arcpy.SetParameter(_success,res)
 
         arcpy.ResetProgressor()
         sourceLayer = None # set source and target back to None for multiple file processing
         targetLayer = None
         if res == False:
             err = "Publish Failed, see messages for details"
-            arcpy.AddError("Publish Failed, see messages for details")
+            dla.AddError("Publish Failed, see messages for details")
             print(err)
 
 def doPublish(xmlDoc,dlaTable,targetLayer):
@@ -125,14 +99,13 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
     if useReplaceSettings == True:
         expr = getWhereClause(xmlDoc)
     if useReplaceSettings == True and (expr == '' or expr == None):
-        dla.addError("There must be an expression for replacing by field value, current value = " + str(expr))
+        dla.addError("There must be an expression for replacing by field value, current value = '" + str(expr) + "'")
         return False
 
     if targetLayer.startswith("GIS Servers\\") == True or targetLayer.startswith("http") == True:
         targetLayer = dla.getLayerSourceUrl(targetLayer)
         success = doPublishPro(dlaTable,targetLayer,expr)
     else:
-        dlaTable = handleGeometryChanges(dlaTable,targetLayer)
         # logic change - if not replace field settings then only append
         if expr != '' and useReplaceSettings == True:
             if dla.deleteRows(targetLayer,expr) == True:
@@ -141,7 +114,6 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
                 success = False       
         else:
             success = dla.doInlineAppend(dlaTable,targetLayer)
-
     return success
 
 def getOIDs(targelUrl,expr):
@@ -149,27 +121,27 @@ def getOIDs(targelUrl,expr):
     arcpy.SetProgressor("default","Querying Existing Features")
     arcpy.SetProgressorLabel("Querying Existing Features")
     url = targelUrl + '/query'
-    arcpy.AddMessage("Url:"+url)
+    #dla.addMessage("Url:"+url)
     token = dla.getSigninToken()
     if expr != '':
         params = {'f': 'pjson', 'where': expr,'token':token,'returnIdsOnly':'true'}
     else:
         params = {'f': 'pjson', 'where': '1=1','token':token,'returnIdsOnly':'true'}
         
-    arcpy.AddMessage("Params:"+json.dumps(params))
+    #dla.addMessage("Params:"+json.dumps(params))
     result = dla.sendRequest(url,params)            
     try:
         if result['error'] != None:
             retval = False
-            arcpy.AddMessage("Query features from Feature Service failed")
-            arcpy.AddMessage(json.dumps(result))
+            dla.addMessage("Query features from Feature Service failed")
+            dla.addMessage(json.dumps(result))
             error = True
     except:
         ids = result['objectIds']
         lenFound = len(ids)
         msg = str(lenFound) + " features found in existing Service"
         print(msg)
-        arcpy.AddMessage(msg)
+        dla.addMessage(msg)
         retval = True
 
     return ids    
@@ -185,7 +157,7 @@ def deleteFeatures(sourceLayer,targelUrl,expr):
         featuresProcessed = 0
         numFeat = len(ids)
         if numFeat == 0:
-            arcpy.AddMessage("0 Features to Delete, exiting")            
+            dla.addMessage("0 Features to Delete, exiting")            
             return True # nothing to delete is OK
         if numFeat > _chunkSize:
             chunk = _chunkSize
@@ -196,7 +168,7 @@ def deleteFeatures(sourceLayer,targelUrl,expr):
             #Chunk deletes using chunk size at a time
             next = featuresProcessed + chunk
             msg = "Deleting features " + str(featuresProcessed) + ":" + str(next)
-            arcpy.AddMessage(msg)
+            dla.addMessage(msg)
             arcpy.SetProgressorLabel(msg)
             oids = ",".join(str(e) for e in ids[featuresProcessed:next])
             url = targelUrl + '/deleteFeatures'
@@ -206,21 +178,28 @@ def deleteFeatures(sourceLayer,targelUrl,expr):
             try:
                 if result['error'] != None:
                     retval = False
-                    arcpy.AddMessage("Delete features from Feature Service failed")
-                    arcpy.AddMessage(json.dumps(result))
+                    dla.addMessage("Delete features from Feature Service failed")
+                    dla.addMessage(json.dumps(result))
                     error = True
             except:
-                lenDeleted = len(result['deleteResults'])
-                msg = str(lenDeleted) + " features deleted, " + str(featuresProcessed + chunk) + "/" + str(numFeat)
-                print(msg)
-                arcpy.AddMessage(msg)
-                retval = True
-                featuresProcessed += chunk
+                try:
+                    lenDeleted = len(result['deleteResults'])
+                    msg = str(lenDeleted) + " features deleted, " + str(featuresProcessed + chunk) + "/" + str(numFeat)
+                    print(msg)
+                    dla.addMessage(msg)
+                    retval = True
+                except:
+                    retval = False
+                    error = True
+                    dla.showTraceback()
+                    dla.addMessage("Delete features from Feature Service failed")
+                    dla.AddError(json.dumps(result))
+            featuresProcessed += chunk
     except:
         retval = False
         error = True
         dla.showTraceback()
-        arcpy.AddMessage("Delete features from Feature Service failed")
+        dla.addMessage("Delete features from Feature Service failed")
         pass
 
     return retval
@@ -237,7 +216,7 @@ def addFeatures(sourceLayer,targelUrl,expr):
         url = targelUrl + '/addFeatures'  
         numFeat = len(featurejs['features'])
         if numFeat == 0:
-            arcpy.AddMessage("0 Features to Add, exiting")            
+            dla.addMessage("0 Features to Add, exiting")            
             return True # nothing to add is OK
         if numFeat > _chunkSize:
             chunk = _chunkSize
@@ -248,7 +227,7 @@ def addFeatures(sourceLayer,targelUrl,expr):
             next = featuresProcessed + chunk
             features = featurejs['features'][featuresProcessed:next]
             msg = "Adding features " + str(featuresProcessed) + ":" + str(next)
-            arcpy.AddMessage(msg)
+            dla.addMessage(msg)
             arcpy.SetProgressorLabel(msg)
             token = dla.getSigninToken()
             params = {'rollbackonfailure': 'true','f':'json', 'token':token, 'features': json.dumps(features)}
@@ -256,19 +235,26 @@ def addFeatures(sourceLayer,targelUrl,expr):
             try:
                 if result['error'] != None:
                     retval = False
-                    arcpy.AddMessage("Add features to Feature Service failed")
-                    arcpy.AddMessage(json.dumps(result))
+                    dla.addMessage("Add features to Feature Service failed")
+                    dla.addMessage(json.dumps(result))
                     error = True
             except:
-                lenAdded = len(result['addResults']) 
-                msg = str(lenAdded) + " features added, " + str(featuresProcessed + chunk) + "/" + str(numFeat)
-                print(msg)
-                arcpy.AddMessage(msg)
-                retval = True
+                try:
+                    lenAdded = len(result['addResults']) 
+                    msg = str(lenAdded) + " features added, " + str(featuresProcessed + chunk) + "/" + str(numFeat)
+                    print(msg)
+                    dla.addMessage(msg)
+                    retval = True
+                except:
+                    retval = False
+                    dla.addMessage("Add features to Feature Service failed")
+                    dla.showTraceback()
+                    dla.AddError(json.dumps(result))
+                    error = True
             featuresProcessed += chunk
     except:
         retval = False
-        arcpy.AddMessage("Add features to Feature Service failed")
+        dla.addMessage("Add features to Feature Service failed")
         dla.showTraceback()
         error = True
         pass
@@ -281,7 +267,7 @@ def doPublishPro(sourceLayer,targelUrl,expr):
     retval = True
     token = dla.getSigninToken()
     if token == None:
-        arcpy.AddError("Unable to retrieve token, exiting")
+        dla.AddError("Unable to retrieve token, exiting")
         return False
     if expr != '' and useReplaceSettings == True:
         retval = deleteFeatures(sourceLayer,targelUrl,expr)
@@ -307,7 +293,7 @@ def handleGeometryChanges(sourceDataset,targetLayer):
     return dataset
 
 def simplifyPolygons(sourceDataset):
-    arcpy.AddMessage("Simplifying (densifying) Parcel Geometry")
+    dla.addMessage("Simplifying (densifying) Parcel Geometry")
     arcpy.Densify_edit(sourceDataset)
     simplify = sourceDataset + '_simplified'
     if arcpy.Exists(simplify):
@@ -349,6 +335,19 @@ def checkLayerIsService(layerStr):
         return True
     else:
         return False
+
+'''
+some scrapyard items
+#_success = 1 # the last param is the derived output layer
+# this section was commented out since Publish is being called from replace and append scripts now. This could
+# be used in the future to also have a GP tool with option to replace/append. Right now it will just do append...
+# unless useReplaceSettings is set to True.
+#useReplaceSettings = arcpy.GetParameterAsText(1) # indicates whether to replace by field value or just truncate/append
+
+#if useReplaceSettings.lower() == 'true':
+#    useReplaceSettings = True
+#else:
+'''
 
 
 if __name__ == "__main__":

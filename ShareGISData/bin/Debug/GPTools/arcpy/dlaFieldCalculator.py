@@ -1,5 +1,5 @@
-# ---------------------------------------------------------------------------
 # dlaFieldCalculator.py
+# ---------------------------------------------------------------------------
 
 import os, sys, traceback, time, arcpy,  dla
 
@@ -13,7 +13,7 @@ SUCCESS = 2 # parameter number for output success value
 if dla.workspace == "" or dla.workspace == "#":
     dla.workspace = arcpy.env.scratchGDB
 
-errCount = 0
+dla._errCount = 0
 
 def main(argv = None):
     xmlDoc = dla.getXmlDoc(xmlFileName)
@@ -120,8 +120,6 @@ def calcValue(row,names,calcString):
 def setFieldValues(table,fields,names,types,lengths):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
-    global errCount
-    errCount = 0
     row = None
     try:
         updateCursor = arcpy.da.UpdateCursor(table,names)
@@ -134,13 +132,13 @@ def setFieldValues(table,fields,names,types,lengths):
         
         for row in updateCursor:
             success = True
-            if errCount > dla.maxErrorCount:
-                dla.addMessage("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
-                arcpy.AddError("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
+            if dla._errCount > dla.maxErrorCount:
+                #dla.addMessage("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
+                dla.addError("Exceeded max number of errors in dla.maxErrorCount: " + str(dla.maxErrorCount))
                 return False
             if i > dla.maxrows:
-                dla.addMessage("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
-                arcpy.AddError("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
+                #dla.addMessage("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
+                dla.addError("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
                 return True
             i = i + 1
             setProgressor(i,numFeat)
@@ -208,14 +206,14 @@ def setFieldValues(table,fields,names,types,lengths):
             try:
                 updateCursor.updateRow(row)
             except:
-                errCount += 1
+                dla._errCount += 1
                 success = False
                 err = "Exception caught: unable to update row"
                 printRow(row,names)
                 dla.showTraceback()
                 dla.addError(err)
     except:
-        errCount += 1
+        dla._errCount += 1
         success = False
         err = "Exception caught: unable to update dataset"
         if row != None:
@@ -232,7 +230,7 @@ def setFieldValues(table,fields,names,types,lengths):
 
 
 def getSplit(sourceValue,splitter,part):
-    global errCount
+
     strVal = None
     try:
         strVal = sourceValue.split(str(splitter))[int(part)]
@@ -295,7 +293,7 @@ def concatRepair(concat,sep):
     return concatStr
 
 def getValueMap(row,names,sourceValue,field):
-    global errCount
+
     # run value map function for a row
     valueMaps = field.getElementsByTagName("ValueMap")
     newValue = None
@@ -327,7 +325,7 @@ def getValueMap(row,names,sourceValue,field):
                 try:
                     newValue = dla.getTextValue(targetValues[i])
                 except:
-                    errCount += 1
+                    dla._errCount += 1
                     success = False
                     err = "Unable to map values for " + sourceValue + ", value = " + str(newValue)
                     dla.showTraceback()
@@ -338,14 +336,14 @@ def getValueMap(row,names,sourceValue,field):
         if str(otherwise) != "None":
             newValue = otherwise
         else:
-            errCount += 1
+            dla._errCount += 1
             success = False
             err = "Unable to find map value (otherwise) for " + str(targetName) + ", value = " + str(sourceValue)
             dla.addError(err)
     return newValue
 
 def getExpression(row,names,expression):
-    global errCount
+
     calcNew = None
     try:
         calcNew = calcValue(row,names,expression)
@@ -355,7 +353,7 @@ def getExpression(row,names,expression):
         dla.showTraceback()
         dla.addError(err)
         print(err)
-        errCount += 1
+        dla._errCount += 1
     return calcNew
 
 def setProgressor(i,numFeat):
@@ -406,9 +404,7 @@ def getSourceValue(row,names,sourceName,targetName):
     return sourceValue
 
 def setValue(row,names,types,lengths,targetName,targetValue,val):
-
-    global errCount
-   
+  
     try:
         if val == 'None':
             val = None
@@ -423,7 +419,7 @@ def setValue(row,names,types,lengths,targetName,targetValue,val):
                     err = "Exception caught: unable to cast " + targetName + " to " + types[idx] + "  : '" + str(val) + "'"
                     dla.addError(err)
                     print(err)
-                    errCount += 1
+                    dla._errCount += 1
             elif types[idx] == 'String':
                 # if a string then cast to string and check length
                 if type(val) != 'str':
@@ -432,7 +428,7 @@ def setValue(row,names,types,lengths,targetName,targetValue,val):
                     err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
                     dla.addError(err)
                     print(err)
-                    errCount += 1
+                    dla._errCount += 1
                 else:
                     row[idx] = val
             else:
@@ -443,7 +439,7 @@ def setValue(row,names,types,lengths,targetName,targetValue,val):
         dla.showTraceback()
         dla.addError(err)
         print(err)
-        errCount += 1
+        dla._errCount += 1
 
 if __name__ == "__main__":
     main()

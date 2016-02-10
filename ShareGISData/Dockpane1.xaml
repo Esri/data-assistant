@@ -62,7 +62,7 @@
                     <StackPanel x:Name="FileStack" Grid.Row="0" IsEnabled="True">
                         <Label x:Name="FileLabel" Margin="0,5,5,0" Content="Source-Target Configuration File" FontSize="12" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Top"/>
                         <TextBox x:Name="FileName" HorizontalAlignment="Stretch" Margin="5,5,80,5" TextWrapping="NoWrap"  
-                 Text="" TextChanged="FileName_TextChanged" VerticalAlignment="Top" Style="{DynamicResource H6TextBlock}"/>
+                            Text="" TextChanged="FileName_TextChanged" VerticalAlignment="Top" Style="{DynamicResource H6TextBlock}"/>
                         <Button x:Name="SelectButton" Content="Select..." Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-27,5,5" Width="70" Click="SelectButton_Click"/>
                         <Button x:Name="RevertButton" Content="Revert..." Style="{DynamicResource Esri_SimpleButton}" Visibility="Hidden" ToolTip="Discard changes and re-open the original file" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,5,5" Width="70" Click="RevertButton_Click"/>
                     </StackPanel>
@@ -70,7 +70,7 @@
                     <StackPanel x:Name="SourceStack" Grid.Row="1" IsEnabled="False" Visibility="Hidden">
                         <Label x:Name="SourceLabel" Margin="0,5,5,0" Content="Source Layer"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Top"/>
                         <TextBox x:Name="SourceLayer" HorizontalAlignment="Stretch" Margin="5,5,80,5" TextWrapping="NoWrap" IsEnabled="False"  
-                 Text="" VerticalAlignment="Top"  TextChanged="SourceLayer_TextChanged" Style="{DynamicResource H6TextBlock}" />
+                            Text="" VerticalAlignment="Top"  TextChanged="SourceLayer_TextChanged" Style="{DynamicResource H6TextBlock}" />
                         <Button x:Name="SourceButton" Content="Source..." Style="{DynamicResource Esri_SimpleButton}" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-27,5,5" Width="70" Click="SourceButton_Click"/>
                     </StackPanel>
 
@@ -96,7 +96,7 @@
                     <StackPanel x:Name="TargetStack" Grid.Row="4" IsEnabled="False" Visibility="Hidden">
                         <Label x:Name="TargetLabel" Margin="0,5,5,0" Content="Target Layer"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Top"/>
                         <TextBox x:Name="TargetLayer" HorizontalAlignment="Stretch" Margin="5,5,80,5" Style="{DynamicResource H6TextBlock}" TextWrapping="NoWrap" 
-                 Text="" VerticalAlignment="Top" TextChanged="TargetLayer_TextChanged"  IsEnabled="False" />
+                            Text="" VerticalAlignment="Top" TextChanged="TargetLayer_TextChanged"  IsEnabled="False" />
                         <Button x:Name="TargetButton" Content="Target..." Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-27,5,5" Width="70" Click="TargetButton_Click"/>
                     </StackPanel>
                 </Grid>
@@ -294,9 +294,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>
-
             </Grid>
         </TabItem>
-
     </TabControl>
 </UserControl>

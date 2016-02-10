@@ -1,4 +1,5 @@
-## dlaPreview.py - Preview one source to a target with a limited number of rows
+# dlaPreview.py - Preview one source to a target with a limited number of rows
+# ------------------------------------------------------------------------------------
 
 import arcpy,os,dlaExtractLayerToGDB,dlaFieldCalculator,dla,datetime
 
@@ -63,5 +64,7 @@ def preview(xmlFileName):
     else:
         dla.addError("Failed to Extract data")
         print("Failed to Extract data")
+    dla.writeFinalMessage("Data Assistant - Preview")
+
 if __name__ == "__main__":
     main()

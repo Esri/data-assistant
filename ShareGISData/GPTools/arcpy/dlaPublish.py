@@ -86,7 +86,7 @@ def publish(xmlFileNames):
         targetLayer = None
         if res == False:
             err = "Publish Failed, see messages for details"
-            dla.AddError("Publish Failed, see messages for details")
+            dla.AddError(err)
             print(err)
 
 def doPublish(xmlDoc,dlaTable,targetLayer):

@@ -72,7 +72,7 @@ def publish(xmlFileNames):
             msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
             if arcpy.TestSchemaLock(table) != True:
                 msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
-            dla.AddError(msg)
+            dla.addError(msg)
             print(msg)
             return
         else:
@@ -86,7 +86,7 @@ def publish(xmlFileNames):
         targetLayer = None
         if res == False:
             err = "Publish Failed, see messages for details"
-            dla.AddError("Publish Failed, see messages for details")
+            dla.addError(err)
             print(err)
 
 def doPublish(xmlDoc,dlaTable,targetLayer):
@@ -193,7 +193,7 @@ def deleteFeatures(sourceLayer,targelUrl,expr):
                     error = True
                     dla.showTraceback()
                     dla.addMessage("Delete features from Feature Service failed")
-                    dla.AddError(json.dumps(result))
+                    dla.addError(json.dumps(result))
             featuresProcessed += chunk
     except:
         retval = False
@@ -249,7 +249,7 @@ def addFeatures(sourceLayer,targelUrl,expr):
                     retval = False
                     dla.addMessage("Add features to Feature Service failed")
                     dla.showTraceback()
-                    dla.AddError(json.dumps(result))
+                    dla.addError(json.dumps(result))
                     error = True
             featuresProcessed += chunk
     except:
@@ -267,7 +267,7 @@ def doPublishPro(sourceLayer,targelUrl,expr):
     retval = True
     token = dla.getSigninToken()
     if token == None:
-        dla.AddError("Unable to retrieve token, exiting")
+        dla.addError("Unable to retrieve token, exiting")
         return False
     if expr != '' and useReplaceSettings == True:
         retval = deleteFeatures(sourceLayer,targelUrl,expr)

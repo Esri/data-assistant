@@ -322,7 +322,7 @@ def appendRows(sourceTable,targetTable,expr):
     if int(numTargetFeat) != int(numSourceFeat):
         arcpy.AddMessage("WARNING: Different number of rows in target dataset, " + numTargetFeat )
     if int(numTargetFeat) == 0:
-        arcpy.AddError("ERROR: 0 Features in target dataset")
+        addError("ERROR: 0 Features in target dataset")
         retcode = False
 
     return retcode
@@ -733,7 +733,7 @@ def doInlineAppend(source,target):
         if int(numTargetFeat) != int(numSourceFeat):
             arcpy.AddMessage("WARNING: Different number of rows in Target table, " + numTargetFeat )
         if int(numTargetFeat) == 0:
-            arcpy.AddError("ERROR: 0 Features in target dataset")
+            addError("ERROR: 0 Features in target dataset")
             success = False
                        
         if debug:
@@ -842,7 +842,7 @@ def getXmlDoc(xmlFile):
         xmlDoc = xml.dom.minidom.parse(xmlFile) # parse from string
         #xmlFile = os.path.normpath(xmlFile)
     except:
-        arcpy.AddError("Unable to open the xmlFile: " + xmlFile)
+        addError("Unable to open the xmlFile: " + xmlFile)
 
     return xmlDoc
 

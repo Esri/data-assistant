@@ -78,10 +78,10 @@ namespace DataAssistant
             DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
             try
             {
-                if (pane.IsVisible)
-                    Dockpane1ViewModel.doHide();
-                else
-                    Dockpane1ViewModel.Show();
+                //if (pane.IsVisible)
+                //    Dockpane1ViewModel.doHide();
+               // else
+               Dockpane1ViewModel.Show();
             }
             catch { }
         }

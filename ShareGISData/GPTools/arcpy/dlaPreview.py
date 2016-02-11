@@ -36,7 +36,8 @@ def preview(xmlFileName):
     global sourceLayer,targetLayer,rowLimit
 
     dla.setWorkspace()
-    
+    dla._errorCount = 0
+
     xmlDoc = dla.getXmlDoc(xmlFileName)
     if rowLimit == "" or rowLimit == None:
         rowLimit = 100

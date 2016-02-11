@@ -35,6 +35,7 @@ def main(argv = None):
 def publish(xmlFileNames):
     
     global sourceLayer,targetLayer,_success
+    dla._errorCount = 0
 
     arcpy.SetProgressor("default","Publishing")
     arcpy.SetProgressorLabel("Publishing")

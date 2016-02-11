@@ -8,6 +8,7 @@ dlaPublish.useReplaceSettings = True # setting this to True will use ReplaceByFi
 arcpy.AddMessage("Replacing by Field Value")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
+dla._errorCount = 0
 
 dlaPublish.publish(xmlFileNames)
 

@@ -1,7 +1,12 @@
 # dla - Data Loading Assistant common functions
 # Dec 2015
 # ---------------------------------------------------------------------------
+'''
+Contains a collection of support functions used by dla tools to provide error handling and other supporting
+functions, typically an expansion of underlying arcpy functions with a bit more logic and testing.
 
+Generally functions return data or a True/False result depending on the situation and the arcpy functions.
+'''
 import sys,os,traceback,xml.dom.minidom,time,datetime,gc,arcpy
 
 import json, urllib

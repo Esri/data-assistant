@@ -1,5 +1,14 @@
 # dlaPublish.py - Publish one source to a target
 # ----------------------------------------------------------------------------------------------------------------------
+'''
+This script is called by both Append Data and Replace Data tools. It has several options for running
+the tool using as a Geoprocessing script directly or by callng dlaPublish.publish from another script.
+
+Note in the GP script approach a source and target dataset can be provided as parameters to override the settings
+in the Xml Config file. In this case just a single xml file should be passed with the datasets as the 2nd and 3rd
+parameters. By default this will use the Append approach, to use replace by settings you can also make the
+useReplaceSettings variable to change the behavior (see example at the end of this script).
+'''
 
 import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dla,xml.dom.minidom,os
 import json, urllib
@@ -13,14 +22,14 @@ xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multi
 useReplaceSettings = False # change this from a calling script to make this script replace data.
     
 try:
-    sourceLayer = arcpy.GetParameterAsText(2) # Source Layer File to load from
+    sourceLayer = arcpy.GetParameterAsText(1) # Source Layer File to load from
     if sourceLayer == "" or sourceLayer == "#":
         sourceLayer = None
 except:
     sourceLayer = None
 
 try:
-    targetLayer = arcpy.GetParameterAsText(3) # Target Layer File to load to
+    targetLayer = arcpy.GetParameterAsText(2) # Target Layer File to load to
     if targetLayer == "" or targetLayer == "#":
         targetLayer = None
 except:
@@ -33,7 +42,7 @@ def main(argv = None):
     publish(xmlFileNames)
 
 def publish(xmlFileNames):
-    
+    # function called from main or from another script, performs the data update processing
     global sourceLayer,targetLayer,_success
     dla._errorCount = 0
 
@@ -118,6 +127,7 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
     return success
 
 def getOIDs(targelUrl,expr):
+    # get the list of oids.
     ids = []
     arcpy.SetProgressor("default","Querying Existing Features")
     arcpy.SetProgressorLabel("Querying Existing Features")
@@ -148,6 +158,7 @@ def getOIDs(targelUrl,expr):
     return ids    
 
 def deleteFeatures(sourceLayer,targelUrl,expr):
+    # delete features using chunks of _chunkSize
     retval = False
     error = False
     # delete section
@@ -207,6 +218,7 @@ def deleteFeatures(sourceLayer,targelUrl,expr):
 
 
 def addFeatures(sourceLayer,targelUrl,expr):
+    # add features using _chunkSize
     retval = False
     error = False
     # add section
@@ -264,7 +276,7 @@ def addFeatures(sourceLayer,targelUrl,expr):
     
 
 def doPublishPro(sourceLayer,targelUrl,expr):
-    
+    # logic for publishing to service registered on Portal or ArcGIS Online
     retval = True
     token = dla.getSigninToken()
     if token == None:
@@ -278,12 +290,13 @@ def doPublishPro(sourceLayer,targelUrl,expr):
     return retval
 
 def featureclass_to_json(fc):
-    """ converts a feature class to a json dictionary representation """
+    # converts a feature class to a json dictionary representation 
     featureSet = arcpy.FeatureSet(fc)# Load the feature layer into a feature set
     desc = arcpy.Describe(featureSet)# use the json property of the feature set
     return json.loads(desc.json)
 
 def handleGeometryChanges(sourceDataset,targetLayer):
+    # simplfiy polygons
     desc = arcpy.Describe(sourceDataset) # assuming local file gdb
     dataset = sourceDataset
     if desc.ShapeType == "Polygon" and (targetLayer.lower().startswith("gis servers") == True or targetLayer.lower().startswith("http://") == True):
@@ -294,6 +307,7 @@ def handleGeometryChanges(sourceDataset,targetLayer):
     return dataset
 
 def simplifyPolygons(sourceDataset):
+    # simplfy polygons using approach developed by Chris Bus.
     dla.addMessage("Simplifying (densifying) Parcel Geometry")
     arcpy.Densify_edit(sourceDataset)
     simplify = sourceDataset + '_simplified'
@@ -306,7 +320,7 @@ def simplifyPolygons(sourceDataset):
     return simplify
 
 def getWhereClause(xmlDoc):
-
+    # get the where clause using the xml document or return ''
     repl = xmlDoc.getElementsByTagName("ReplaceBy")[0]
     fieldName = dla.getNodeValue(repl,"FieldName")
     operator = dla.getNodeValue(repl,"Operator")
@@ -326,13 +340,15 @@ def getWhereClause(xmlDoc):
     return expr
 
 def getTargetType(xmlDoc,fname):
+    # get the target field type
     for tfield in xmlDoc.getElementsByTagName('TargetField'):       
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")
 
 def checkLayerIsService(layerStr):
-    if layerStr.find("http:") > -1 or layerStr.startswith("GIS Servers") == True:
+    # Check if the layer string is a service
+    if layerStr.lower().startswith("http") > -1 or layerStr.lower().startswith("gis servers") == True:
         return True
     else:
         return False

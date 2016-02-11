@@ -1,7 +1,12 @@
 # dla - Data Loading Assistant common functions
 # Dec 2015
 # ---------------------------------------------------------------------------
+'''
+Contains a collection of support functions used by dla tools to provide error handling and other supporting
+functions, typically an expansion of underlying arcpy functions with a bit more logic and testing.
 
+Generally functions return data or a True/False result depending on the situation and the arcpy functions.
+'''
 import sys,os,traceback,xml.dom.minidom,time,datetime,gc,arcpy
 
 import json, urllib
@@ -14,7 +19,7 @@ startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
 maxErrorCount = 20 # max errors before a script will stop
-_errCount = 0 # count the errors and only report things > maxRowCount errors...
+_errorCount = 0 # count the errors and only report things > maxRowCount errors...
 
 dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
@@ -62,16 +67,16 @@ def addMessageLocal(val):
 def addError(val):
     # add an error to the screen output
     #arcpy.AddMessage("Error: " + str(val))
-    global _errCount
-    _errCount += 1
+    global _errorCount
+    _errorCount += 1
     arcpy.AddError(str(val))
 
 def writeFinalMessage(msg):
-    global _errCount    
+    global _errorCount    
     if msg != None:
         addMessage(str(msg))
-    addMessage("Process completed with " + str(_errCount) + " errors")
-    if _errCount > 0:
+    addMessage("Process completed with " + str(_errorCount) + " errors")
+    if _errorCount > 0:
         addMessage("When any errors are encountered tools will report a general failure - even though the results may be still be satisfactory.")
         addMessage("Check the Geoprocessing log and errors reported along with the output data to confirm.")
 

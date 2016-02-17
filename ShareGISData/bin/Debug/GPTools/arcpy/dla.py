@@ -23,7 +23,7 @@ _errorCount = 0 # count the errors and only report things > maxRowCount errors..
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 
-dirName = os.path.dirname( os.path.realpath( __file__) )
+_dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 noneName = '(None)'
 
@@ -754,11 +754,21 @@ def doInlineAppend(source,target):
 
 def setWorkspace():
     global workspace
-    #if arcpy.env.scratchWorkspace == None:
-    workspace = arcpy.env.scratchGDB # just put it in temp for now - not project gdb
+    wsName = 'dla.gdb'
+    ws = os.path.join(_dirName,wsName)
+    if not arcpy.Exists(ws):
+        arcpy.CreateFileGDB_management(_dirName,wsName)
+        workspace = ws
+    arcpy.env.workspace = workspace
+    #if arcpy.env.scratchWorkspace == None: -- too many issues with locking using project/scratch gdb for intermediate data
+     #workspace = arcpy.env.scratchGDB # just put it in temp for now - not project gdb
     #else:
     #    workspace = arcpy.env.scratchWorkspace
-    arcpy.env.workspace = workspace
+
+def deleteWorkspace():
+    global workspace
+    if workspace != None and arcpy.Exists(workspace):
+        arcpy.Delete_management(workspace)
 
 def getLayerVisibility(layer,xmlFileName):
     fieldInfo = None

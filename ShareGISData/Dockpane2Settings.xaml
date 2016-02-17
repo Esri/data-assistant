@@ -53,9 +53,9 @@
                         <ColumnDefinition Width="160*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel x:Name="MatchLibraryStack" Grid.Row="5" IsEnabled="True" Visibility="Visible">
-                        <Label x:Name="MatchLibraryLabel" Margin="5,5,5,0" Content="Match Library Settings" VerticalAlignment="Top" ToolTip="MatchLibrary remembers your configuration patterns and applies to new field settings"/>
-                        <Button x:Name="UpdateMatchLibraryButton" Content="Update Match Library..." Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="left" Margin="5,5,0,5" Click="UpdateMatchLibraryButton_Click" ToolTip="Use the settings in your current configuration file to update MatchLibrary values" Width="150"/>
-                        <Button x:Name="ResetMatchLibraryButton" Content="Clear Match Library..." Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="left" Margin="5,5,0,5" Click="ResetMatchLibraryButton_Click" ToolTip="This button will clear all saved MatchLibrary values" Width="150"/>
+                        <Label x:Name="MatchLibraryLabel" Margin="5,5,5,0" Content="Match Library Settings" VerticalAlignment="Top" ToolTip="Match Library remembers your configuration patterns and applies to new field settings"/>
+                        <Button x:Name="UpdateMatchLibraryButton" Content="Update Match Library..." Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="left" Margin="5,5,0,5" Click="UpdateMatchLibraryButton_Click" ToolTip="Use the settings in your current configuration file to update Match Library values" Width="150"/>
+                        <Button x:Name="ResetMatchLibraryButton" Content="Clear Match Library..." Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="left" Margin="5,5,0,5" Click="ResetMatchLibraryButton_Click" ToolTip="This button will clear all saved Match Library values" Width="150"/>
                     </StackPanel>
                 </Grid>
             </TabItem>

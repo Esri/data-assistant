@@ -282,6 +282,7 @@ def doPublishPro(sourceLayer,targelUrl,expr):
     if token == None:
         dla.addError("Unable to retrieve token, exiting")
         return False
+    dla.setupProxy()
     if expr != '' and useReplaceSettings == True:
         retval = deleteFeatures(sourceLayer,targelUrl,expr)
     if retval == True:

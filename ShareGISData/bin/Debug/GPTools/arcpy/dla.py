@@ -20,6 +20,8 @@ workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
 maxErrorCount = 20 # max errors before a script will stop
 _errorCount = 0 # count the errors and only report things > maxRowCount errors...
+_proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
+_proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 
 dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
@@ -851,3 +853,15 @@ def getXmlDoc(xmlFile):
 
     return xmlDoc
 
+def setupProxy():
+    proxies = {}
+    if _proxyhttp != None:
+        proxies['http'] = 'http://' + _proxyhttp
+        os.environ['http'] = _proxyhttp
+    if _proxyhttps != None:
+        proxies['https'] = _proxyhttps
+        os.environ['https'] = 'http://' + _proxyhttps
+    if proxies != {}:
+        proxy = urllib.ProxyHandler(proxies)
+        opener = urllib.build_opener(proxy)
+        urllib.install_opener(opener)  

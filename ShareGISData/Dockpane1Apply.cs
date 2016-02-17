@@ -422,7 +422,7 @@ namespace DataAssistant
             string fileloc = getSourceTargetLocation("", "Select Target");
             if (fileloc != null)
             {
-                if (System.Windows.Forms.MessageBox.Show("You should only Change the target dataset if the schemas match", "Update Source Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                if (System.Windows.Forms.MessageBox.Show("You should only Change the target dataset if the schemas match", "Update Target Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
                     TargetLayer.Text = fileloc;
                 }

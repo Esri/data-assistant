@@ -51,7 +51,7 @@ namespace DataAssistant
             string xmlFile = Dockpane1View.getXmlFileName();
             if (xmlFile != "" && xmlFile != null)
             {
-                if (System.Windows.Forms.MessageBox.Show("Update Match Library Values?", "Update Match Library", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                if (System.Windows.Forms.MessageBox.Show("Update Match Library Values using the settings in your current configuration file?", "Update Match Library", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
                     XsltArgumentList argList = new XsltArgumentList();
                     argList.AddParam("configFile", "", xmlFile);

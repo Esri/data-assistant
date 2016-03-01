@@ -758,7 +758,7 @@ def setWorkspace():
     ws = os.path.join(_dirName,wsName)
     if not arcpy.Exists(ws):
         arcpy.CreateFileGDB_management(_dirName,wsName)
-        workspace = ws
+    workspace = ws
     arcpy.env.workspace = workspace
     #if arcpy.env.scratchWorkspace == None: -- too many issues with locking using project/scratch gdb for intermediate data
      #workspace = arcpy.env.scratchGDB # just put it in temp for now - not project gdb

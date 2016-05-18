@@ -94,7 +94,7 @@ namespace DataAssistant
         }
         private void saveM2()
         {
-            // Default Value
+            // Set Value
             // make sure method is saved to Xml for the field node
             System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
             if (nodes != null)
@@ -102,7 +102,7 @@ namespace DataAssistant
                 try
                 {
                     nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
-                    System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("DefaultValue");
+                    System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("SetValue");
                     trimNodes(nodes, 3);
                     if (node != null)
                         node.InnerText = Method2Value.Text;

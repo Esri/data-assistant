@@ -230,7 +230,7 @@ namespace DataAssistant
                 case 1: // Copy
                     Method1Preview_Click();
                     break;
-                case 2: // DefaultValue
+                case 2: // SetValue
                     Method2Preview_Click();
                     break;
                 case 3: // ValueMap

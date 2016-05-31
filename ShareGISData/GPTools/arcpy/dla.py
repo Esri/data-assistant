@@ -204,7 +204,7 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
         except:
             showTraceback()
             addMessage("Error occured, where clause: " + whereClause)
-        #addMessageLocal("Feature Layer " + viewName + " created for " + str(whereClause))
+        #addMessage("Feature Layer " + viewName + " created for " + str(whereClause))
     else:
         addError(sourceFC + " does not exist, exiting")
 
@@ -215,8 +215,8 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
 def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
     # make a table view using the where clause
     if arcpy.Exists(sourceTable):
-        if arcpy.Exists(viewName):
-            arcpy.Delete_management(viewName) # delete view if it exists
+        if arcpy.Exists(workspace + os.sep + viewName):
+            arcpy.Delete_management(workspace + os.sep + viewName) # delete view if it exists
         desc = arcpy.Describe(sourceTable)
         fields = arcpy.ListFields(sourceTable)
         fStr = getViewString(fields,xmlField)
@@ -228,11 +228,11 @@ def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
         exit(-1)
     return(viewName)
 
-def makeFeatureViewForLayer(workspace,sourceLayer,viewName,whereClause,xmlFields):
+def xmakeFeatureViewForLayerx(workspace,sourceLayer,viewName,whereClause,xmlFields):
     # Process: Make Feature Layers - drop prefixes as needed
     #if arcpy.Exists(sourceLayer):
-    if arcpy.Exists(viewName):
-        arcpy.Delete_management(viewName) # delete view if it exists
+    #if arcpy.Exists(workspace + os.sep + viewName):
+    #    arcpy.Delete_management(workspace + os.sep + viewName) # delete view if it exists
 
     desc = arcpy.Describe(sourceLayer)
     fields = arcpy.ListFields(sourceLayer)
@@ -922,6 +922,9 @@ def checkLayerIsService(layerStr):
 
 def checkServiceCapabilities(sourcePath,required):
     ## Added May2016. Ensure that feature layer has been added and warn if capabilities are not available
+    if sourcePath == None:
+        addMessage('Error: No path available for layer')            
+        return False
     addMessage('Checking: ' + sourcePath)    
     if checkLayerIsService(sourcePath):
         url = getLayerSourceUrl(sourcePath)

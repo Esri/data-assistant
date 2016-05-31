@@ -57,19 +57,9 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
     desc = arcpy.Describe(sourceDataset)
     descT = arcpy.Describe(targetDataset)
-    sourcePath = None
-    try:
-        sourcePath = desc.catalogPath
-    except:
-        sourcePath = desc.path
-    dla.addMessage(sourcePath)
+    sourcePath = getLayerPath(desc)
+    targetPath = getLayerPath(descT)
 
-    targetPath = None
-    try:
-        targetPath = descT.catalogPath
-    except:
-        targetPath = descT.path
-    dla.addMessage(targetPath)
     ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
     if not dla.checkServiceCapabilities(sourcePath,False):
         dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
@@ -121,6 +111,20 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     # write it out
     xmlDoc.writexml( open(xmlFileName, 'w'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
+
+def getLayerPath(desc): # requires arcpy.Describe object
+    # altered May31 2016 to handle no .path for layer...
+    pth = None
+    try:
+        pth = desc.catalogPath
+    except:
+        try:
+            pth = desc.path
+        except:
+            dla.addError('Unable to obtain a source path for this layer. Please select a feature layer and re-run this tool')
+    if pth != None:
+        dla.addMessage(pth)
+    return pth
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
     try:

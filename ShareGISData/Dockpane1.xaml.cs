@@ -370,7 +370,10 @@ namespace DataAssistant
                     for(int i=0;i<comboMethod.Items.Count;i++)
                     {
                         string val = comboMethod.Items.GetItemAt(i).ToString().Replace(" ","");
-                        if (val.EndsWith(node.InnerText.ToString()))
+                        // special case to convert DefaultValue to SetValue
+                        if (val.EndsWith("SetValue") && node.InnerText.ToString() == "DefaultValue")
+                            num = i;
+                        else if (val.EndsWith(node.InnerText.ToString()))
                             num = i;
                     }
                 }
@@ -391,8 +394,8 @@ namespace DataAssistant
                     break;
                 case 1: // Copy
                     break;
-                case 2: // DefaultValue
-                    Method2Value.Text = getPanelValue(2, "DefaultValue");
+                case 2: // SetValue
+                    Method2Value.Text = getPanelValue(2, "SetValue");
                     break;
                 case 3: // ValueMap
                     setValueMapValues(3, getPanelValue(3, "ValueMap"));
@@ -457,7 +460,12 @@ namespace DataAssistant
                 try
                 {
                     var node = nodes.Item(0).SelectSingleNode(nodename);
-                    theval = node.InnerText.ToString();
+                    if (node == null && nodename == "SetValue")
+                    {
+                        node = nodes.Item(0).SelectSingleNode("DefaultValue");
+                    }
+                    if(node != null)
+                        theval = node.InnerText.ToString();
                 }
                 catch
                 { }

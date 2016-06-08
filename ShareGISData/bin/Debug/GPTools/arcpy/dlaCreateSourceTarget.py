@@ -31,9 +31,9 @@ matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
     global sourceDataset,targetDataset,xmlFileName   
-    print(sourceDataset)
-    print(targetDataset)
-    print(xmlFileName)
+    dla.addMessage(sourceDataset)
+    dla.addMessage(targetDataset)
+    dla.addMessage(xmlFileName)
     if not os.path.exists(matchxslt):
         msg = matchxslt + " does not exist, exiting"
         arcpy.AddError(msg)
@@ -48,6 +48,7 @@ def main(argv = None):
 
 def createDlaFile(sourceDataset,targetDataset,xmlFileName):
 
+    # entry point for calling this tool from another python script
     writeDocument(sourceDataset,targetDataset,xmlFileName)
     
     return True
@@ -56,7 +57,17 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
     desc = arcpy.Describe(sourceDataset)
     descT = arcpy.Describe(targetDataset)
+    sourcePath = getLayerPath(desc)
+    targetPath = getLayerPath(descT)
 
+    ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
+    if not dla.checkServiceCapabilities(sourcePath,False):
+        dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+        return False
+    if not dla.checkServiceCapabilities(targetPath,False):
+        dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+        return False
+    
     xmlDoc = Document()
     root = xmlDoc.createElement('SourceTargetMatrix')
     xmlDoc.appendChild(root)
@@ -65,8 +76,8 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
-    setSourceTarget(dataset,xmlDoc,"Source",desc.catalogPath)
-    setSourceTarget(dataset,xmlDoc,"Target",descT.catalogPath)
+    setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
+    setSourceTarget(dataset,xmlDoc,"Target",targetPath)
     
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")    
@@ -100,6 +111,20 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     # write it out
     xmlDoc.writexml( open(xmlFileName, 'w'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
+
+def getLayerPath(desc): # requires arcpy.Describe object
+    # altered May31 2016 to handle no .path for layer...
+    pth = None
+    try:
+        pth = desc.catalogPath
+    except:
+        try:
+            pth = desc.path
+        except:
+            dla.addError('Unable to obtain a source path for this layer. Please select a feature layer and re-run this tool')
+    if pth != None:
+        dla.addMessage(pth)
+    return pth
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
     try:

@@ -15,7 +15,7 @@ import json, urllib
 import urllib.parse as parse
 import urllib.request as request
 
-arcpy.AddMessage("Data Assistant - Publish")
+arcpy.AddMessage("Data Assistant")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
 
@@ -46,8 +46,8 @@ def publish(xmlFileNames):
     global sourceLayer,targetLayer,_success
     dla._errorCount = 0
 
-    arcpy.SetProgressor("default","Publishing")
-    arcpy.SetProgressorLabel("Publishing")
+    arcpy.SetProgressor("default","Data Assistant")
+    arcpy.SetProgressorLabel("Data Assistant")
     xmlFiles = xmlFileNames.split(";")
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
         dla.addMessage("Configuration file: " + xmlFile)
@@ -58,10 +58,17 @@ def publish(xmlFileNames):
         svceT = False
         if sourceLayer == "" or sourceLayer == None:
             sourceLayer = dla.getNodeValue(xmlDoc,"Source")
-            svceS = checkLayerIsService(sourceLayer)
+            svceS = dla.checkLayerIsService(sourceLayer)
         if targetLayer == "" or targetLayer == None:
             targetLayer = dla.getNodeValue(xmlDoc,"Target")
-            svceT = checkLayerIsService(targetLayer)
+            svceT = dla.checkLayerIsService(targetLayer)
+
+        dla.addMessage(targetLayer)
+        ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
+        if not dla.checkServiceCapabilities(sourceLayer,True):
+            return False
+        if not dla.checkServiceCapabilities(targetLayer,True):
+            return False
 
         if svceS == True or svceT == True:
             token = dla.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
@@ -95,7 +102,7 @@ def publish(xmlFileNames):
         sourceLayer = None # set source and target back to None for multiple file processing
         targetLayer = None
         if res == False:
-            err = "Publish Failed, see messages for details"
+            err = "Data Assistant Update Failed, see messages for details"
             dla.addError(err)
             print(err)
 
@@ -347,12 +354,6 @@ def getTargetType(xmlDoc,fname):
         if nm == fname:
             return tfield.getAttribute("Type")
 
-def checkLayerIsService(layerStr):
-    # Check if the layer string is a service
-    if layerStr.lower().startswith("http") > -1 or layerStr.lower().startswith("gis servers") == True:
-        return True
-    else:
-        return False
 
 '''
 some scrapyard items

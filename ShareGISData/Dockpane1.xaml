@@ -155,7 +155,7 @@
                     <ComboBox x:Name="comboMethod"  Margin="5,5,5,5" SelectedIndex="0" SelectionChanged="comboMethod_SelectionChanged" >
                         <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
                         <ComboBoxItem Content="Copy" ToolTip="Copy Source Field values to Target Fields."/>
-                        <ComboBoxItem Content="DefaultValue" ToolTip="Target Field values will be set to a constant value."/>
+                        <ComboBoxItem Content="SetValue" ToolTip="Target Field values will be set to a constant value."/>
                         <ComboBoxItem Content="ValueMap" ToolTip="Set Target values based on Source values."/>
                         <ComboBoxItem Content="ChangeCase" ToolTip="Change the case of the source text strings."/>
                         <ComboBoxItem Content="Concatenate" ToolTip="Concatenate Source values into a string."/>
@@ -175,8 +175,8 @@
                         <Run Text="Copy Source Field values to Target Fields."/></TextBlock>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method2" Visibility="Hidden">
-                    <Label Content="Default Value" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method2Value" Margin="5,0,5,0" Text="" ToolTip="Default Value to Set" />
+                    <Label Content="Set Value" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                    <TextBox x:Name="Method2Value" Margin="5,0,5,0" Text="" ToolTip="Set a Constant Value" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method3" Visibility="Hidden">
                     <Label Content="Value Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>

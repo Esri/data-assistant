@@ -48,12 +48,16 @@ namespace DataAssistant
                     string nm = node.Attributes.GetNamedItem("Name").InnerText;
                     if (elem.InnerText != DataAssistant.Dockpane1View.getNoneFieldName())
                     {
-                        string alias = getValue(node, "AliasName") + ", ";
+                        string alias = getValue(node, "AliasName");
+                        if (alias == "")
+                            alias = getValue(node, "Name");
                         string typ = getValue(node, "Type");
                         string len = getValue(node, "Length");
-                        if(len != "")
+                        if (len == "0")
+                            len = "";
+                        else if(len != "")
                             len = "(" + len + ")";
-                        tip = alias + " " + typ + len;
+                        tip = alias + ", " + typ + len;
                         return tip.Trim();
                     }
                     else

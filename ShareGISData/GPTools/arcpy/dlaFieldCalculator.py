@@ -157,6 +157,8 @@ def setFieldValues(table,fields,names,types,lengths):
                     val = sourceValue
                 elif method == "DefaultValue":
                     val = dla.getNodeValue(field,"DefaultValue")
+                elif method == "SetValue":
+                    val = dla.getNodeValue(field,"SetValue")
                 elif method == "ValueMap":
                     val = getValueMap(row,names,sourceValue,field)
                 elif method == "ChangeCase":

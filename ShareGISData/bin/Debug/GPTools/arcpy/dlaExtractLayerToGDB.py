@@ -68,10 +68,6 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
             #    dla.addError("Layer " + sourceLayer + " does not exist, exiting")
             #    return
             
-            target = dla.getTempTable(targetName)
-            if arcpy.Exists(target):
-                arcpy.Delete_management(target)
-
             retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit)
             if retVal == False:
                 success = False
@@ -93,47 +89,40 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     xmlFields = xmlDoc.getElementsByTagName("Field")
     dla.addMessage("Exporting Layer from " + sourceLayer)
     whereClause = ""
-    try:
-        if rowLimit != None:
-            try:
-                whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
-            except:
-                dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
-                
-        if whereClause != '' and whereClause != ' ':
-            dla.addMessage("Where " + str(whereClause))
-        sourceName = dla.getSourceName(xmlDoc)
-        viewName = sourceName + "_View"
-        dla.addMessage(viewName)
-        
-        #try:
-        targetRef = getSpatialReference(xmlDoc,"Target")
-        #sourceRef = getSpatialReference(xmlDoc,"Source")
-        
-        if targetRef != '':
-            if arcpy.Exists(targetName):
-                arcpy.Delete_management(targetName)
-                
-            arcpy.env.workspace = workspace
-            view = dla.makeFeatureViewForLayer(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
-            dla.addMessage("View Created")            
-            count = arcpy.GetCount_management(view).getOutput(0)
-            dla.addMessage(str(count) + " source rows")
+    if rowLimit != None:
+        try:
+            whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
+        except:
+            dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
             
-            arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
-            arcpy.Append_management(inputs=view,target=targetName,schema_type="NO_TEST")
-            dla.addMessage(arcpy.GetMessages(2)) # only serious errors
-            count = arcpy.GetCount_management(targetName).getOutput(0)
-            dla.addMessage(str(count) + " source rows exported to " + targetName)
-            if str(count) == '0':
-                result = False
-                dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
-                dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
-    except:
-        err = "Failed to create new dataset " + targetName
-        dla.showTraceback()
-        dla.addError(err)
-        result = False
+    if whereClause != '' and whereClause != ' ':
+        dla.addMessage("Where " + str(whereClause))
+    sourceName = dla.getSourceName(xmlDoc)
+    viewName = sourceName + "_View"
+    dla.addMessage(viewName)
+    
+    targetRef = getSpatialReference(xmlDoc,"Target")
+    #sourceRef = getSpatialReference(xmlDoc,"Source")
+    
+    if targetRef != '':
+            
+        arcpy.env.workspace = workspace
+        view = dla.makeFeatureView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+        dla.addMessage("View Created")            
+        count = arcpy.GetCount_management(view).getOutput(0)
+        dla.addMessage(str(count) + " source rows")
+
+        arcpy.env.overwriteOutput = True
+        arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+        fc = workspace + os.sep + targetName
+        arcpy.Append_management(view,fc,schema_type="NO_TEST")
+        dla.addMessage(arcpy.GetMessages(2)) # only serious errors
+        count = arcpy.GetCount_management(fc).getOutput(0)
+        dla.addMessage(str(count) + " source rows exported to " + targetName)
+        if str(count) == '0':
+            result = False
+            dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
+            dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
     return result
 
 def getSpatialReference(xmlDoc,lyrtype):

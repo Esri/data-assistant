@@ -48,7 +48,7 @@ def addMessage(val):
     # write a message to the screen
     try:
         if sys.stdin.isatty():
-            #arcpy.AddMessage(str(val))
+            arcpy.AddMessage(str(val))
             print (str(val))
         else:
             arcpy.AddMessage(str(val))
@@ -204,7 +204,7 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
         except:
             showTraceback()
             addMessage("Error occured, where clause: " + whereClause)
-        #addMessageLocal("Feature Layer " + viewName + " created for " + str(whereClause))
+        #addMessage("Feature Layer " + viewName + " created for " + str(whereClause))
     else:
         addError(sourceFC + " does not exist, exiting")
 
@@ -215,8 +215,8 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
 def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
     # make a table view using the where clause
     if arcpy.Exists(sourceTable):
-        if arcpy.Exists(viewName):
-            arcpy.Delete_management(viewName) # delete view if it exists
+        if arcpy.Exists(workspace + os.sep + viewName):
+            arcpy.Delete_management(workspace + os.sep + viewName) # delete view if it exists
         desc = arcpy.Describe(sourceTable)
         fields = arcpy.ListFields(sourceTable)
         fStr = getViewString(fields,xmlField)
@@ -228,11 +228,11 @@ def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
         exit(-1)
     return(viewName)
 
-def makeFeatureViewForLayer(workspace,sourceLayer,viewName,whereClause,xmlFields):
+def xmakeFeatureViewForLayerx(workspace,sourceLayer,viewName,whereClause,xmlFields):
     # Process: Make Feature Layers - drop prefixes as needed
     #if arcpy.Exists(sourceLayer):
-    if arcpy.Exists(viewName):
-        arcpy.Delete_management(viewName) # delete view if it exists
+    #if arcpy.Exists(workspace + os.sep + viewName):
+    #    arcpy.Delete_management(workspace + os.sep + viewName) # delete view if it exists
 
     desc = arcpy.Describe(sourceLayer)
     fields = arcpy.ListFields(sourceLayer)
@@ -863,6 +863,94 @@ def getXmlDoc(xmlFile):
 
     return xmlDoc
 
+## Added May 2016 
+def hasCapabilities(url,token,checkList):
+    hasit = False
+    if token != None and isFeatureLayerUrl(url):
+        params = {'f': 'pjson', 'token':token}
+        response = sendRequest(url,params)
+        if response != None:
+            try:
+                error = json.dumps(response['error'])
+                addError('Unable to access service properties ' + error)
+                return False
+            except:
+                hasit = True
+            
+            try:
+                capabilities = json.dumps(response['capabilities'])
+                addMessage('Service REST capabilities: ' + capabilities)
+                for item in checkList:
+                    if capabilities.find(item) == -1:
+                        addMessage('Service does not support: ' + item)
+                        hasit = False
+                    else:
+                        addMessage('Service supports: ' + item)
+            except:
+                addError('Unable to access service capabilities')                
+                hasit = False
+        else:
+            addError('Unable to access service')                
+            hasit = False
+        
+    return hasit
+
+def getServiceName(url):
+    parts = url.split('/')
+    lngth = len(parts)
+    if len(parts) > 8:
+        return parts[7]
+
+def isFeatureLayerUrl(url):
+    parts = url.split('/')
+    lngth = len(parts)
+    try: 
+        # check for number at end
+        last = int(parts[lngth-1])
+        if parts[lngth-2] == 'FeatureServer':
+            return True
+    except:
+        return False
+
+def checkLayerIsService(layerStr):
+    ## moved here from dlaPublish
+    # Check if the layer string is a service
+    if layerStr.lower().startswith("http") == True or layerStr.lower().startswith("gis servers") == True:
+        return True
+    else:
+        return False
+
+def checkServiceCapabilities(sourcePath,required):
+    ## Added May2016. Ensure that feature layer has been added and warn if capabilities are not available
+    if sourcePath == None:
+        addMessage('Error: No path available for layer')            
+        return False
+    addMessage('Checking: ' + sourcePath)    
+    if checkLayerIsService(sourcePath):
+        url = getLayerSourceUrl(sourcePath)
+        if isFeatureLayerUrl(url):
+            data = arcpy.GetSigninToken()
+            token = data['token']
+            name = getServiceName(url)
+            print('Service',name)
+            res = hasCapabilities(url,token,['Create','Delete'])
+            if res != True and required == False:
+                addMessage('WARNING: ' + name + ' does not have Create and Delete privileges')
+                addMessage('Verify the service properties for: ' + url)
+                addMessage('This tool might continue but other tools will not run until this is addressed')
+            elif res != True and required == True:
+                addError('WARNING: ' + name + ' does not have Create and Delete privileges')
+                addMessage('Verify the service properties for: ' + url)
+                addMessage('This tool will not run until this is addressed')
+            return res
+        else:
+            addMessage('Service does not appear to be a feature layer')
+            return False
+    else:
+        return True
+
+## end May 2016 section
+
 def setupProxy():
     proxies = {}
     if _proxyhttp != None:
@@ -874,4 +962,5 @@ def setupProxy():
     if proxies != {}:
         proxy = urllib.ProxyHandler(proxies)
         opener = urllib.build_opener(proxy)
-        urllib.install_opener(opener)  
+        urllib.install_opener(opener)
+

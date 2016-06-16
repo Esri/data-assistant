@@ -14,7 +14,7 @@ If you do not want to compile in Visual Studio, click/install data-aggregation\S
 
 ### Esri Solutions 
 
-Esri's provides a number of solutions that utilize this Add-in.
+Esri provides a number of solutions that utilize this Add-in.
 * [ArcGIS for Emergency Management's Community Addresses](http://links.esri.com/emergencymanagement/help/AggregateAddresses/)
 * [ArcGIS for Emergency Management's Community Parcels](http://links.esri.com/emergencymanagement/help/AggregateParcels/)
 * [ArcGIS for Local Government's Community Addresses](http://links.esri.com/localgovernment/help/AggregateAddresses/)

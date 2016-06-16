@@ -4,13 +4,13 @@ The data-assistant repo includes an ArcGIS Pro Add-in that helps communities (st
 
 ## Features
 
-* Data Assistant
+* Data Assistant Add-in
 * Community Addresses
 * Community Parcels
 
 ## Instructions
 
-If you do not want to compile in Visual Studio, click/install data-aggregation\ShareGISData\bin\Debug\ShareGISData.esriAddInX.
+If you do not want to compile in Visual Studio, click/install data-aggregation\ShareGISData\bin\Debug\DataAssistant.esriAddInX.
 
 ### Esri Solutions 
 

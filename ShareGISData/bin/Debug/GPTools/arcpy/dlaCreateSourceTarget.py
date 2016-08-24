@@ -8,7 +8,7 @@ import xml.etree.ElementTree as etree
 import re
 
 # Local variables...
-debug = False
+debug = False 
 # Parameters
 sourceDataset = arcpy.GetParameterAsText(0) # source dataset to analyze
 targetDataset = arcpy.GetParameterAsText(1) # target dataset to analyze
@@ -73,7 +73,8 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     xmlDoc.appendChild(root)
     root.setAttribute("version",'1.1')
     root.setAttribute("xmlns:esri",'http://www.esri.com')
-
+    #root.setAttribute("encoding",'UTF-8')
+    
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
@@ -109,7 +110,7 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     # add some data to the document
     writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
     # write it out
-    xmlDoc.writexml( open(xmlFileName, 'w'),indent="  ",addindent="  ",newl='\n')
+    xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
 
 def getLayerPath(desc): # requires arcpy.Describe object
@@ -275,7 +276,15 @@ def writeDataSample(xmlDoc,root,sourceFields,sourceDataset,rowLimit):
             return
         xrow = xmlDoc.createElement("Row")
         for f in range(0,len(sourceFields)):
-            xrow.setAttribute(sourceFields[f],str(row[f]))
+            try:
+                xrow.setAttribute(sourceFields[f],str(row[f])) # handles numeric values and simple strings
+            except:
+                try:
+                    attrval = row[f].encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handles non-utf-8 codes
+                    xrow.setAttribute(sourceFields[f],attrval)
+                except:
+                    pass # backslashreplace should never throw a unicode decode error...
+                
         data.appendChild(xrow)
         i += 1
 

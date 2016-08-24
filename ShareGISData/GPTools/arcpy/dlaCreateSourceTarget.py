@@ -8,7 +8,7 @@ import xml.etree.ElementTree as etree
 import re
 
 # Local variables...
-debug = False
+debug = False 
 # Parameters
 sourceDataset = arcpy.GetParameterAsText(0) # source dataset to analyze
 targetDataset = arcpy.GetParameterAsText(1) # target dataset to analyze

@@ -735,6 +735,20 @@ def getLayerSourceUrl(targetLayer):
     return targetLayer
 
 
+def getLayerServiceUrl(targetLayer):
+    targetLayer = getLayerSourceUrl(targetLayer)
+    parts = targetLayer.split("/")
+    lastPart = parts[len(parts)-1]
+
+    if lastPart.startswith('L'):
+        suffix = parts[len(parts)-3]
+        lastPart = lastPart[1:].replace(suffix,'')
+        parts[len(parts) - 1] = lastPart
+        targetLayer = "/".join(parts)
+
+    return targetLayer
+
+
 def getTempTable(name):
     tname = workspace + os.sep + name
     return tname
@@ -917,17 +931,20 @@ def getServiceName(url):
     parts = url.split('/')
     lngth = len(parts)
     if len(parts) > 8:
+        addMessage("Service Name: " + parts[7])
         return parts[7]
 
 def isFeatureLayerUrl(url):
+    # assume layer string has already had \ and GIS Servers or other characters switched to be a url
     parts = url.split('/')
     lngth = len(parts)
     try: 
         # check for number at end
-        last = int(parts[lngth-1])
+        # last = int(parts[lngth-1])
         if parts[lngth-2] == 'FeatureServer':
             return True
     except:
+        addError("2nd last part of url != 'FeatureServer'")
         return False
 
 def checkLayerIsService(layerStr):
@@ -950,7 +967,7 @@ def checkServiceCapabilities(sourcePath,required):
             data = arcpy.GetSigninToken()
             token = data['token']
             name = getServiceName(url)
-            print('Service',name)
+            #print('Service',name)
             res = hasCapabilities(url,token,['Create','Delete'])
             if res != True and required == False:
                 addMessage('WARNING: ' + name + ' does not have Create and Delete privileges')

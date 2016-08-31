@@ -31,9 +31,9 @@ matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
     global sourceDataset,targetDataset,xmlFileName   
-    dla.addMessage(sourceDataset)
-    dla.addMessage(targetDataset)
-    dla.addMessage(xmlFileName)
+    dla.addMessage("Source: " + sourceDataset)
+    dla.addMessage("Target: " + targetDataset)
+    dla.addMessage("File: " + xmlFileName)
     if not os.path.exists(matchxslt):
         msg = matchxslt + " does not exist, exiting"
         arcpy.AddError(msg)
@@ -55,10 +55,8 @@ def createDlaFile(sourceDataset,targetDataset,xmlFileName):
 
 def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
-    desc = arcpy.Describe(sourceDataset)
-    descT = arcpy.Describe(targetDataset)
-    sourcePath = getLayerPath(desc)
-    targetPath = getLayerPath(descT)
+    sourcePath = getLayerPath(sourceDataset)
+    targetPath = getLayerPath(targetDataset)
 
     ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
     if not dla.checkServiceCapabilities(sourcePath,False):
@@ -68,6 +66,9 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
         dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
         return False
     
+    desc = arcpy.Describe(sourceDataset) # need this for spatial references and other properties
+    descT = arcpy.Describe(targetDataset)
+
     xmlDoc = Document()
     root = xmlDoc.createElement('SourceTargetMatrix')
     xmlDoc.appendChild(root)
@@ -113,18 +114,24 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()   
 
-def getLayerPath(desc): # requires arcpy.Describe object
+def getLayerPath(pth): # requires string for layer argument
     # altered May31 2016 to handle no .path for layer...
-    pth = None
-    try:
-        pth = desc.catalogPath
-    except:
-        try:
-            pth = desc.path
-        except:
-            dla.addError('Unable to obtain a source path for this layer. Please select a feature layer and re-run this tool')
+    # altered August 2016 - Pro 1.3.1 changes in urls for feature service layers
     if pth != None:
-        dla.addMessage(pth)
+        pthurl = dla.getLayerSourceUrl(pth)
+        desc = arcpy.Describe(pthurl)
+        try:
+            pth = desc.catalogPath
+            #dla.addMessage("catalogPath:" + pth)
+        except:
+            try:
+                pth = desc.path
+                #dla.addMessage("path:" + pth)
+            except:
+                dla.addError('Unable to obtain a source path for this layer. Please select a feature layer and re-run this tool')
+                pth = None
+        pth = dla.getLayerServiceUrl(pth)
+        dla.addMessage("Output path:" + pth)
     return pth
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):

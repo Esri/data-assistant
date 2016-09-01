@@ -66,8 +66,8 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
         dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
         return False
     
-    desc = arcpy.Describe(sourceDataset) # need this for spatial references and other properties
-    descT = arcpy.Describe(targetDataset)
+    desc = arcpy.Describe(sourcePath) # need this for spatial references and other properties
+    descT = arcpy.Describe(targetPath)
 
     xmlDoc = Document()
     root = xmlDoc.createElement('SourceTargetMatrix')

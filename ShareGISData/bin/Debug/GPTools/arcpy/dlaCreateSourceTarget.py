@@ -58,61 +58,62 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     sourcePath = getLayerPath(sourceDataset)
     targetPath = getLayerPath(targetDataset)
 
-    ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
-    if not dla.checkServiceCapabilities(sourcePath,False):
-        dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
-        return False
-    if not dla.checkServiceCapabilities(targetPath,False):
-        dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
-        return False
-    
-    desc = arcpy.Describe(sourceDataset) # need this for spatial references and other properties
-    descT = arcpy.Describe(targetDataset)
+    if sourcePath != None and targetPath != None:
+        ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
+        if not dla.checkServiceCapabilities(sourcePath,False):
+            dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+            return False
+        if not dla.checkServiceCapabilities(targetPath,False):
+            dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+            return False
 
-    xmlDoc = Document()
-    root = xmlDoc.createElement('SourceTargetMatrix')
-    xmlDoc.appendChild(root)
-    root.setAttribute("version",'1.1')
-    root.setAttribute("xmlns:esri",'http://www.esri.com')
-    #root.setAttribute("encoding",'UTF-8')
-    
-    dataset = xmlDoc.createElement("Datasets")
-    root.appendChild(dataset)
-    setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
-    setSourceTarget(dataset,xmlDoc,"Target",targetPath)
-    
-    setSpatialReference(dataset,xmlDoc,desc,"Source")
-    setSpatialReference(dataset,xmlDoc,descT,"Target")    
+        desc = arcpy.Describe(sourcePath) # need this for spatial references and other properties
+        descT = arcpy.Describe(targetPath)
 
-    setSourceTarget(dataset,xmlDoc,"ReplaceBy","")
-    
-    fieldroot = xmlDoc.createElement("Fields")
-    root.appendChild(fieldroot)
+        xmlDoc = Document()
+        root = xmlDoc.createElement('SourceTargetMatrix')
+        xmlDoc.appendChild(root)
+        root.setAttribute("version",'1.1')
+        root.setAttribute("xmlns:esri",'http://www.esri.com')
+        #root.setAttribute("encoding",'UTF-8')
 
-    fields = getFields(descT,targetDataset)
-    sourceFields = getFields(desc,sourceDataset)
-    sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
-    upperNames = [nm.upper() for nm in sourceNames]
+        dataset = xmlDoc.createElement("Datasets")
+        root.appendChild(dataset)
+        setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
+        setSourceTarget(dataset,xmlDoc,"Target",targetPath)
 
-    #try:
-    for field in fields:
-        
-        fNode = xmlDoc.createElement("Field")
-        fieldroot.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
-        matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)       
+        setSpatialReference(dataset,xmlDoc,desc,"Source")
+        setSpatialReference(dataset,xmlDoc,descT,"Target")
 
-    # write the source field values
-    setSourceFields(root,xmlDoc,sourceFields)
-    setTargetFields(root,xmlDoc,fields)
-    # Should add a template section for value maps, maybe write domains...
-    # could try to preset field mapping and domain mapping...
+        setSourceTarget(dataset,xmlDoc,"ReplaceBy","")
 
-    # add some data to the document
-    writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
-    # write it out
-    xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
-    xmlDoc.unlink()   
+        fieldroot = xmlDoc.createElement("Fields")
+        root.appendChild(fieldroot)
+
+        fields = getFields(descT,targetDataset)
+        sourceFields = getFields(desc,sourceDataset)
+        sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
+        upperNames = [nm.upper() for nm in sourceNames]
+
+        #try:
+        for field in fields:
+
+            fNode = xmlDoc.createElement("Field")
+            fieldroot.appendChild(fNode)
+            fieldName = field.name[field.name.rfind(".")+1:]
+            matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)
+
+        # write the source field values
+        setSourceFields(root,xmlDoc,sourceFields)
+        setTargetFields(root,xmlDoc,fields)
+        # Should add a template section for value maps, maybe write domains...
+        # could try to preset field mapping and domain mapping...
+
+        # add some data to the document
+        writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
+        # write it out
+        xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
+        xmlDoc.unlink()
 
 def getLayerPath(pth): # requires string for layer argument
     # altered May31 2016 to handle no .path for layer...
@@ -130,8 +131,9 @@ def getLayerPath(pth): # requires string for layer argument
             except:
                 dla.addError('Unable to obtain a source path for this layer. Please select a feature layer and re-run this tool')
                 pth = None
-        pth = dla.getLayerServiceUrl(pth)
-        dla.addMessage("Output path:" + pth)
+        if pth != None:
+            pth = dla.getLayerServiceUrl(pth)
+            dla.addMessage("Output path:" + pth)
     return pth
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):

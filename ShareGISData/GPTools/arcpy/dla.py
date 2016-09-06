@@ -25,7 +25,7 @@ functions, typically an expansion of underlying arcpy functions with a bit more 
 
 Generally functions return data or a True/False result depending on the situation and the arcpy functions.
 '''
-import sys,os,traceback,xml.dom.minidom,time,datetime,gc,arcpy
+import sys,os,traceback,xml.dom.minidom,time,datetime,re,gc,arcpy
 
 import json, urllib
 import urllib.parse as parse
@@ -737,12 +737,16 @@ def getLayerSourceUrl(targetLayer):
 
 def getLayerServiceUrl(targetLayer):
     targetLayer = getLayerSourceUrl(targetLayer)
-    parts = targetLayer.split("/")
-    lastPart = parts[len(parts)-1]
+    if targetLayer.startswith('http'):
+        parts = targetLayer.split("/")
+        lastPart = parts[len(parts)-1]
+        #if lastPart.startswith('L'): # Thought the Pro 1.3 bug involved 'L' prefix, seems like not always...
+        #    suffix = parts[len(parts)-3]
+        #    lastPart = lastPart[1:].replace(suffix,'')
+        ints = [int(s) for s in re.findall(r'\d+',lastPart )]
+        if ints != []:
+            lastPart = str(ints[0])
 
-    if lastPart.startswith('L'):
-        suffix = parts[len(parts)-3]
-        lastPart = lastPart[1:].replace(suffix,'')
         parts[len(parts) - 1] = lastPart
         targetLayer = "/".join(parts)
 

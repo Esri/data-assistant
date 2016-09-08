@@ -1,0 +1,239 @@
+<?xml version="1.0" ?>
+  <SourceTargetMatrix version="1.1" xmlns:esri="http://www.esri.com">
+    <Datasets>
+      <Source>http://services2.arcgis.com/EmOtS7q6cfSmspIo/arcgis/rest/services/PARCELS100/FeatureServer/0</Source>
+      <Target>http://services2.arcgis.com/EmOtS7q6cfSmspIo/arcgis/rest/services/PARCELS100/FeatureServer/0</Target>
+      <SourceSpatialReference>PROJCS['WGS_1984_Web_Mercator_Auxiliary_Sphere',GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator_Auxiliary_Sphere'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],PARAMETER['Auxiliary_Sphere_Type',0.0],UNIT['Meter',1.0]];-20037700 -30241100 10000;-100000 10000;-100000 10000;0.001;0.001;0.001;IsHighPrecision</SourceSpatialReference>
+      <TargetSpatialReference>PROJCS['WGS_1984_Web_Mercator_Auxiliary_Sphere',GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator_Auxiliary_Sphere'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],PARAMETER['Auxiliary_Sphere_Type',0.0],UNIT['Meter',1.0]];-20037700 -30241100 10000;-100000 10000;-100000 10000;0.001;0.001;0.001;IsHighPrecision</TargetSpatialReference>
+      <ReplaceBy></ReplaceBy>
+    </Datasets>
+    <Fields>
+      <Field>
+        <SourceName>LOWPARCELID</SourceName>
+        <TargetName>LOWPARCELID</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>PARCELID</SourceName>
+        <TargetName>PARCELID</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>FLOORDESIG</SourceName>
+        <TargetName>FLOORDESIG</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>STATEAREA</SourceName>
+        <TargetName>STATEAREA</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>CNVYNAME</SourceName>
+        <TargetName>CNVYNAME</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>USEDCD</SourceName>
+        <TargetName>USEDCD</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>USEDSCRP</SourceName>
+        <TargetName>USEDSCRP</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>CVTTXDSCRP</SourceName>
+        <TargetName>CVTTXDSCRP</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>IMPROVED</SourceName>
+        <TargetName>IMPROVED</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>OWNTYPE</SourceName>
+        <TargetName>OWNTYPE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>SITEADRESS</SourceName>
+        <TargetName>SITEADRESS</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>PSTLADRESS</SourceName>
+        <TargetName>PSTLADRESS</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>USPSBOX</SourceName>
+        <TargetName>USPSBOX</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>PSTLCITY</SourceName>
+        <TargetName>PSTLCITY</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>PSTLSTATE</SourceName>
+        <TargetName>PSTLSTATE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>PSTLZIP</SourceName>
+        <TargetName>PSTLZIP</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>PSTLINTER</SourceName>
+        <TargetName>PSTLINTER</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>SALEDATE</SourceName>
+        <TargetName>SALEDATE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>LOCALFIPS</SourceName>
+        <TargetName>LOCALFIPS</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>STCOFIPS</SourceName>
+        <TargetName>STCOFIPS</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>GNISID</SourceName>
+        <TargetName>GNISID</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>LASTEDITOR</SourceName>
+        <TargetName>LASTEDITOR</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>LASTUPDATE</SourceName>
+        <TargetName>LASTUPDATE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>OWNERNME1</SourceName>
+        <TargetName>OWNERNME1</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>OWNERNME2</SourceName>
+        <TargetName>OWNERNME2</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>SALEPRICE</SourceName>
+        <TargetName>SALEPRICE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>CNTASSDVALUE</SourceName>
+        <TargetName>CNTASSDVALUE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>CNTTXBLVAL</SourceName>
+        <TargetName>CNTTXBLVAL</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>LNDVALUE</SourceName>
+        <TargetName>LNDVALUE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+      <Field>
+        <SourceName>IMPVALUE</SourceName>
+        <TargetName>IMPVALUE</TargetName>
+        <Method>Copy</Method>
+      </Field>
+    </Fields>
+    <SourceFields>
+      <SourceField Name="(None)"/>
+      <SourceField AliasName="LOWPARCELID" Length="255" Name="LOWPARCELID" Type="String"/>
+      <SourceField AliasName="PARCELID" Length="255" Name="PARCELID" Type="String"/>
+      <SourceField AliasName="FLOORDESIG" Length="255" Name="FLOORDESIG" Type="String"/>
+      <SourceField AliasName="STATEAREA" Length="255" Name="STATEAREA" Type="String"/>
+      <SourceField AliasName="CNVYNAME" Length="255" Name="CNVYNAME" Type="String"/>
+      <SourceField AliasName="USEDCD" Length="255" Name="USEDCD" Type="String"/>
+      <SourceField AliasName="USEDSCRP" Length="255" Name="USEDSCRP" Type="String"/>
+      <SourceField AliasName="CVTTXDSCRP" Length="255" Name="CVTTXDSCRP" Type="String"/>
+      <SourceField AliasName="IMPROVED" Length="255" Name="IMPROVED" Type="String"/>
+      <SourceField AliasName="OWNTYPE" Length="255" Name="OWNTYPE" Type="String"/>
+      <SourceField AliasName="SITEADRESS" Length="255" Name="SITEADRESS" Type="String"/>
+      <SourceField AliasName="PSTLADRESS" Length="255" Name="PSTLADRESS" Type="String"/>
+      <SourceField AliasName="USPSBOX" Length="255" Name="USPSBOX" Type="String"/>
+      <SourceField AliasName="PSTLCITY" Length="255" Name="PSTLCITY" Type="String"/>
+      <SourceField AliasName="PSTLSTATE" Length="255" Name="PSTLSTATE" Type="String"/>
+      <SourceField AliasName="PSTLZIP" Length="255" Name="PSTLZIP" Type="String"/>
+      <SourceField AliasName="PSTLINTER" Length="255" Name="PSTLINTER" Type="String"/>
+      <SourceField AliasName="SALEDATE" Length="255" Name="SALEDATE" Type="String"/>
+      <SourceField AliasName="LOCALFIPS" Length="255" Name="LOCALFIPS" Type="String"/>
+      <SourceField AliasName="STCOFIPS" Length="255" Name="STCOFIPS" Type="String"/>
+      <SourceField AliasName="GNISID" Length="255" Name="GNISID" Type="String"/>
+      <SourceField AliasName="LASTEDITOR" Length="255" Name="LASTEDITOR" Type="String"/>
+      <SourceField AliasName="LASTUPDATE" Length="255" Name="LASTUPDATE" Type="String"/>
+      <SourceField AliasName="OWNERNME1" Length="255" Name="OWNERNME1" Type="String"/>
+      <SourceField AliasName="OWNERNME2" Length="255" Name="OWNERNME2" Type="String"/>
+      <SourceField AliasName="SALEPRICE" Length="0" Name="SALEPRICE" Type="Double"/>
+      <SourceField AliasName="CNTASSDVALUE" Length="0" Name="CNTASSDVALUE" Type="Double"/>
+      <SourceField AliasName="CNTTXBLVAL" Length="0" Name="CNTTXBLVAL" Type="Double"/>
+      <SourceField AliasName="LNDVALUE" Length="0" Name="LNDVALUE" Type="Double"/>
+      <SourceField AliasName="IMPVALUE" Length="0" Name="IMPVALUE" Type="Double"/>
+    </SourceFields>
+    <TargetFields>
+      <TargetField AliasName="LOWPARCELID" Length="255" Name="LOWPARCELID" Type="String"/>
+      <TargetField AliasName="PARCELID" Length="255" Name="PARCELID" Type="String"/>
+      <TargetField AliasName="FLOORDESIG" Length="255" Name="FLOORDESIG" Type="String"/>
+      <TargetField AliasName="STATEAREA" Length="255" Name="STATEAREA" Type="String"/>
+      <TargetField AliasName="CNVYNAME" Length="255" Name="CNVYNAME" Type="String"/>
+      <TargetField AliasName="USEDCD" Length="255" Name="USEDCD" Type="String"/>
+      <TargetField AliasName="USEDSCRP" Length="255" Name="USEDSCRP" Type="String"/>
+      <TargetField AliasName="CVTTXDSCRP" Length="255" Name="CVTTXDSCRP" Type="String"/>
+      <TargetField AliasName="IMPROVED" Length="255" Name="IMPROVED" Type="String"/>
+      <TargetField AliasName="OWNTYPE" Length="255" Name="OWNTYPE" Type="String"/>
+      <TargetField AliasName="SITEADRESS" Length="255" Name="SITEADRESS" Type="String"/>
+      <TargetField AliasName="PSTLADRESS" Length="255" Name="PSTLADRESS" Type="String"/>
+      <TargetField AliasName="USPSBOX" Length="255" Name="USPSBOX" Type="String"/>
+      <TargetField AliasName="PSTLCITY" Length="255" Name="PSTLCITY" Type="String"/>
+      <TargetField AliasName="PSTLSTATE" Length="255" Name="PSTLSTATE" Type="String"/>
+      <TargetField AliasName="PSTLZIP" Length="255" Name="PSTLZIP" Type="String"/>
+      <TargetField AliasName="PSTLINTER" Length="255" Name="PSTLINTER" Type="String"/>
+      <TargetField AliasName="SALEDATE" Length="255" Name="SALEDATE" Type="String"/>
+      <TargetField AliasName="LOCALFIPS" Length="255" Name="LOCALFIPS" Type="String"/>
+      <TargetField AliasName="STCOFIPS" Length="255" Name="STCOFIPS" Type="String"/>
+      <TargetField AliasName="GNISID" Length="255" Name="GNISID" Type="String"/>
+      <TargetField AliasName="LASTEDITOR" Length="255" Name="LASTEDITOR" Type="String"/>
+      <TargetField AliasName="LASTUPDATE" Length="255" Name="LASTUPDATE" Type="String"/>
+      <TargetField AliasName="OWNERNME1" Length="255" Name="OWNERNME1" Type="String"/>
+      <TargetField AliasName="OWNERNME2" Length="255" Name="OWNERNME2" Type="String"/>
+      <TargetField AliasName="SALEPRICE" Length="0" Name="SALEPRICE" Type="Double"/>
+      <TargetField AliasName="CNTASSDVALUE" Length="0" Name="CNTASSDVALUE" Type="Double"/>
+      <TargetField AliasName="CNTTXBLVAL" Length="0" Name="CNTTXBLVAL" Type="Double"/>
+      <TargetField AliasName="LNDVALUE" Length="0" Name="LNDVALUE" Type="Double"/>
+      <TargetField AliasName="IMPVALUE" Length="0" Name="IMPVALUE" Type="Double"/>
+    </TargetFields>
+    <Data>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P58154" PSTLADRESS="1109 7TH ST 1109 7TH ST" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="1997-06-03T00:00:00.000Z" SALEPRICE="0.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P56184" PSTLADRESS="NELSON SCOTT A TRUSTEE NELSON TARA A TRUSTEE ATTN NELSON TARA" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="2013-07-31T00:00:00.000Z" SALEPRICE="0.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P31741" PSTLADRESS="3022 OAKES AVE" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="2012-06-13T00:00:00.000Z" SALEPRICE="0.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P31738" PSTLADRESS="3022 OAKES AVE" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="2012-06-13T00:00:00.000Z" SALEPRICE="0.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P56231" PSTLADRESS="KRUEGER BOWDEN CHELSEA 2201 13TH ST" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="2011-07-27T00:00:00.000Z" SALEPRICE="185000.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P109050" PSTLADRESS="11080 HAPPY VALLEY RD 11080 HAPPY VALLEY RD" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE=" " SALEPRICE="0.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P56233" PSTLADRESS="747 BAY FRONT LN" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="1998-03-27T00:00:00.000Z" SALEPRICE="105000.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P58179" PSTLADRESS="PETERSEN WALTER J TRUSTEE PETERSEN FRANCES L TRUSTEE" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="2010-12-14T00:00:00.000Z" SALEPRICE="169000.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P56234" PSTLADRESS="THOMPSON GALE L PO BOX 323" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="2010-04-22T00:00:00.000Z" SALEPRICE="245000.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+      <Row CNTASSDVALUE="None" CNTTXBLVAL="None" CNVYNAME="None" CVTTXDSCRP="None" FLOORDESIG="None" GNISID="None" IMPROVED="None" IMPVALUE="None" LASTEDITOR="None" LASTUPDATE="None" LNDVALUE="None" LOCALFIPS="None" LOWPARCELID="None" OWNERNME1="None" OWNERNME2="None" OWNTYPE="None" PARCELID="P56236" PSTLADRESS="2219 13TH ST" PSTLCITY="None" PSTLINTER="None" PSTLSTATE="None" PSTLZIP="None" SALEDATE="1990-01-01T00:00:00.000Z" SALEPRICE="12000.0" SITEADRESS="None" STATEAREA="None" STCOFIPS="None" USEDCD="None" USEDSCRP="None" USPSBOX="None"/>
+    </Data>
+  </SourceTargetMatrix>

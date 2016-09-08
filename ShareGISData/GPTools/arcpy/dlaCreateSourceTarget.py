@@ -1,6 +1,6 @@
-## dlaCreateSourceTarget.py - take a list of 2 datasets and export a Configuration file
-## December 2015
-## Loop through the source and target datasets and write an xml document
+# dlaCreateSourceTarget.py - take a list of 2 datasets and export a Configuration file
+# December 2015
+# Loop through the source and target datasets and write an xml document
 
 import os, sys, traceback, time, xml.dom.minidom, arcpy, dla
 from xml.dom.minidom import Document, parse, parseString
@@ -58,62 +58,79 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     sourcePath = getLayerPath(sourceDataset)
     targetPath = getLayerPath(targetDataset)
 
-    if sourcePath != None and targetPath != None:
-        ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
-        if not dla.checkServiceCapabilities(sourcePath,False):
-            dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
-            return False
-        if not dla.checkServiceCapabilities(targetPath,False):
-            dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
-            return False
+    if sourcePath == None or targetPath == None:
+        return False
 
-        desc = arcpy.Describe(sourcePath) # need this for spatial references and other properties
-        descT = arcpy.Describe(targetPath)
+    ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
+    if not dla.checkServiceCapabilities(sourcePath,False):
+        dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+        return False
+    if not dla.checkServiceCapabilities(targetPath,False):
+        dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+        return False
 
-        xmlDoc = Document()
-        root = xmlDoc.createElement('SourceTargetMatrix')
-        xmlDoc.appendChild(root)
-        root.setAttribute("version",'1.1')
-        root.setAttribute("xmlns:esri",'http://www.esri.com')
-        #root.setAttribute("encoding",'UTF-8')
+    desc = getDescribe(sourcePath,sourceDataset)
+    descT = getDescribe(targetPath,targetDataset)
 
-        dataset = xmlDoc.createElement("Datasets")
-        root.appendChild(dataset)
-        setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
-        setSourceTarget(dataset,xmlDoc,"Target",targetPath)
+    xmlDoc = Document()
+    root = xmlDoc.createElement('SourceTargetMatrix')
+    xmlDoc.appendChild(root)
+    root.setAttribute("version",'1.1')
+    root.setAttribute("xmlns:esri",'http://www.esri.com')
+    #root.setAttribute("encoding",'UTF-8')
 
-        setSpatialReference(dataset,xmlDoc,desc,"Source")
-        setSpatialReference(dataset,xmlDoc,descT,"Target")
+    dataset = xmlDoc.createElement("Datasets")
+    root.appendChild(dataset)
+    setSourceTarget(dataset,xmlDoc,"Source",getDataPath(sourcePath,sourceDataset))
+    setSourceTarget(dataset,xmlDoc,"Target",getDataPath(targetPath,targetDataset))
 
-        setSourceTarget(dataset,xmlDoc,"ReplaceBy","")
+    setSpatialReference(dataset,xmlDoc,desc,"Source")
+    setSpatialReference(dataset,xmlDoc,descT,"Target")
 
-        fieldroot = xmlDoc.createElement("Fields")
-        root.appendChild(fieldroot)
+    setSourceTarget(dataset,xmlDoc,"ReplaceBy","")
 
-        fields = getFields(descT,targetDataset)
-        sourceFields = getFields(desc,sourceDataset)
-        sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
-        upperNames = [nm.upper() for nm in sourceNames]
+    fieldroot = xmlDoc.createElement("Fields")
+    root.appendChild(fieldroot)
 
-        #try:
-        for field in fields:
+    fields = getFields(descT,targetDataset)
+    sourceFields = getFields(desc,sourceDataset)
+    sourceNames = [field.name for field in sourceFields]#[field.name[field.name.rfind(".")+1:] for field in sourceFields]
+    upperNames = [nm.upper() for nm in sourceNames]
 
-            fNode = xmlDoc.createElement("Field")
-            fieldroot.appendChild(fNode)
-            fieldName = field.name[field.name.rfind(".")+1:]
-            matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)
+    #try:
+    for field in fields:
 
-        # write the source field values
-        setSourceFields(root,xmlDoc,sourceFields)
-        setTargetFields(root,xmlDoc,fields)
-        # Should add a template section for value maps, maybe write domains...
-        # could try to preset field mapping and domain mapping...
+        fNode = xmlDoc.createElement("Field")
+        fieldroot.appendChild(fNode)
+        fieldName = field.name # field.name[field.name.rfind(".")+1:]
+        matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)
 
-        # add some data to the document
-        writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
-        # write it out
-        xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
-        xmlDoc.unlink()
+    # write the source field values
+    setSourceFields(root,xmlDoc,sourceFields)
+    setTargetFields(root,xmlDoc,fields)
+    # Should add a template section for value maps, maybe write domains...
+    # could try to preset field mapping and domain mapping...
+
+    # add some data to the document
+    writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
+    # write it out
+    xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
+    xmlDoc.unlink()
+
+def getDataPath(layerPath,layer):
+    if layerPath.startswith('CIMWKSP'):
+        pth = layer
+    else:
+        pth = layerPath
+    return pth
+
+def getDescribe(layerPath,layer):
+    try:
+        desc = arcpy.Describe(layerPath) # if CIM workspace this fails
+    except:
+        desc = arcpy.Describe(layer)
+
+    return desc
 
 def getLayerPath(pth): # requires string for layer argument
     # altered May31 2016 to handle no .path for layer...
@@ -123,14 +140,14 @@ def getLayerPath(pth): # requires string for layer argument
         desc = arcpy.Describe(pthurl)
         try:
             pth = desc.catalogPath
-            #dla.addMessage("catalogPath:" + pth)
+            dla.addMessage("catalogPath:" + pth)
         except:
-            try:
-                pth = desc.path
-                #dla.addMessage("path:" + pth)
-            except:
-                dla.addError('Unable to obtain a source path for this layer. Please select a feature layer and re-run this tool')
-                pth = None
+            #try:
+            #    pth = desc.path
+            #    dla.addMessage("path:" + pth) # this never seems to be useful in 1.3.1 - the parent folder or catalog location
+            #except:
+            dla.addError('Unable to obtain a catalog path for this layer. Please select a feature layer and re-run this tool')
+            pth = None
         if pth != None:
             pth = dla.getLayerServiceUrl(pth)
             dla.addMessage("Output path:" + pth)
@@ -218,7 +235,7 @@ def setSourceFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")
         sourceFields.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name # field.name[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -234,7 +251,7 @@ def setTargetFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("TargetField")
         targetFields.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name #field.name[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -255,10 +272,10 @@ def getFields(desc,dataset):
     for name in ["OIDFieldName","ShapeFieldName","LengthFieldName","AreaFieldName","GlobalID"]:
         val = getFieldExcept(desc,name)
         if val != None:
-            val = val[val.rfind(".")+1:]
+            # val = val[val.rfind(".")+1:] trying to make it work for joined fields...
             ignore.append(val)
     for field in arcpy.ListFields(dataset):
-        if field.name[field.name.rfind(".")+1:] not in ignore:
+        if field.name not in ignore: #field.name[field.name.rfind(".")+1:] not in ignore:
             fields.append(field)
 
     return fields

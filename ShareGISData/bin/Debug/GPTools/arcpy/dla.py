@@ -1,3 +1,21 @@
+
+"""
+-------------------------------------------------------------------------------
+ | Copyright 2016 Esri
+ |
+ | Licensed under the Apache License, Version 2.0 (the "License");
+ | you may not use this file except in compliance with the License.
+ | You may obtain a copy of the License at
+ |
+ |    http://www.apache.org/licenses/LICENSE-2.0
+ |
+ | Unless required by applicable law or agreed to in writing, software
+ | distributed under the License is distributed on an "AS IS" BASIS,
+ | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ | See the License for the specific language governing permissions and
+ | limitations under the License.
+ ------------------------------------------------------------------------------
+ """
 # dla - Data Loading Assistant common functions
 # Dec 2015
 # ---------------------------------------------------------------------------
@@ -7,7 +25,7 @@ functions, typically an expansion of underlying arcpy functions with a bit more 
 
 Generally functions return data or a True/False result depending on the situation and the arcpy functions.
 '''
-import sys,os,traceback,xml.dom.minidom,time,datetime,gc,arcpy
+import sys,os,traceback,xml.dom.minidom,time,datetime,re,gc,arcpy
 
 import json, urllib
 import urllib.parse as parse
@@ -717,6 +735,24 @@ def getLayerSourceUrl(targetLayer):
     return targetLayer
 
 
+def getLayerServiceUrl(targetLayer):
+    targetLayer = getLayerSourceUrl(targetLayer)
+    if targetLayer.startswith('http'):
+        parts = targetLayer.split("/")
+        lastPart = parts[len(parts)-1]
+        #if lastPart.startswith('L'): # Thought the Pro 1.3 bug involved 'L' prefix, seems like not always...
+        #    suffix = parts[len(parts)-3]
+        #    lastPart = lastPart[1:].replace(suffix,'')
+        ints = [int(s) for s in re.findall(r'\d+',lastPart )]
+        if ints != []:
+            lastPart = str(ints[0])
+
+        parts[len(parts) - 1] = lastPart
+        targetLayer = "/".join(parts)
+
+    return targetLayer
+
+
 def getTempTable(name):
     tname = workspace + os.sep + name
     return tname
@@ -899,17 +935,20 @@ def getServiceName(url):
     parts = url.split('/')
     lngth = len(parts)
     if len(parts) > 8:
+        addMessage("Service Name: " + parts[7])
         return parts[7]
 
 def isFeatureLayerUrl(url):
+    # assume layer string has already had \ and GIS Servers or other characters switched to be a url
     parts = url.split('/')
     lngth = len(parts)
     try: 
         # check for number at end
-        last = int(parts[lngth-1])
+        # last = int(parts[lngth-1])
         if parts[lngth-2] == 'FeatureServer':
             return True
     except:
+        addError("2nd last part of url != 'FeatureServer'")
         return False
 
 def checkLayerIsService(layerStr):
@@ -932,7 +971,7 @@ def checkServiceCapabilities(sourcePath,required):
             data = arcpy.GetSigninToken()
             token = data['token']
             name = getServiceName(url)
-            print('Service',name)
+            #print('Service',name)
             res = hasCapabilities(url,token,['Create','Delete'])
             if res != True and required == False:
                 addMessage('WARNING: ' + name + ' does not have Create and Delete privileges')

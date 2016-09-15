@@ -89,13 +89,33 @@ namespace DataAssistant
             if (System.IO.File.Exists(fname))
             {
                 setXmlFileName(fname);
-                _xml.Load(_filename);
-                this._skipSelectionChanged = true;
-                setXmlDataProvider(this.FieldGrid, fieldXPath);
-                this._skipSelectionChanged = false;
-                setDatasetUI();
-                _datarows = _xml.SelectNodes("//Data/Row");
+                //_xml.Load(_filename);
+                if(loadXml(_filename))
+                {
+                    this._skipSelectionChanged = true;
+                    setXmlDataProvider(this.FieldGrid, fieldXPath);
+                    this._skipSelectionChanged = false;
+                    setDatasetUI();
+                    _datarows = _xml.SelectNodes("//Data/Row");
+                }
             }
+        }
+        private bool loadXml(string filename)
+        {
+            if (!System.IO.File.Exists(filename))
+            {
+                MessageBox.Show(filename + " does not exist, please select a file");
+                return false;
+            }
+            string xmlstr = System.IO.File.ReadAllText(filename);
+            // Encode in UTF-8 byte array
+            byte[] encodedString = Encoding.UTF8.GetBytes(xmlstr);
+            // Put the byte array into a stream and rewind
+            System.IO.MemoryStream ms = new System.IO.MemoryStream(encodedString);
+            ms.Flush();
+            ms.Position = 0;
+            _xml.Load(ms);
+            return true;
         }
         private void setDatasetUI()
         {
@@ -107,11 +127,19 @@ namespace DataAssistant
             TargetStack.Visibility = System.Windows.Visibility.Visible;
             ReplaceStack.Visibility = System.Windows.Visibility.Visible;
 
-            SourceLayer.Text = _xml.SelectSingleNode("//Datasets/Source").InnerText;
-            TargetLayer.Text = _xml.SelectSingleNode("//Datasets/Target").InnerText;
+            System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
+            if (node == null)
+                MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
+            else
+                SourceLayer.Text = node.InnerText;
+
+            node = _xml.SelectSingleNode("//Datasets/Target");
+            if (node == null)
+                MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
+            else
+                TargetLayer.Text = node.InnerText;
 
             setXmlDataProvider(ReplaceField, "//TargetField/@Name");
-
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
             setReplaceValues(nodes);
             setPreviewValues(false);
@@ -245,6 +273,7 @@ namespace DataAssistant
                 dp = this.FieldGrid.DataContext as XmlDataProvider;
                 dp.IsAsynchronous = false;
                 //setXmlFileName(FileName.Text);
+                
                 dp.Document.Save(getXmlFileName());
                 setRevertButton();
             }           
@@ -299,7 +328,7 @@ namespace DataAssistant
             System.Xml.XmlNodeList nodes = null;
             string xpath = "//Field[position()=" + fieldnum.ToString() + "]"; // Field grid position to set
             System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
-            if (nodelist.Count == 1)
+            if (nodelist != null && nodelist.Count == 1)
                 return nodelist;
             else
                 return nodes;
@@ -311,10 +340,19 @@ namespace DataAssistant
                 return nodes;
             int fieldnum = FieldGrid.SelectedIndex + 1;
             System.Xml.XmlNodeList fnodes = getFieldNodes(fieldnum);
-            string sname = fnodes.Item(0).SelectSingleNode("SourceName").InnerText;
+            string sname = "";
+            try
+            {
+                sname = fnodes.Item(0).SelectSingleNode("SourceName").InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not find SourceName element for field (row) number " + fieldnum.ToString());
+                return nodes;
+            }
             string xpath = "//SourceField[@Name='" + sname + "']"; // Source field values
             System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
-            if (nodelist.Count == 1)
+            if (nodelist != null && nodelist.Count == 1)
                 return nodelist;
             else
                 return nodes;
@@ -954,8 +992,12 @@ namespace DataAssistant
                             try
                             {
                                 string nm = xml.GetElementsByTagName("TargetName")[0].InnerText;
-                                string xmlname = _xml.SelectSingleNode("//Field[position()=" + (_selectedRowNum + 1).ToString() + "]/TargetName").InnerText;
-
+                                string xmlname = "";
+                                try
+                                {
+                                    xmlname = _xml.SelectSingleNode("//Field[position()=" + (_selectedRowNum + 1).ToString() + "]/TargetName").InnerText;
+                                }
+                                catch { }
                                 if (nm == xmlname)
                                 {
                                     doSave = true;

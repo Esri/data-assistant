@@ -1,4 +1,4 @@
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -70,20 +70,20 @@ def calculate(xmlFileName,workspace,name,ignore):
         targetName = dla.getNodeValue(field,"TargetName")
         sourceName = dla.getNodeValue(field,"SourceName")
             
-        type = "String"
+        ftype = "String"
         length = "50"
         for target in targetFields:
             nm = target.getAttributeNode("Name").nodeValue
             if  nm == targetName:
-                type = target.getAttributeNode("Type").nodeValue
+                ftype = target.getAttributeNode("Type").nodeValue
                 length = target.getAttributeNode("Length").nodeValue
         # uppercase compare, later need to check for orig/upper name for calc
         #ups = [nm.upper() for nm in attrs]
-        dla.addDlaField(table,targetName,field,attrs,type,length)
+        dla.addDlaField(table,targetName,field,attrs,ftype,length)
 
     allFields = sourceFields + targetFields
     names = []
-    types = []
+    ftypes = []
     lengths = []
     for field in allFields:
         nm = field.getAttributeNode("Name").nodeValue
@@ -91,10 +91,10 @@ def calculate(xmlFileName,workspace,name,ignore):
             names.append(nm)
             typ = field.getAttributeNode("Type").nodeValue
             leng = field.getAttributeNode("Length").nodeValue      
-            types.append(typ)
+            ftypes.append(typ)
             lengths.append(leng)
 
-    retVal = setFieldValues(table,fields,names,types,lengths)
+    retVal = setFieldValues(table,fields,names,ftypes,lengths)
     if retVal == False:
         success = False
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -134,7 +134,7 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
-def setFieldValues(table,fields,names,types,lengths):
+def setFieldValues(table,fields,names,ftypes,lengths):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
     row = None
@@ -159,6 +159,7 @@ def setFieldValues(table,fields,names,types,lengths):
                 return True
             i = i + 1
             setProgressor(i,numFeat)
+            
             for field in fields:
                 method = "None"
                 sourceName = dla.getNodeValue(field,"SourceName")
@@ -167,6 +168,8 @@ def setFieldValues(table,fields,names,types,lengths):
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
+                fnum = names.index(targetName)
+
                 if method == "None" or (method == "Copy" and sourceName == '(None)'):
                     method = "None"
                     val = None
@@ -221,7 +224,10 @@ def setFieldValues(table,fields,names,types,lengths):
                     val = getExpression(row,names,expression)
                 # set field value
                 if method != "None":
-                    setValue(row,names,types,lengths,targetName,targetValue,val)
+                    row[fnum] = getValue(names,ftypes,lengths,targetName,targetValue,val)
+
+                    #if targetName == 'RECTYPE': debug...
+                    #    dla.addMessage(targetName + ':' + str(row[fnum])  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
             except:
@@ -422,43 +428,43 @@ def getSourceValue(row,names,sourceName,targetName):
             sourceValue = None
     return sourceValue
 
-def setValue(row,names,types,lengths,targetName,targetValue,val):
-  
+def getValue(names,ftypes,lengths,targetName,targetValue,val):
+    retVal = None  
     try:
         if val == 'None':
             val = None
         if val != targetValue:
             idx = names.index(targetName)
-            if types[idx] == 'Integer' or types[idx] == 'Double':
+            if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
                 # if the type is numeric then try to cast to float
                 try:
                     valTest = float(val)
-                    row[idx] = val
+                    retVal = val
                 except:
-                    err = "Exception caught: unable to cast " + targetName + " to " + types[idx] + "  : '" + str(val) + "'"
+                    err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
                     dla.addError(err)
-                    print(err)
                     dla._errCount += 1
-            elif types[idx] == 'String':
+            elif ftypes[idx] == 'String':
                 # if a string then cast to string and check length
-                if type(val) != 'str':
-                   val = str(val)
-                if len(val) > int(lengths[idx]):
-                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
-                    dla.addError(err)
-                    print(err)
-                    dla._errCount += 1
+                if type(val) == 'str':
+                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle uniode
                 else:
-                    row[idx] = val
+                    retVal = str(val)
+
+                if len(retVal) > int(lengths[idx]):
+                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"
+                    dla.addError(err)
+                    dla._errCount += 1
+
             else:
-                row[idx] = val
+                retVal = val
     except:
-        success = False
-        err = "Exception caught: unable to set value for value=" + str(val) + " fieldname=" + targetName
+        err = "Exception caught: unable to get value for value=" + str(val) + " fieldname=" + targetName
         dla.showTraceback()
         dla.addError(err)
-        print(err)
         dla._errCount += 1
+
+    return retVal
 
 if __name__ == "__main__":
     main()

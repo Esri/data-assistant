@@ -1,4 +1,4 @@
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -61,7 +61,7 @@ def main(argv = None):
 def publish(xmlFileNames):
     # function called from main or from another script, performs the data update processing
     global sourceLayer,targetLayer,_success
-    dla._errorCount = 0
+    dla._errCount = 0
 
     arcpy.SetProgressor("default","Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")

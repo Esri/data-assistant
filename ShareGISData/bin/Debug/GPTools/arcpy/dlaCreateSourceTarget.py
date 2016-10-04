@@ -1,4 +1,4 @@
-# dlaCreateSourceTarget.py - take a list of 2 datasets and export a Configuration file
+﻿# dlaCreateSourceTarget.py - take a list of 2 datasets and export a Configuration file
 # December 2015
 # Loop through the source and target datasets and write an xml document
 
@@ -94,7 +94,7 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
     fields = getFields(descT,targetDataset)
     sourceFields = getFields(desc,sourceDataset)
-    sourceNames = [field.name for field in sourceFields]#[field.name[field.name.rfind(".")+1:] for field in sourceFields]
+    sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
     upperNames = [nm.upper() for nm in sourceNames]
 
     #try:
@@ -102,7 +102,7 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
         fNode = xmlDoc.createElement("Field")
         fieldroot.appendChild(fNode)
-        fieldName = field.name # field.name[field.name.rfind(".")+1:]
+        fieldName = field.name[field.name.rfind(".")+1:]
         matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)
 
     # write the source field values
@@ -120,8 +120,10 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 def getDataPath(layerPath,layer):
     if layerPath.startswith('CIMWKSP'):
         pth = layer
+        dla.addMessage('layer pth '+ pth)
     else:
         pth = layerPath
+        dla.addMessage('layerPath pth '+ pth)
     return pth
 
 def getDescribe(layerPath,layer):
@@ -135,32 +137,33 @@ def getDescribe(layerPath,layer):
 def getLayerPath(pth): # requires string for layer argument
     # altered May31 2016 to handle no .path for layer...
     # altered August 2016 - Pro 1.3.1 changes in urls for feature service layers
-    if pth != None:
-        pthurl = dla.getLayerSourceUrl(pth)
-        desc = arcpy.Describe(pthurl)
-        try:
-            pth = desc.catalogPath
-            dla.addMessage("catalogPath:" + pth)
-        except:
+    #if pth != None:
+    #    pthurl = dla.getLayerSourceUrl(pth)
+        #desc = arcpy.Describe(pthurl)
+        #try:
+        #    pth = desc.catalogPath
+        #    dla.addMessage("catalogPath:" + pth)
+        #except:
             #try:
             #    pth = desc.path
             #    dla.addMessage("path:" + pth) # this never seems to be useful in 1.3.1 - the parent folder or catalog location
             #except:
-            dla.addError('Unable to obtain a catalog path for this layer. Please select a feature layer and re-run this tool')
-            pth = None
-        if pth != None:
-            pth = dla.getLayerServiceUrl(pth)
-            dla.addMessage("Output path:" + pth)
+        #    dla.addError('Unable to obtain a catalog path for this layer. Please select a feature layer and re-run this tool')
+        #    pth = None
+    if pth != None:
+        pth = dla.getLayerServiceUrl(pth)
+        dla.addMessage("Output path:" + pth)
     return pth
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
     try:
-        spref = desc.spatialReference.factoryCode
-        setSourceTarget(dataset,xmlDoc,lyrtype + "FactoryCode",desc.spatialReference.factoryCode)
+        spref = str(desc.spatialReference.factoryCode)
+        setSourceTarget(dataset,xmlDoc,lyrtype + "FactoryCode",spref)
     except:
         try:
             setSourceTarget(dataset,xmlDoc,lyrtype + "SpatialReference",desc.spatialReference.exportToString())
         except:
+            dla.showTraceback()
             arcpy.AddError("Could not set Spatial Reference for " + lyrtype + " Layer")
 
 def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
@@ -235,7 +238,7 @@ def setSourceFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")
         sourceFields.appendChild(fNode)
-        fieldName = field.name # field.name[field.name.rfind(".")+1:]
+        fieldName = field.name[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -251,7 +254,7 @@ def setTargetFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("TargetField")
         targetFields.appendChild(fNode)
-        fieldName = field.name #field.name[field.name.rfind(".")+1:]
+        fieldName = field.name[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -268,14 +271,14 @@ def addFieldElement(xmlDoc,node,name,value):
 
 def getFields(desc,dataset):
     fields = []
-    ignore = []
-    for name in ["OIDFieldName","ShapeFieldName","LengthFieldName","AreaFieldName","GlobalID"]:
+    ignore = ['OBJECTID','GlobalID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','STLength()','StArea']
+    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:
         val = getFieldExcept(desc,name)
         if val != None:
-            # val = val[val.rfind(".")+1:] trying to make it work for joined fields...
+            val = val[val.rfind('.')+1:] 
             ignore.append(val)
     for field in arcpy.ListFields(dataset):
-        if field.name not in ignore: #field.name[field.name.rfind(".")+1:] not in ignore:
+        if field.name[field.name.rfind('.')+1:] not in ignore:
             fields.append(field)
 
     return fields
@@ -296,7 +299,7 @@ def writeDataSample(xmlDoc,root,sourceFields,sourceDataset,rowLimit):
 
     cursor = arcpy.da.SearchCursor(sourceDataset,sourceFields)
     i = 0
-
+    #dla.addMessage(str(sourceFields))
     for row in cursor:
         if i == 10:
             return
@@ -309,6 +312,7 @@ def writeDataSample(xmlDoc,root,sourceFields,sourceDataset,rowLimit):
                     attrval = row[f].encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handles non-utf-8 codes
                     xrow.setAttribute(sourceFields[f],attrval)
                 except:
+                    dla.showTraceback()
                     pass # backslashreplace should never throw a unicode decode error...
                 
         data.appendChild(xrow)

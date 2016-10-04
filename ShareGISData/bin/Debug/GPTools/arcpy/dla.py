@@ -1,4 +1,4 @@
-
+﻿
 """
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
@@ -37,7 +37,7 @@ startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
 maxErrorCount = 20 # max errors before a script will stop
-_errorCount = 0 # count the errors and only report things > maxRowCount errors...
+_errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 
@@ -87,16 +87,16 @@ def addMessageLocal(val):
 def addError(val):
     # add an error to the screen output
     #arcpy.AddMessage("Error: " + str(val))
-    global _errorCount
-    _errorCount += 1
+    global _errCount
+    _errCount += 1
     arcpy.AddError(str(val))
 
 def writeFinalMessage(msg):
-    global _errorCount    
+    global _errCount    
     if msg != None:
         addMessage(str(msg))
-    addMessage("Process completed with " + str(_errorCount) + " errors")
-    if _errorCount > 0:
+    addMessage("Process completed with " + str(_errCount) + " errors")
+    if _errCount > 0:
         addMessage("When any errors are encountered tools will report a general failure - even though the results may be still be satisfactory.")
         addMessage("Check the Geoprocessing log and errors reported along with the output data to confirm.")
 
@@ -473,7 +473,7 @@ def getFieldValues(mode,fields,datasets):
 
     return [theValues,theDiff]
 
-def addDlaField(table,targetName,field,attrs,type,length):
+def addDlaField(table,targetName,field,attrs,ftype,flength):
     # add a field to a dla Geodatabase
     retcode = False
     try:
@@ -489,11 +489,11 @@ def addDlaField(table,targetName,field,attrs,type,length):
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
-                    addMessageLocal("Field altered: " + nm + " to " + targetName)
+                    addMessage("Field altered: " + nm + " to " + targetName)
                     upfield = True
             if upfield == False:
-                retcode = addField(table,targetName,type,length)
-                addMessageLocal("Field added: " + targetName)
+                retcode = addField(table,targetName,ftype,flength)
+                addMessage("Field added: " + targetName)
         except :
             showTraceback()
             for attr in attrs: # drop any field prefix from the source layer (happens with map joins)
@@ -717,7 +717,7 @@ def getDatasetName(xmlDoc,doctype):
     fullname = ''
     if layer.find("/") > -1:
         parts = layer.split("/")
-        fullname = parts[len(parts)-2]
+        fullname = parts[len(parts)-3]
     else:
         fullname = layer[layer.rfind(os.sep)+1:]
     trimname = nameTrimmer(fullname)    
@@ -727,10 +727,22 @@ def getDatasetName(xmlDoc,doctype):
 
 def getLayerSourceUrl(targetLayer):
 
+    prj = arcpy.mp.ArcGISProject("CURRENT")
+    map = prj.listMaps("*")[0]
+    compLayer = targetLayer[targetLayer.rfind('\\')+1:]
+    lyrs = map.listLayers(compLayer)
+    found = False
+    for lyr in lyrs:
+        addMessage(targetLayer + '|' + compLayer)
+        if lyr.name == compLayer and not found:
+            if lyr.supports("DataSource"):
+                targetLayer = lyr.dataSource
+                found = True # take the first layer with matching name
+    addMessage('source='+targetLayer + ' found='+str(found))
     if targetLayer.startswith('GIS Servers\\'):
         targetLayer = targetLayer.replace("GIS Servers\\","http://")
-    if targetLayer.find('\\') > -1:
-        targetLayer = targetLayer.replace("\\",'/')
+        if targetLayer.find('\\') > -1:
+            targetLayer = targetLayer.replace("\\",'/')
         
     return targetLayer
 
@@ -749,7 +761,7 @@ def getLayerServiceUrl(targetLayer):
 
         parts[len(parts) - 1] = lastPart
         targetLayer = "/".join(parts)
-
+    addMessage('layer='+targetLayer)
     return targetLayer
 
 
@@ -989,6 +1001,17 @@ def checkServiceCapabilities(sourcePath,required):
         return True
 
 ## end May 2016 section
+    
+def getSpatialReference(desc): # needs gp Describe object
+    try:
+        spref = str(desc.spatialReference.factoryCode)
+    except:
+        try:
+            spref = desc.spatialReference.exportToString()
+        except:
+            arcpy.AddError("Could not get Spatial Reference")
+
+    return spref
 
 def setupProxy():
     proxies = {}

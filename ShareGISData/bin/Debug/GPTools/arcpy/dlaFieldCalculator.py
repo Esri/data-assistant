@@ -88,11 +88,14 @@ def calculate(xmlFileName,workspace,name,ignore):
     for field in allFields:
         nm = field.getAttributeNode("Name").nodeValue
         if nm != dla.noneName:
-            names.append(nm)
-            typ = field.getAttributeNode("Type").nodeValue
-            leng = field.getAttributeNode("Length").nodeValue      
-            ftypes.append(typ)
-            lengths.append(leng)
+            try:
+                names.index(nm)
+            except:
+                names.append(nm)
+                typ = field.getAttributeNode("Type").nodeValue
+                leng = field.getAttributeNode("Length").nodeValue      
+                ftypes.append(typ)
+                lengths.append(leng)
 
     retVal = setFieldValues(table,fields,names,ftypes,lengths)
     if retVal == False:
@@ -224,12 +227,13 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     val = getExpression(row,names,expression)
                 # set field value
                 if method != "None":
-                    row[fnum] = getValue(names,ftypes,lengths,targetName,targetValue,val)
-
-                    #if targetName == 'RECTYPE': debug...
-                    #    dla.addMessage(targetName + ':' + str(row[fnum])  + ':' + str(targetValue))
+                    newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
+                    row[fnum] = newVal
+                    
+                    dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
+                #printRow(row,names)
             except:
                 dla._errCount += 1
                 success = False
@@ -398,7 +402,7 @@ def getProgressUpdate(numFeat):
 def printRow(row,names):
     r = 0
     for item in row:
-        msg = str(names[r]) + ": " + str(item)
+        msg = str(names[r]) + ":" + str(item) + ' #' + str(r)
         print(msg)
         arcpy.AddMessage(msg)
         r += 1
@@ -446,10 +450,10 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
                     dla._errCount += 1
             elif ftypes[idx] == 'String':
                 # if a string then cast to string and check length
-                if type(val) == 'str':
-                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle uniode
-                else:
-                    retVal = str(val)
+                #if type(val) == 'str':
+                retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
+                #else:
+                #   retVal = str(val)
 
                 if len(retVal) > int(lengths[idx]):
                     err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"

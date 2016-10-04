@@ -230,7 +230,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
                     row[fnum] = newVal
                     
-                    dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                    #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
                 #printRow(row,names)

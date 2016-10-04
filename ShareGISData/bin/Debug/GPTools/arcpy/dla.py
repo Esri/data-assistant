@@ -733,12 +733,12 @@ def getLayerSourceUrl(targetLayer):
     lyrs = map.listLayers(compLayer)
     found = False
     for lyr in lyrs:
-        addMessage(targetLayer + '|' + compLayer)
+        #addMessage(targetLayer + '|' + compLayer)
         if lyr.name == compLayer and not found:
             if lyr.supports("DataSource"):
                 targetLayer = lyr.dataSource
                 found = True # take the first layer with matching name
-    addMessage('source='+targetLayer + ' found='+str(found))
+    #addMessage('source='+targetLayer + ' found='+str(found))
     if targetLayer.startswith('GIS Servers\\'):
         targetLayer = targetLayer.replace("GIS Servers\\","http://")
         if targetLayer.find('\\') > -1:

@@ -739,10 +739,13 @@ def getLayerSourceUrl(targetLayer):
                 targetLayer = lyr.dataSource
                 found = True # take the first layer with matching name
     #addMessage('source='+targetLayer + ' found='+str(found))
+
     if targetLayer.startswith('GIS Servers\\'):
         targetLayer = targetLayer.replace("GIS Servers\\","http://")
         if targetLayer.find('\\') > -1:
             targetLayer = targetLayer.replace("\\",'/')
+    if targetLayer.startswith('CIMWKSP'):
+        targetLayer = compLayer
         
     return targetLayer
 

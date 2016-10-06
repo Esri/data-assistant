@@ -98,6 +98,8 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
+    prj = arcpy.mp.ArcGISProject("CURRENT")
+    setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
     setSourceTarget(dataset,xmlDoc,"Source",getDataPath(sourcePath,sourceDataset))
     setSourceTarget(dataset,xmlDoc,"Target",getDataPath(targetPath,targetDataset))
 

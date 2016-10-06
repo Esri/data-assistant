@@ -449,12 +449,12 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
                     dla.addError(err)
                     dla._errCount += 1
             elif ftypes[idx] == 'String':
-                # if a string then cast to string and check length
-                #if type(val) == 'str':
-                retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
-                #else:
-                #   retVal = str(val)
-
+                # if a string then cast to string or encode utf-8
+                if type(val) == 'str':
+                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
+                else:
+                    retVal = str(val)
+                # check length to make sure it is not too long.
                 if len(retVal) > int(lengths[idx]):
                     err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"
                     dla.addError(err)

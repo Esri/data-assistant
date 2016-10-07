@@ -132,18 +132,18 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
         if srcCount == 0:
             result = False
             dla.addError("Failed to extract " + sourceName + ", Nothing to export")
-
-        arcpy.env.overwriteOutput = True
-        arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
-        fc = workspace + os.sep + targetName
-        arcpy.Append_management(view,fc,schema_type="NO_TEST")
-        dla.addMessage(arcpy.GetMessages(2)) # only serious errors
-        count = arcpy.GetCount_management(fc).getOutput(0)
-        dla.addMessage(str(count) + " source rows exported to " + targetName)
-        if str(count) == '0':
-            result = False
-            dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
-            dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
+        else:
+            arcpy.env.overwriteOutput = True
+            arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+            fc = workspace + os.sep + targetName
+            arcpy.Append_management(view,fc,schema_type="NO_TEST")
+            dla.addMessage(arcpy.GetMessages(2)) # only serious errors
+            count = arcpy.GetCount_management(fc).getOutput(0)
+            dla.addMessage(str(count) + " source rows exported to " + targetName)
+            if str(count) == '0':
+                result = False
+                dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
+                dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
     return result
 
 def getSpatialReference(xmlDoc,lyrtype):

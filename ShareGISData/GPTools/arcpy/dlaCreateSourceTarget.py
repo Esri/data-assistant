@@ -94,14 +94,15 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     xmlDoc.appendChild(root)
     root.setAttribute("version",'1.1')
     root.setAttribute("xmlns:esri",'http://www.esri.com')
-    #root.setAttribute("encoding",'UTF-8')
-
+    
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = arcpy.mp.ArcGISProject("CURRENT")
     setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
     setSourceTarget(dataset,xmlDoc,"Source",getDataPath(sourcePath,sourceDataset))
+    #setSourceTarget(dataset,xmlDoc,"SourceDatasetType",desc.datasetType)
     setSourceTarget(dataset,xmlDoc,"Target",getDataPath(targetPath,targetDataset))
+    #setSourceTarget(dataset,xmlDoc,"TargetDatasetType",descT.datasetType)
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")
@@ -139,10 +140,10 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
 def getDataPath(layerPath,layer):
     if layerPath.startswith('CIMWKSP'):
         pth = layer
-        dla.addMessage('layer pth '+ pth)
+        #dla.addMessage('layer pth '+ pth)
     else:
         pth = layerPath
-        dla.addMessage('layerPath pth '+ pth)
+        #dla.addMessage('layerPath pth '+ pth)
     return pth
 
 def getDescribe(layerPath,layer):
@@ -177,7 +178,10 @@ def getLayerPath(pth): # requires string for layer argument
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
     try:
         spref = str(desc.spatialReference.factoryCode)
-        setSourceTarget(dataset,xmlDoc,lyrtype + "FactoryCode",spref)
+        if spref == None or spref == '' or spref == '0':
+            setSourceTarget(dataset,xmlDoc,lyrtype + "SpatialReference",desc.spatialReference.exportToString())
+        else:
+            setSourceTarget(dataset,xmlDoc,lyrtype + "FactoryCode",spref)
     except:
         try:
             setSourceTarget(dataset,xmlDoc,lyrtype + "SpatialReference",desc.spatialReference.exportToString())

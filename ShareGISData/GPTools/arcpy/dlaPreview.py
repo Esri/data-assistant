@@ -56,7 +56,7 @@ def preview(xmlFileName):
     dla._errCount = 0
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
-    arcpy.AddMessage("rowLimit = " + str(rowLimit) )
+    #arcpy.AddMessage("rowLimit = " + str(rowLimit) )
     if rowLimit == "" or rowLimit == None:
         rowLimit = 100
     if sourceLayer == "" or sourceLayer == None:

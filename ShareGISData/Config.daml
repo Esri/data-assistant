@@ -49,9 +49,7 @@
         <button id="DataAssistant_Dockpane2Settings_ShowButton" caption="Settings" className="Dockpane2Settings_ShowButton" loadOnClick="true" smallImage="Images\Icon5.png" largeImage="Images\Icon5.png">
           <tooltip heading="Change Settings">Change Optional Settings<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_ReplaceDataButton" caption="ReplaceDataButton " className="ReplaceDataButton" loadOnClick="true" smallImage="Images\GenericButtonBlue16.png" largeImage="Images\GenericButtonBlue32.png">
-          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
-        </button>
+        
       </controls>
       <dockPanes>
         <dockPane id="DataAssistant_Dockpane1" caption="Configure Data Mapping" className="Dockpane1ViewModel" dock="group" dockWith="esri_core_contentsDockPane">

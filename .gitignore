@@ -1,2 +1,3 @@
 *.pyc
-\obj\*.*
+ShareGISData/bin/Debug/GPTools/*
+!ShareGISData/bin/Debug/*.esriAddInX

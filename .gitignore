@@ -1,4 +1,3 @@
 *.pyc
-bin/*
+ShareGISData/bin/Debug/GPTools/*
 !ShareGISData/bin/Debug/*.esriAddInX
-ShareGISData/bin/Debug/GPTools/arcpy/*.py

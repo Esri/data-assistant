@@ -81,9 +81,9 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
 
             sourceName = dla.getSourceName(xmlDoc)
             arcpy.SetProgressorLabel("Loading " + sourceName + " to " + targetName +"...")
-            #if not arcpy.Exists(sourceLayer):
-            #    dla.addError("Layer " + sourceLayer + " does not exist, exiting")
-            #    return
+            if not arcpy.Exists(sourceLayer):
+                dla.addError("Layer " + sourceLayer + " does not exist, exiting")
+                return
             
             retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit)
             if retVal == False:
@@ -113,7 +113,7 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
         #    dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
             
     if whereClause != '' and whereClause != ' ':
-        dla.addMessage("rowLimit " + str(rowLimit))
+        #dla.addMessage("rowLimit " + str(rowLimit))
         dla.addMessage("Where " + str(whereClause))
     sourceName = dla.getSourceName(xmlDoc)
     viewName = sourceName + "_View"
@@ -133,8 +133,14 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
             result = False
             dla.addError("Failed to extract " + sourceName + ", Nothing to export")
         else:
+            arcpy.env.preserveGlobalIds = False # need to run this way until support added for GlobalIDs
+            dla.addMessage("names: " + sourceName + "|" + targetName)
             arcpy.env.overwriteOutput = True
-            arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+            try:
+                arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+            except:
+                arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
+                return False
             fc = workspace + os.sep + targetName
             arcpy.Append_management(view,fc,schema_type="NO_TEST")
             dla.addMessage(arcpy.GetMessages(2)) # only serious errors
@@ -147,16 +153,16 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     return result
 
 def getSpatialReference(xmlDoc,lyrtype):
-    spref = ''
+    spref = None
     # try factoryCode first
     sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "FactoryCode")
     if sprefstr != '':
-        #arcpy.AddMessage(lyrtype + ":" + sprefstr)
+        arcpy.AddMessage(lyrtype + ":" + sprefstr)
         spref = arcpy.SpatialReference(int(sprefstr))
     else:    
         sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "SpatialReference")
         if sprefstr != '':
-            #arcpy.AddMessage(lyrtype + ":" + sprefstr)
+            arcpy.AddMessage(lyrtype + ":" + sprefstr)
             spref = arcpy.SpatialReference()
             spref.loadFromString(sprefstr)
 

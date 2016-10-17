@@ -104,7 +104,7 @@ def publish(xmlFileNames):
         if res != True:
             table = dla.getTempTable(targetName)
             msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
-            if arcpy.TestSchemaLock(table) != True:
+            if arcpy.TestSchemaLock(table) != True and arcpy.Exists(table) == True:
                 msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
             dla.addError(msg)
             print(msg)

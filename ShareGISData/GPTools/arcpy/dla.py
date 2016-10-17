@@ -713,7 +713,7 @@ def getTargetName(xmlDoc):
     return name
 
 def getDatasetName(xmlDoc,doctype):
-    layer = getNodeValue(xmlDoc,doctype)
+    layer = getLayerServiceUrl(getNodeValue(xmlDoc,doctype))
     fullname = ''
     if layer.find("/") > -1:
         parts = layer.split("/")
@@ -738,13 +738,14 @@ def getLayerSourceUrl(targetLayer):
             if lyr.supports("DataSource"):
                 targetLayer = lyr.dataSource
                 found = True # take the first layer with matching name
+                # should also compare layer/dataset type here to find the first similar type
     #addMessage('source='+targetLayer + ' found='+str(found))
 
     if targetLayer.startswith('GIS Servers\\'):
         targetLayer = targetLayer.replace("GIS Servers\\","http://")
         if targetLayer.find('\\') > -1:
             targetLayer = targetLayer.replace("\\",'/')
-    if targetLayer.startswith('CIMWKSP'):
+    elif targetLayer.startswith('CIMWKSP'):
         targetLayer = compLayer
         
     return targetLayer
@@ -764,7 +765,7 @@ def getLayerServiceUrl(targetLayer):
 
         parts[len(parts) - 1] = lastPart
         targetLayer = "/".join(parts)
-    addMessage('layer='+targetLayer)
+    #addMessage('layer='+targetLayer)
     return targetLayer
 
 

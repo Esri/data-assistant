@@ -1,3 +1,12 @@
 *.pyc
-ShareGISData/bin/*
+bin/*
+!bin/Debug
+!bin/Debug/GPTools
+!bin/Debug/GPTools/arcpy
+bin/Debug/GPTools/arcpy/*.py
+[Dd]ebug/*
+[Dd]ebugPublic/*
+[Rr]elease/*
+[Rr]eleases/*
+/bin/Debug/GPTools/arcpy/dla.py
 !ShareGISData/bin/Debug/*.esriAddInX

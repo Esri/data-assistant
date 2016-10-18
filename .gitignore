@@ -1,3 +1,6 @@
 *.pyc
+ShareGISData/obj/*
+ShareGISData/bin/*
+!ShareGISData/bin/Debug
 ShareGISData/bin/Debug/*
 !ShareGISData/bin/Debug/*.esriAddInX

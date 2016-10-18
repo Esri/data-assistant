@@ -94,16 +94,15 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     xmlDoc.appendChild(root)
     root.setAttribute("version",'1.1')
     root.setAttribute("xmlns:esri",'http://www.esri.com')
-    root.setAttribute("encoding",'UTF-8')
-
+    
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = arcpy.mp.ArcGISProject("CURRENT")
     setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
     setSourceTarget(dataset,xmlDoc,"Source",getDataPath(sourcePath,sourceDataset))
-    setSourceTarget(dataset,xmlDoc,"SourceDatasetType",desc.datasetType)
+    #setSourceTarget(dataset,xmlDoc,"SourceDatasetType",desc.datasetType)
     setSourceTarget(dataset,xmlDoc,"Target",getDataPath(targetPath,targetDataset))
-    setSourceTarget(dataset,xmlDoc,"TargetDatasetType",descT.datasetType)
+    #setSourceTarget(dataset,xmlDoc,"TargetDatasetType",descT.datasetType)
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")

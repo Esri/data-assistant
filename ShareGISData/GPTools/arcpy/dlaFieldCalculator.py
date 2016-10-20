@@ -46,7 +46,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)
     xmlDoc = dla.getXmlDoc(xmlFileName)
-    
+    dla.addMessage("Field Calculator: " + xmlFileName)
     arcpy.env.Workspace = dla.workspace
     table = dla.getTempTable(name)
 
@@ -230,7 +230,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
                     row[fnum] = newVal
                     
-                    #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                    dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
                 #printRow(row,names)
@@ -433,12 +433,12 @@ def getSourceValue(row,names,sourceName,targetName):
     return sourceValue
 
 def getValue(names,ftypes,lengths,targetName,targetValue,val):
-    retVal = None  
+    retVal = val # init to the value calculated so far. This function will alter as needed for field type 
     try:
-        if val == 'None':
-            val = None
-        if val != targetValue:
-            idx = names.index(targetName)
+        idx = names.index(targetName)
+        if retVal == 'None':
+            retVal = None
+        if retVal != targetValue:
             if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
                 # if the type is numeric then try to cast to float
                 try:
@@ -468,6 +468,7 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
         dla.addError(err)
         dla._errCount += 1
 
+    dla.addMessage("exiting:"+str(retVal))
     return retVal
 
 if __name__ == "__main__":

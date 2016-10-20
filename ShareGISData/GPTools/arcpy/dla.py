@@ -728,18 +728,25 @@ def getDatasetName(xmlDoc,doctype):
 def getLayerSourceUrl(targetLayer):
 
     prj = arcpy.mp.ArcGISProject("CURRENT")
-    map = prj.listMaps("*")[0]
     compLayer = targetLayer[targetLayer.rfind('\\')+1:]
-    lyrs = map.listLayers(compLayer)
-    found = False
-    for lyr in lyrs:
-        #addMessage(targetLayer + '|' + compLayer)
-        if lyr.name == compLayer and not found:
-            if lyr.supports("DataSource"):
-                targetLayer = lyr.dataSource
-                found = True # take the first layer with matching name
-                # should also compare layer/dataset type here to find the first similar type
-    #addMessage('source='+targetLayer + ' found='+str(found))
+    try:
+        map = prj.listMaps("*")[0]
+        lyrs = map.listLayers(compLayer)
+        found = False
+        for lyr in lyrs:
+            #addMessage(targetLayer + '|' + compLayer)
+            if lyr.name == compLayer and not found:
+                if lyr.supports("DataSource"):
+                    targetLayer = lyr.dataSource
+                    found = True # take the first layer with matching name
+                    # should also compare layer/dataset type here to find the first similar type
+        #addMessage('source='+targetLayer + ' found='+str(found))
+    except:
+        try:
+            targetLayer = targetLayer.dataSource
+        except:
+            addMessage("Unable to get layer data source")
+            return None
 
     if targetLayer.startswith('GIS Servers\\'):
         targetLayer = targetLayer.replace("GIS Servers\\","http://")
@@ -827,7 +834,7 @@ def getLayerVisibility(layer,xmlFileName):
     xmlDoc = getXmlDoc(xmlFileName)
     targets = xmlDoc.getElementsByTagName("TargetName")
     names = [collect_text(node).upper() for node in targets]
-    esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH']
+    esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH','GlobalID','GLOBALID']
     desc = arcpy.Describe(layer)
     if desc.dataType == "FeatureLayer":
         fieldInfo = desc.fieldInfo

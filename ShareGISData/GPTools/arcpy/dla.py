@@ -987,7 +987,7 @@ def checkServiceCapabilities(sourcePath,required):
     if sourcePath == None:
         addMessage('Error: No path available for layer')            
         return False
-    addMessage('Checking: ' + sourcePath)    
+    #addMessage('Checking: ' + sourcePath)    
     if checkLayerIsService(sourcePath):
         url = getLayerSourceUrl(sourcePath)
         if isFeatureLayerUrl(url):

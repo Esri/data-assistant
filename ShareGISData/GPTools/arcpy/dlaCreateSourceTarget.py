@@ -66,7 +66,10 @@ def main(argv = None):
 def createDlaFile(sourceDataset,targetDataset,xmlFileName):
 
     # entry point for calling this tool from another python script
-    writeDocument(sourceDataset,targetDataset,xmlFileName)
+    if sourceDataset == targetDataset:
+        dla.addError("2 layers with the same name is not supported by this tool, please rename one of the layers.")
+    else:
+        writeDocument(sourceDataset,targetDataset,xmlFileName)
     
     return True
 
@@ -155,21 +158,7 @@ def getDescribe(layerPath,layer):
     return desc
 
 def getLayerPath(pth): # requires string for layer argument
-    # altered May31 2016 to handle no .path for layer...
-    # altered August 2016 - Pro 1.3.1 changes in urls for feature service layers
-    #if pth != None:
-    #    pthurl = dla.getLayerSourceUrl(pth)
-        #desc = arcpy.Describe(pthurl)
-        #try:
-        #    pth = desc.catalogPath
-        #    dla.addMessage("catalogPath:" + pth)
-        #except:
-            #try:
-            #    pth = desc.path
-            #    dla.addMessage("path:" + pth) # this never seems to be useful in 1.3.1 - the parent folder or catalog location
-            #except:
-        #    dla.addError('Unable to obtain a catalog path for this layer. Please select a feature layer and re-run this tool')
-        #    pth = None
+
     if pth != None:
         pth = dla.getLayerServiceUrl(pth)
         dla.addMessage("Output path:" + pth)
@@ -347,23 +336,3 @@ if __name__ == "__main__":
     main()
 
 
-##def automatchDocument(xmlFileName): couldn't get this to work in ArcGIS Pro
-    
-##    xml_input = etree.XML(open(xmlFileName, 'r').read())
-##   xslt_root = etree.XML(open(matchxslt, 'r').read())
-##    transform = etree.XSLT(xslt_root)
-##   print(str(transform(xml_input)))
-##    import win32com.client.dynamic
-##    xslt = win32com.client.dynamic.Dispatch("Msxml2.DOMDocument.6.0")
-##    xslt.async = 0
-##    xslt.load(matchxslt)
-##    xml = win32com.client.dynamic.Dispatch("Msxml2.DOMDocument.6.0")
-##    xml.async = 0
-##    xml.load(xmlFileName)
-##    xml.setProperty("AllowDocumentFunction",True)
-##    xslt.setProperty("AllowDocumentFunction",True)
-##    output = ''
-##    output = xml.transformNode(xslt)
-##    xmlFile = xmlFileName.replace(".xml","1.xml")
-##    xml.loadXML(output)
-##    xml.save(xmlFileName)

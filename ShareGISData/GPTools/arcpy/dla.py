@@ -40,6 +40,8 @@ maxErrorCount = 20 # max errors before a script will stop
 _errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
+_project = None
+
 
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
@@ -713,7 +715,7 @@ def getTargetName(xmlDoc):
     return name
 
 def getDatasetName(xmlDoc,doctype):
-    layer = getLayerServiceUrl(getNodeValue(xmlDoc,doctype))
+    layer = getNodeValue(xmlDoc,doctype)
     fullname = ''
     if layer.find("/") > -1:
         parts = layer.split("/")
@@ -725,41 +727,74 @@ def getDatasetName(xmlDoc,doctype):
 
     return name
 
+def getProject():
+    global _project
+    if _project == None:
+        try:
+            _project = arcpy.mp.ArcGISProject("CURRENT")
+        except:
+            addError("Unable to obtain a reference to the current project, exiting")
+            _project = None
+    return _project
+
+def getLayer(layerName):
+    name = layerName[layerName.rfind('\\')+1:]
+    layer = None
+    try:
+        prj = getProject()
+        maps = prj.listMaps("*")
+        found = False
+        for map in maps:
+            if not found:
+                lyrs = map.listLayers(name)
+                for lyr in lyrs:
+                    if lyr.name == name and not found:
+                        if lyr.supports("DataSource"):
+                            layer = lyr
+                            found = True # take the first layer with matching name
+    except:
+        addMessage("Unable to get layer from maps")
+        return None
+       
+    return layer
+
+
+def getLayerPath(pth): # requires string for layer argument
+
+    if pth != None:
+        if os.path.exists(pth[:pth.rfind(os.sep)]):
+            # this is a link to a path so Ok
+            pth = pth
+        else:
+            # this is feature service, layer name (layer in map), other non-filed-based
+            try:
+                desc = arcpy.Describe(pth)
+                pth = desc.catalogPath
+            except:
+                pass
+            pth = getLayerSourceUrl(pth)
+
+        #dla.addMessage("Output path:" + pth)
+    return pth
+
 def getLayerSourceUrl(targetLayer):
 
-    prj = arcpy.mp.ArcGISProject("CURRENT")
     compLayer = targetLayer[targetLayer.rfind('\\')+1:]
-    try:
-        map = prj.listMaps("*")[0]
-        lyrs = map.listLayers(compLayer)
-        found = False
-        for lyr in lyrs:
-            #addMessage(targetLayer + '|' + compLayer)
-            if lyr.name == compLayer and not found:
-                if lyr.supports("DataSource"):
-                    targetLayer = lyr.dataSource
-                    found = True # take the first layer with matching name
-                    # should also compare layer/dataset type here to find the first similar type
-        #addMessage('source='+targetLayer + ' found='+str(found))
-    except:
-        try:
-            targetLayer = targetLayer.dataSource
-        except:
-            addMessage("Unable to get layer data source")
-            return None
+    targetLayer = None
+
+    lyr = getLayer(compLayer)
+    if lyr != None and lyr.supports("DataSource"):
+        targetLayer = lyr.dataSource
+        found = True # take the first layer with matching name
 
     if targetLayer.startswith('GIS Servers\\'):
         targetLayer = targetLayer.replace("GIS Servers\\","http://")
         if targetLayer.find('\\') > -1:
             targetLayer = targetLayer.replace("\\",'/')
-    elif targetLayer.startswith('CIMWKSP'):
-        targetLayer = compLayer
-        
-    return targetLayer
+    elif targetLayer.startswith('CIMWKSP') and found == True:
+        connfile = getConnectionFile(lyr.connectionProperties)
+        targetLayer = os.path.join(connfile + os.sep + targetLayer[targetLayer.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
 
-
-def getLayerServiceUrl(targetLayer):
-    targetLayer = getLayerSourceUrl(targetLayer)
     if targetLayer.startswith('http'):
         parts = targetLayer.split("/")
         lastPart = parts[len(parts)-1]
@@ -989,7 +1024,8 @@ def checkServiceCapabilities(sourcePath,required):
         return False
     #addMessage('Checking: ' + sourcePath)    
     if checkLayerIsService(sourcePath):
-        url = getLayerSourceUrl(sourcePath)
+        #url = getLayerSourceUrl(sourcePath)
+        url = sourcePath
         if isFeatureLayerUrl(url):
             data = arcpy.GetSigninToken()
             token = data['token']
@@ -1006,7 +1042,7 @@ def checkServiceCapabilities(sourcePath,required):
                 addMessage('This tool will not run until this is addressed')
             return res
         else:
-            addMessage('Service does not appear to be a feature layer')
+            addMessage(sourcePath + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
             return False
     else:
         return True
@@ -1037,3 +1073,47 @@ def setupProxy():
         opener = urllib.build_opener(proxy)
         urllib.install_opener(opener)
 
+def getConnectionFile(connectionProperties):
+
+    dir = os.path.dirname(os.path.realpath(__file__))
+    cp = connectionProperties['connection_info']
+    srvr = getcp(cp,'server')
+    inst = getcp(cp,'db_connection_properties')
+    db = getcp(cp,'database')
+    fname = (srvr+inst+db+".sde").replace(":","").replace("\\","")
+    connfile = os.path.join(dir,fname)
+    if os.path.exists(connfile):
+        os.remove(connfile)
+
+    arcpy.CreateDatabaseConnection_management (out_folder_path=dir,
+                                            out_name=fname,
+                                            database_platform=getcp(cp,'dbclient'),
+                                            instance=inst,
+                                            account_authentication=getcp(cp,'authentication_mode'),
+                                            username=getcp(cp,'username'),
+                                            password=getcp(cp,'password'),
+                                            database=db,
+                                            schema=getcp(cp,'schema'),
+                                            version=getcp(cp,'version'),
+                                            date=getcp(cp,'date'))
+    return connfile
+
+def getcp(cp,name):
+    retval = ""
+    try:
+        retval = cp[name]
+        if name.lower() == 'authentication_mode':
+            if retval == 'OSA':
+                retval = 'OPERATING_SYSTEM_AUTH'
+            else:
+                retval = 'DATABASE_AUTH'
+        elif name.lower() == 'dbclient':
+            srcs = ['','altibase','db2 for z/os','informix','netezza','oracle','postgresql','sap hana','sqlserver','teradata']
+            targs = ['','ALTIBASE','DB2 for z/OS','Informix','Netezza','Oracle','PostgreSQL','SAP HANA','Sql Server','Teradata']
+            try:
+                retval = targs[srcs.index(retval.lower())]
+            except:
+                retval = retval
+    except:
+        pass
+    return retval

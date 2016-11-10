@@ -33,7 +33,7 @@ xmlFileName = arcpy.GetParameterAsText(2) # output file name argument
 matchLibrary = 'true' # arcpy.GetParameterAsText(3) always use automatch now. When starting the match library is blank anyway
 #  so this will have no effect until the user starts working with it.
 
-if not xmlFileName.lower().endswith(".xml"):
+if not xmlFileName.lower().endswith(".xml") and str(xmlFileName) != '':
     xmlFileName = xmlFileName + ".xml"
 
 if matchLibrary.lower() == 'true':
@@ -42,7 +42,7 @@ else:
     matchLibrary = False
 
 dir = os.path.dirname(os.path.realpath(__file__))
-arcpy.AddMessage(dir)
+
 matchxslt = os.path.join(dir,"FieldMatcher.xsl")
 matchfile = os.path.join(dir,"MatchLocal.xml")
 
@@ -66,31 +66,33 @@ def main(argv = None):
 def createDlaFile(sourceDataset,targetDataset,xmlFileName):
 
     # entry point for calling this tool from another python script
-    if sourceDataset == targetDataset:
-        dla.addError("2 layers with the same name is not supported by this tool, please rename one of the layers.")
+    if str(sourceDataset) == '' or str(targetDataset) == '':
+        dla.addError("This tool requires both a source and target dataset, exiting.")
+    elif sourceDataset == targetDataset:
+        dla.addError("2 layers with the same name is not supported by this tool, please rename one of the layers, exiting.")
     else:
         writeDocument(sourceDataset,targetDataset,xmlFileName)
-    
     return True
 
 def writeDocument(sourceDataset,targetDataset,xmlFileName):
 
-    sourcePath = getLayerPath(sourceDataset)
-    targetPath = getLayerPath(targetDataset)
+    # there are 2 cases for the incoming layers. Sometimes it is a physical layer path - such as when the user selects a dataset from the file system
+    # other times there is just a layer name.
+
+    sourcePath = dla.getLayerPath(sourceDataset)
+    targetPath = dla.getLayerPath(targetDataset)
 
     if sourcePath == None or targetPath == None:
         return False
 
     ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
     if not dla.checkServiceCapabilities(sourcePath,False):
-        dla.addMessage(sourceDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
         return False
     if not dla.checkServiceCapabilities(targetPath,False):
-        dla.addMessage(targetDataset + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
         return False
 
-    desc = getDescribe(sourcePath,sourceDataset)
-    descT = getDescribe(targetPath,targetDataset)
+    desc = arcpy.Describe(sourcePath)
+    descT = arcpy.Describe(targetPath)
 
     xmlDoc = Document()
     root = xmlDoc.createElement('SourceTargetMatrix')
@@ -100,11 +102,11 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
-    prj = arcpy.mp.ArcGISProject("CURRENT")
+    prj = dla.getProject()
     setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
-    setSourceTarget(dataset,xmlDoc,"Source",getDataPath(sourcePath,sourceDataset))
+    setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
     #setSourceTarget(dataset,xmlDoc,"SourceDatasetType",desc.datasetType)
-    setSourceTarget(dataset,xmlDoc,"Target",getDataPath(targetPath,targetDataset))
+    setSourceTarget(dataset,xmlDoc,"Target",targetPath)
     #setSourceTarget(dataset,xmlDoc,"TargetDatasetType",descT.datasetType)
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
@@ -134,35 +136,11 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     # Should add a template section for value maps, maybe write domains...
     # could try to preset field mapping and domain mapping...
 
-    # add some data to the document
-    writeDataSample(xmlDoc,root,sourceNames,sourceDataset,10)
+    # add data to the document
+    writeDataSample(xmlDoc,root,sourceNames,sourcePath,10)
     # write it out
     xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()
-
-def getDataPath(layerPath,layer):
-    if layerPath.startswith('CIMWKSP'):
-        pth = layer
-        #dla.addMessage('layer pth '+ pth)
-    else:
-        pth = layerPath
-        #dla.addMessage('layerPath pth '+ pth)
-    return pth
-
-def getDescribe(layerPath,layer):
-    try:
-        desc = arcpy.Describe(layerPath) # if CIM workspace this fails
-    except:
-        desc = arcpy.Describe(layer)
-
-    return desc
-
-def getLayerPath(pth): # requires string for layer argument
-
-    if pth != None:
-        pth = dla.getLayerServiceUrl(pth)
-        dla.addMessage("Output path:" + pth)
-    return pth
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
     try:
@@ -289,7 +267,7 @@ def getFields(desc,dataset):
         if val != None:
             val = val[val.rfind('.')+1:] 
             ignore.append(val)
-    for field in arcpy.ListFields(dataset):
+    for field in desc.fields:
         if field.name[field.name.rfind('.')+1:] not in ignore:
             fields.append(field)
 
@@ -303,13 +281,14 @@ def getFieldExcept(desc,name):
         val = None
     return val
 
-def writeDataSample(xmlDoc,root,sourceFields,sourceDataset,rowLimit):
+def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     # get a subset of data for preview and other purposes
     i = 0
     data = xmlDoc.createElement("Data")
     root.appendChild(data)
 
-    cursor = arcpy.da.SearchCursor(sourceDataset,sourceFields)
+    cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
+
     i = 0
     #dla.addMessage(str(sourceFields))
     for row in cursor:

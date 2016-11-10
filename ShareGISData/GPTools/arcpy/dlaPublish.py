@@ -251,7 +251,10 @@ def addFeatures(sourceLayer,targelUrl,expr):
         arcpy.SetProgressorLabel("Adding Features")
         featurejs = featureclass_to_json(sourceLayer)
         url = targelUrl + '/addFeatures'  
-        numFeat = len(featurejs['features'])
+        try:
+            numFeat = len(featurejs['features'])
+        except:
+            numFeat = 0
         if numFeat == 0:
             dla.addMessage("0 Features to Add, exiting")            
             return True # nothing to add is OK
@@ -284,9 +287,9 @@ def addFeatures(sourceLayer,targelUrl,expr):
                     retval = True
                 except:
                     retval = False
-                    dla.addMessage("Add features to Feature Service failed")
-                    dla.showTraceback()
-                    dla.addError(json.dumps(result))
+                    dla.addMessage("Add features to Feature Service failed. Unfortunately you will need to re-run this tool.")
+                    #dla.showTraceback()
+                    #dla.addError(json.dumps(result))
                     error = True
             featuresProcessed += chunk
     except:

@@ -134,7 +134,7 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
             dla.addError("Failed to extract " + sourceName + ", Nothing to export")
         else:
             arcpy.env.preserveGlobalIds = False # need to run this way until support added for GlobalIDs
-            dla.addMessage("names: " + sourceName + "|" + targetName)
+            #dla.addMessage("names: " + sourceName + "|" + targetName)
             arcpy.env.overwriteOutput = True
             try:
                 arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)

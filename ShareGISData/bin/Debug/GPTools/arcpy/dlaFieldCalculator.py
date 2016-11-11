@@ -46,7 +46,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)
     xmlDoc = dla.getXmlDoc(xmlFileName)
-    
+    dla.addMessage("Field Calculator: " + xmlFileName)
     arcpy.env.Workspace = dla.workspace
     table = dla.getTempTable(name)
 
@@ -433,12 +433,12 @@ def getSourceValue(row,names,sourceName,targetName):
     return sourceValue
 
 def getValue(names,ftypes,lengths,targetName,targetValue,val):
-    retVal = None  
+    retVal = val # init to the value calculated so far. This function will alter as needed for field type 
     try:
-        if val == 'None':
-            val = None
-        if val != targetValue:
-            idx = names.index(targetName)
+        idx = names.index(targetName)
+        if retVal == 'None':
+            retVal = None
+        if retVal != targetValue:
             if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
                 # if the type is numeric then try to cast to float
                 try:

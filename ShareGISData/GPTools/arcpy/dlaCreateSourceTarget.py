@@ -79,9 +79,6 @@ def createDlaFile(source,target,xmlFileName):
 
 def writeDocument(sourcePath,targetPath,xmlFileName):
 
-    # there are 2 cases for the incoming layers. Sometimes it is a physical layer path - such as when the user selects a dataset from the file system
-    # other times there is just a layer name.
-
     if sourcePath == None or targetPath == None:
         return False
 

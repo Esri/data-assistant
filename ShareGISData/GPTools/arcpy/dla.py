@@ -759,26 +759,29 @@ def getMapLayer(layerName):
     return layer
 
 def getLayerPath(layer):
+    # get the source data path for a layer
+
     pth = ''
-    if isinstance(layer, arcpy._mp.Layer):
+    if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
         pth = layer.dataSource
     else:
         try:
-            desc = arcpy.Describe(layer)
+            desc = arcpy.Describe(layer) # dataset path/source as parameter
             pth = desc.catalogPath
         except:
-            lyr = getMapLayer(layer)
+            lyr = getMapLayer(layer) # layer name in the project/map
             if lyr != None and lyr.supports("DataSource"):
                 pth = lyr.dataSource
                 layer = lyr
 
-    pth = repairLayerSourceUrl(pth,layer)
+    pth = repairLayerSourceUrl(pth,layer) # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
 
     return pth
 
 
 def repairLayerSourceUrl(layerPath,lyr):
     # take a layer path or layer name and return the data source or repaired source
+    # lyr parameter is here but only used in CIMWKSP case.
     if layerPath == "" or layerPath == None:
         return layerPath
     path = None
@@ -808,7 +811,6 @@ def repairLayerSourceUrl(layerPath,lyr):
         path = layerPath
     
     return path
-
 
 def getTempTable(name):
     tname = workspace + os.sep + name

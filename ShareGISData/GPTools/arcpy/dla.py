@@ -737,7 +737,7 @@ def getProject():
             _project = None
     return _project
 
-def getLayer(layerName):
+def getMapLayer(layerName):
     name = layerName[layerName.rfind('\\')+1:]
     layer = None
     try:
@@ -758,57 +758,56 @@ def getLayer(layerName):
        
     return layer
 
+def getLayerPath(layer):
+    pth = ''
+    if isinstance(layer, arcpy._mp.Layer):
+        pth = layer.dataSource
+    else:
+        try:
+            desc = arcpy.Describe(layer)
+            pth = desc.catalogPath
+        except:
+            lyr = getMapLayer(layer)
+            if lyr != None and lyr.supports("DataSource"):
+                pth = lyr.dataSource
+                layer = lyr
 
-def getLayerPath(pth): # requires string for layer argument
+    pth = repairLayerSourceUrl(pth,layer)
 
-    if pth != None:
-        if os.path.exists(pth[:pth.rfind(os.sep)]):
-            # this is a link to a path so Ok
-            pth = pth
-        else:
-            # this is feature service, layer name (layer in map), other non-filed-based
-            try:
-                desc = arcpy.Describe(pth)
-                pth = desc.catalogPath
-            except:
-                pass
-            pth = getLayerSourceUrl(pth)
-
-        #dla.addMessage("Output path:" + pth)
     return pth
 
-def getLayerSourceUrl(targetLayer):
 
-    compLayer = targetLayer[targetLayer.rfind('\\')+1:]
-    targetLayer = None
+def repairLayerSourceUrl(layerPath,lyr):
+    # take a layer path or layer name and return the data source or repaired source
+    if layerPath == "" or layerPath == None:
+        return layerPath
+    path = None
 
-    lyr = getLayer(compLayer)
-    if lyr != None and lyr.supports("DataSource"):
-        targetLayer = lyr.dataSource
-        found = True # take the first layer with matching name
-
-    if targetLayer.startswith('GIS Servers\\'):
-        targetLayer = targetLayer.replace("GIS Servers\\","http://")
-        if targetLayer.find('\\') > -1:
-            targetLayer = targetLayer.replace("\\",'/')
-    elif targetLayer.startswith('CIMWKSP') and found == True:
+    if layerPath.startswith('GIS Servers\\'):
+        # turn into url 
+        layerPath = layerPath.replace("GIS Servers\\","http://")
+        if layerPath.find('\\') > -1:
+            path = layerPath.replace("\\",'/')
+    elif layerPath.startswith('CIMWKSP'):
+        # create database connection and use that path
         connfile = getConnectionFile(lyr.connectionProperties)
-        targetLayer = os.path.join(connfile + os.sep + targetLayer[targetLayer.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
+        path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
+        path = path.replace("\\\\","\\")
 
-    if targetLayer.startswith('http'):
-        parts = targetLayer.split("/")
+    if layerPath.startswith('http'):
+        # fix for non-integer layer ids
+        parts = layerPath.split("/")
         lastPart = parts[len(parts)-1]
-        #if lastPart.startswith('L'): # Thought the Pro 1.3 bug involved 'L' prefix, seems like not always...
-        #    suffix = parts[len(parts)-3]
-        #    lastPart = lastPart[1:].replace(suffix,'')
-        ints = [int(s) for s in re.findall(r'\d+',lastPart )]
+        ints = [int(s) for s in re.findall(r'\d+',lastPart )] # scan for the integer value in the string
         if ints != []:
             lastPart = str(ints[0])
-
         parts[len(parts) - 1] = lastPart
-        targetLayer = "/".join(parts)
-    #addMessage('layer='+targetLayer)
-    return targetLayer
+        path = "/".join(parts)
+    elif path == None: 
+        # nothing done here
+        path = layerPath
+    
+    return path
 
 
 def getTempTable(name):
@@ -1024,7 +1023,6 @@ def checkServiceCapabilities(sourcePath,required):
         return False
     #addMessage('Checking: ' + sourcePath)    
     if checkLayerIsService(sourcePath):
-        #url = getLayerSourceUrl(sourcePath)
         url = sourcePath
         if isFeatureLayerUrl(url):
             data = arcpy.GetSigninToken()

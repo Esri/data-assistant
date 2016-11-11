@@ -27,8 +27,8 @@ import re
 # Local variables...
 debug = False 
 # Parameters
-sourceDataset = arcpy.GetParameterAsText(0) # source dataset to analyze
-targetDataset = arcpy.GetParameterAsText(1) # target dataset to analyze
+source = arcpy.GetParameter(0) # source dataset to analyze
+target = arcpy.GetParameter(1) # target dataset to analyze
 xmlFileName = arcpy.GetParameterAsText(2) # output file name argument
 matchLibrary = 'true' # arcpy.GetParameterAsText(3) always use automatch now. When starting the match library is blank anyway
 #  so this will have no effect until the user starts working with it.
@@ -47,9 +47,9 @@ matchxslt = os.path.join(dir,"FieldMatcher.xsl")
 matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
-    global sourceDataset,targetDataset,xmlFileName   
-    dla.addMessage("Source: " + sourceDataset)
-    dla.addMessage("Target: " + targetDataset)
+    global source,target,xmlFileName   
+    dla.addMessage("Source: " + str(source))
+    dla.addMessage("Target: " + str(target))
     dla.addMessage("File: " + xmlFileName)
     if not os.path.exists(matchxslt):
         msg = matchxslt + " does not exist, exiting"
@@ -61,26 +61,26 @@ def main(argv = None):
         arcpy.AddError(msg)
         print(msg)
         return
-    createDlaFile(sourceDataset,targetDataset,xmlFileName)
+    createDlaFile(source,target,xmlFileName)
 
-def createDlaFile(sourceDataset,targetDataset,xmlFileName):
+def createDlaFile(source,target,xmlFileName):
 
     # entry point for calling this tool from another python script
-    if str(sourceDataset) == '' or str(targetDataset) == '':
+    if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
-    elif sourceDataset == targetDataset:
+    elif source == target:
         dla.addError("2 layers with the same name is not supported by this tool, please rename one of the layers, exiting.")
     else:
-        writeDocument(sourceDataset,targetDataset,xmlFileName)
+        sourcePath = dla.getLayerPath(source)
+        targetPath = dla.getLayerPath(target)
+        writeDocument(sourcePath,targetPath,xmlFileName)
     return True
 
-def writeDocument(sourceDataset,targetDataset,xmlFileName):
+
+def writeDocument(sourcePath,targetPath,xmlFileName):
 
     # there are 2 cases for the incoming layers. Sometimes it is a physical layer path - such as when the user selects a dataset from the file system
     # other times there is just a layer name.
-
-    sourcePath = dla.getLayerPath(sourceDataset)
-    targetPath = dla.getLayerPath(targetDataset)
 
     if sourcePath == None or targetPath == None:
         return False
@@ -105,9 +105,7 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     prj = dla.getProject()
     setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
     setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
-    #setSourceTarget(dataset,xmlDoc,"SourceDatasetType",desc.datasetType)
     setSourceTarget(dataset,xmlDoc,"Target",targetPath)
-    #setSourceTarget(dataset,xmlDoc,"TargetDatasetType",descT.datasetType)
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")
@@ -117,8 +115,8 @@ def writeDocument(sourceDataset,targetDataset,xmlFileName):
     fieldroot = xmlDoc.createElement("Fields")
     root.appendChild(fieldroot)
 
-    fields = getFields(descT,targetDataset)
-    sourceFields = getFields(desc,sourceDataset)
+    fields = getFields(descT)
+    sourceFields = getFields(desc)
     sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
     upperNames = [nm.upper() for nm in sourceNames]
 
@@ -259,7 +257,7 @@ def addFieldElement(xmlDoc,node,name,value):
     nodeText = xmlDoc.createTextNode(value)
     xmlName.appendChild(nodeText)
 
-def getFields(desc,dataset):
+def getFields(desc):
     fields = []
     ignore = ['OBJECTID','GlobalID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','STLength()','StArea']
     for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:

@@ -760,7 +760,6 @@ def getMapLayer(layerName):
 
 def getLayerPath(layer):
     # get the source data path for a layer
-
     pth = ''
     if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
         pth = layer.dataSource
@@ -774,7 +773,8 @@ def getLayerPath(layer):
                 pth = lyr.dataSource
                 layer = lyr
 
-    pth = repairLayerSourceUrl(pth,layer) # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
+    # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
+    pth = repairLayerSourceUrl(pth,layer) 
 
     return pth
 
@@ -791,13 +791,15 @@ def repairLayerSourceUrl(layerPath,lyr):
         layerPath = layerPath.replace("GIS Servers\\","http://")
         if layerPath.find('\\') > -1:
             path = layerPath.replace("\\",'/')
+            layerPath = path
+
     elif layerPath.startswith('CIMWKSP'):
         # create database connection and use that path
         connfile = getConnectionFile(lyr.connectionProperties)
         path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
         path = path.replace("\\\\","\\")
 
-    if layerPath.startswith('http'):
+    if layerPath.startswith('http'): # sometimes get http path to start with, need to handle non-integer layerid in both cases
         # fix for non-integer layer ids
         parts = layerPath.split("/")
         lastPart = parts[len(parts)-1]
@@ -806,6 +808,7 @@ def repairLayerSourceUrl(layerPath,lyr):
             lastPart = str(ints[0])
         parts[len(parts) - 1] = lastPart
         path = "/".join(parts)
+
     elif path == None: 
         # nothing done here
         path = layerPath

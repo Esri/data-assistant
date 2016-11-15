@@ -135,9 +135,8 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
     if useReplaceSettings == True and (expr == '' or expr == None):
         dla.addError("There must be an expression for replacing by field value, current value = '" + str(expr) + "'")
         return False
-    targetLayer = dla.getLayerServiceUrl(targetLayer)
-    if targetLayer.startswith("GIS Servers\\") == True or targetLayer.startswith("http") == True:
-        targetLayer = dla.getLayerSourceUrl(targetLayer)
+    targetLayer = dla.getLayerPath(targetLayer)
+    if targetLayer.startswith("http") == True:
         success = doPublishPro(dlaTable,targetLayer,expr)
     else:
         # logic change - if not replace field settings then only append

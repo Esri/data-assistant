@@ -634,10 +634,19 @@ namespace DataAssistant
                     if (cname == sourcename)
                         found = true;
                 }
-                if(!found && sourcename != _noneField)
-                    grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
+                if (!found && sourcename != _noneField)
+                {
+                    try
+                    {
+                        grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Error setting checkbox values");
+                    }
+                }
             }
-            
+            grid.Items.Refresh();           
         }
 
         private void setSubstringValues(string start, string length)
@@ -793,11 +802,22 @@ namespace DataAssistant
                         {
                             bool chk = (check.IsChecked.HasValue) ? check.IsChecked.Value : false;
                             row.Checked = chk;
-                            if (chk == true)
+                            bool present = false;
+                            for (int c = 0; c < _concat.Count; c++)
+                            {
+                                if ( Equals(row.Name,_concat[c]))
+                                    present = true;
+                            }
+                            if (chk && ! present)
+                            {
                                 _concat.Add(row.Name);
-                            else
+                                setConcatValues();
+                            }
+                            else if (! chk && present)
+                            {
                                 _concat.Remove(row.Name);
-                            setConcatValues();
+                                setConcatValues();
+                            }  
                         }
                     }
                 }

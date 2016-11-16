@@ -82,12 +82,27 @@ def calculate(xmlFileName,workspace,name,ignore):
         dla.addDlaField(table,targetName,field,attrs,ftype,length)
 
     allFields = sourceFields + targetFields
+    desc = arcpy.Describe(table)
+    layerNames = []
     names = []
     ftypes = []
     lengths = []
+    ignore = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLENGTH()','STAREA()']
+    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:
+        try:
+            val = eval("desc." + name)
+            val = val[val.rfind('.')+1:] 
+            ignore.append(val).upper()
+        except:
+            pass
+
+    for field in desc.fields:
+        if field.name.upper() not in ignore:
+            layerNames.append(field.name.upper())
+
     for field in allFields:
         nm = field.getAttributeNode("Name").nodeValue
-        if nm != dla.noneName:
+        if nm != dla.noneName and nm.upper() not in ignore and nm.upper() in layerNames:
             try:
                 names.index(nm)
             except:
@@ -107,6 +122,11 @@ def calculate(xmlFileName,workspace,name,ignore):
     if ignore == True:
         success = True
     return success
+
+def getFieldExcept(desc,name):
+    val = None
+    return val
+
 
 def calcValue(row,names,calcString):
     # calculate a value based on source fields and/or other expressions

@@ -256,7 +256,7 @@ def addFieldElement(xmlDoc,node,name,value):
 
 def getFields(desc):
     fields = []
-    ignore = ['OBJECTID','GlobalID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','STLength()','StArea']
+    ignore = ['FID','OBJECTID','GlobalID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLength()','StArea()']
     for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:
         val = getFieldExcept(desc,name)
         if val != None:

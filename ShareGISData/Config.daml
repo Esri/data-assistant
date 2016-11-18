@@ -1,5 +1,5 @@
 ﻿<ArcGIS defaultAssembly="DataAssistant.dll" defaultNamespace="DataAssistant" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="December-2016" desktopVersion="1.4">
+  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="December-2016" desktopVersion="1.3">
     <Name>DataAssistant</Name>
     <Description>The Data Assistant can be used to transform your organization’s data and load it into a database or service.</Description>
     <Image>Images\Icon0.png</Image>

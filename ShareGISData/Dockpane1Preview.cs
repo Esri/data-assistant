@@ -351,33 +351,49 @@ namespace DataAssistant
             for (int i = 0; i < _datarows.Count; i++)
             {
                 string textval = "";
-                try
+              
+                if (attrName == null)
+                    textval = targName + "=None";
+                else
                 {
-                    if (attrName == null)
-                        textval = targName + "=None";
-                    else
+                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                    if (att != null)
                     {
-                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                        if (att != null)
+                        int len = length;
+                        int startat = start;
+                        if (att.InnerText != "")
+                            textval = att.InnerText;
+                        else
+                            textval = "None"; // att.InnerText should be "None" but make sure if ""
+                        try
                         {
-                            try
+                            if (length == -1 && textval != "None") // right
                             {
-                                if (length == -1)
+                                if (start >= att.InnerText.Length)
                                 {
-                                    // num chars for right function
-                                    textval = targName + "=" + att.InnerText.Substring(att.InnerText.Length - start);
+                                    startat = 0;
+                                    len = att.InnerText.Length;
                                 }
                                 else
                                 {
-                                    textval = targName + "=" + att.InnerText.Substring(start, length);
+                                    startat = att.InnerText.Length - start;
+                                    len = start;
                                 }
+                                textval = att.InnerText.Substring(startat, len); 
                             }
-                            catch { textval = targName + "=" + "None"; }
+                            else if (length > -1 && textval != "None")
+                            {
+                                if (start + length > att.InnerText.Length)
+                                    len = att.InnerText.Length - start;
+                                textval = att.InnerText.Substring(start, len); 
+                            }
+                        }
+                        catch
+                        { // initialized to value None or InnerText
                         }
                     }
                 }
-                catch { textval = targName + "=" + "None"; }
-                grid.Items.Add(new PreviewRow() { Value = textval });
+                grid.Items.Add(new PreviewRow() { Value = targName + "=" + textval });
             }
         }
         private void setPreviewValueMapRows(string attrName)

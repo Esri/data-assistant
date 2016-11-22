@@ -634,19 +634,17 @@ namespace DataAssistant
                     if (cname == sourcename)
                         found = true;
                 }
-                if (!found && sourcename != _noneField)
+                if (!found && sourcename != _noneField && sourcename != null && sourcename != "")
                 {
                     try
-                    {
-                        grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
-                    }
-                    catch
-                    {
-                        MessageBox.Show("Error setting checkbox values");
+                        { grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename }); }
+                    catch (Exception e)
+                    {   
+                        MessageBox.Show(e.Message.ToString());
+                        return; 
                     }
                 }
             }
-            grid.Items.Refresh();           
         }
 
         private void setSubstringValues(string start, string length)
@@ -780,10 +778,11 @@ namespace DataAssistant
             if (val == false)
                 Method5ClearAll.IsEnabled = false;
         }
-
-        private void Method5Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Method5_BeginningEdit(object sender, SelectionChangedEventArgs e)
         {
+            // not editable
         }
+
         private void Method5Check_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox check = sender as CheckBox;

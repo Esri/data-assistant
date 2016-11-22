@@ -240,10 +240,10 @@
                     <Label Content="Select Fields" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
                     <Button x:Name="Method5ClearAll" Content="Clear" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False"  Width="60" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10,5" Click="Method5ClearAll_Click"/>
                     <DataGrid x:Name="Method5Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
-                      AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" 
-                      Height="150" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged">
+                      AutoGenerateColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" 
+                      Height="150" Width="Auto" IsReadOnly="True" >
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn x:Name="Method5Checked" MinWidth="20" Header="Include">
+                            <DataGridTemplateColumn x:Name="Method5Checked" MinWidth="20" Header="Include" CanUserResize="False" CanUserReorder="False" IsReadOnly="True">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
@@ -304,7 +304,7 @@
                     <Button x:Name="MethodPanelApply" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="MethodPanelApply_Click"/>
                     <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  
                       AutoGenerateColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                      Height="0" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged" Margin="0,0,0,0">
+                      Height="0" Width="Auto" Margin="0,0,0,0">
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="100" IsReadOnly="True" Width="*"/>
                         </DataGrid.Columns>

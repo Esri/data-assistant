@@ -37,20 +37,6 @@ arcpy.AddMessage("Data Assistant")
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
 
 useReplaceSettings = False # change this from a calling script to make this script replace data.
-    
-try:
-    sourceLayer = arcpy.GetParameterAsText(1) # Source Layer File to load from
-    if sourceLayer == "" or sourceLayer == "#":
-        sourceLayer = None
-except:
-    sourceLayer = None
-
-try:
-    targetLayer = arcpy.GetParameterAsText(2) # Target Layer File to load to
-    if targetLayer == "" or targetLayer == "#":
-        targetLayer = None
-except:
-    targetLayer = None
 
 _chunkSize = 100
 
@@ -73,12 +59,10 @@ def publish(xmlFileNames):
             return
         svceS = False
         svceT = False
-        if sourceLayer == "" or sourceLayer == None:
-            sourceLayer = dla.getNodeValue(xmlDoc,"Source")
-            svceS = dla.checkLayerIsService(sourceLayer)
-        if targetLayer == "" or targetLayer == None:
-            targetLayer = dla.getNodeValue(xmlDoc,"Target")
-            svceT = dla.checkLayerIsService(targetLayer)
+        sourceLayer = dla.getNodeValue(xmlDoc,"Source")
+        svceS = dla.checkLayerIsService(sourceLayer)
+        targetLayer = dla.getNodeValue(xmlDoc,"Target")
+        svceT = dla.checkLayerIsService(targetLayer)
 
         dla.addMessage(targetLayer)
         ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
@@ -115,9 +99,9 @@ def publish(xmlFileNames):
                 dlaTable = dla.getTempTable(targetName)
                 res = doPublish(xmlDoc,dlaTable,targetLayer)
 
+        dla.refreshLayerVisibility()
         arcpy.ResetProgressor()
-        sourceLayer = None # set source and target back to None for multiple file processing
-        targetLayer = None
+
         if res == False:
             err = "Data Assistant Update Failed, see messages for details"
             dla.addError(err)

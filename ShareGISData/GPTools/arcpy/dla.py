@@ -847,7 +847,7 @@ def doInlineAppend(source,target):
         addMessage("Target: " + target + " does not exist")
         success = False
 
-    cleanupGarbage()
+    #cleanupGarbage()
     return success
 
 def setWorkspace():
@@ -883,6 +883,19 @@ def getLayerVisibility(layer,xmlFileName):
                 addMessage("Hiding Field: " + name)
                 fieldInfo.setVisible(index,"HIDDEN")
     return fieldInfo
+
+def refreshLayerVisibility():
+    prj = getProject()
+    maps = prj.listMaps("*")
+    for map in maps:
+        lyrs = map.listLayers("*")
+        for lyr in lyrs:
+            try:
+                isviz = lyr.visible # flip viz to redraw layer.
+                lyr.visible = True if isviz == False else False
+                lyr.visible = isviz
+            except:
+                addMessage("Could not set layer visibility")
 
 def sendRequest(url, qDict=None, headers=None):
     """Robust request maker - from github https://github.com/khibma/ArcGISProPythonAssignedLicensing/blob/master/ProLicense.py"""

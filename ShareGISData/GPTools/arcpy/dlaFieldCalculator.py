@@ -87,8 +87,8 @@ def calculate(xmlFileName,workspace,name,ignore):
     names = []
     ftypes = []
     lengths = []
-    ignore = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLENGTH()','STAREA()']
-    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:
+    ignore = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLENGTH()','STAREA()','raster']
+    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalIDFieldName','RasterFieldName']:
         try:
             val = eval("desc." + name)
             val = val[val.rfind('.')+1:] 
@@ -456,9 +456,9 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
     retVal = val # init to the value calculated so far. This function will alter as needed for field type 
     try:
         idx = names.index(targetName)
-        if retVal == 'None':
+        if str(retVal) == 'None':
             retVal = None
-        if retVal != targetValue:
+        if str(retVal) != str(targetValue):
             if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
                 # if the type is numeric then try to cast to float
                 try:

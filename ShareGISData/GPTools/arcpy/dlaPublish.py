@@ -37,7 +37,7 @@ arcpy.AddMessage("Data Assistant")
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
 
 useReplaceSettings = False # change this from a calling script to make this script replace data.
-
+_outParam = 1
 _chunkSize = 100
 
 def main(argv = None):
@@ -52,6 +52,8 @@ def publish(xmlFileNames):
     arcpy.SetProgressor("default","Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")
     xmlFiles = xmlFileNames.split(";")
+    layers = []
+
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
         dla.addMessage("Configuration file: " + xmlFile)
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
@@ -99,13 +101,16 @@ def publish(xmlFileNames):
                 dlaTable = dla.getTempTable(targetName)
                 res = doPublish(xmlDoc,dlaTable,targetLayer)
 
-        dla.refreshLayerVisibility()
+        #dla.refreshLayerVisibility()
         arcpy.ResetProgressor()
-
+        
         if res == False:
             err = "Data Assistant Update Failed, see messages for details"
             dla.addError(err)
             print(err)
+        layers.append(targetLayer)
+
+    arcpy.SetParameter(_outParam,";".join(layers))
 
 def doPublish(xmlDoc,dlaTable,targetLayer):
     # either truncate and replace or replace by field value

@@ -123,11 +123,6 @@ def calculate(xmlFileName,workspace,name,ignore):
         success = True
     return success
 
-def getFieldExcept(desc,name):
-    val = None
-    return val
-
-
 def calcValue(row,names,calcString):
     # calculate a value based on source fields and/or other expressions
     outVal = ""
@@ -193,9 +188,9 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                 method = dla.getNodeValue(field,"Method").replace(" ","")
                 fnum = names.index(targetName)
 
-                if method == "None" or (method == "Copy" and sourceName == '(None)'):
-                    method = "None"
+                if method == "None" or (method == "Copy" and sourceName == dla._noneFieldName):
                     val = None
+                    method = "None"
                 elif method == "Copy":
                     val = sourceValue
                 elif method == "DefaultValue":
@@ -217,9 +212,11 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     chars = dla.getNodeValue(field,"Right")
                     val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
                 elif method == "Substring":
-                    start = dla.getNodeValue(field,"Start")
-                    length = dla.getNodeValue(field,"Length")
-                    val = getSubstring(sourceValue,start,length)
+                    start = int(dla.getNodeValue(field,"Start"))
+                    lngth = int(dla.getNodeValue(field,"Length"))
+                    if sourceValue != None:
+                        lngth = start + lngth
+                    val = getSubstring(sourceValue,start,lngth)
                 elif method == "Split":
                     splitter = dla.getNodeValue(field,"SplitAt")
                     splitter = splitter.replace("(space)"," ")
@@ -246,14 +243,13 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                         expression = expression.replace(name,"|" + name + "|")
                     val = getExpression(row,names,expression)
                 # set field value
-                if method != "None":
+                if method != "None" and val != None:
                     newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
                     row[fnum] = newVal
-                    
-                    #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                else:
+                    row[fnum] = val
             try:
                 updateCursor.updateRow(row)
-                #printRow(row,names)
             except:
                 dla._errCount += 1
                 success = False
@@ -277,6 +273,43 @@ def setFieldValues(table,fields,names,ftypes,lengths):
 
     return success
 
+def getValue(names,ftypes,lengths,targetName,targetValue,val):
+    retVal = val # init to the value calculated so far. This function will alter as needed for field type 
+    try:
+        idx = names.index(targetName)
+        if str(retVal) == 'None':
+            retVal = None
+        if str(retVal) != str(targetValue):
+            if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double' or ftypes[idx] == 'Float':
+                # if the type is numeric then try to cast to float
+                try:
+                    valTest = float(val)
+                    retVal = val
+                except:
+                    err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
+                    dla.addError(err)
+                    dla._errCount += 1
+            elif ftypes[idx] == 'String':
+                # if a string then cast to string or encode utf-8
+                if type(val) == 'str':
+                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
+                else:
+                    retVal = str(val)
+                # check length to make sure it is not too long.
+                if len(retVal) > int(lengths[idx]):
+                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"
+                    dla.addError(err)
+                    dla._errCount += 1
+
+            else:
+                retVal = val
+    except:
+        err = "Exception caught: unable to get value for value=" + str(val) + " fieldname=" + targetName
+        dla.showTraceback()
+        dla.addError(err)
+        dla._errCount += 1
+
+    return retVal
 
 def getSplit(sourceValue,splitter,part):
 
@@ -293,7 +326,7 @@ def getSubstring(sourceValue,start,chars):
     try:
         start = int(start)
         chars = int(chars)
-        strVal = str(sourceValue)[start:chars]        
+        strVal = sourceValue[start:chars]        
     except:
         pass
     return strVal
@@ -430,7 +463,7 @@ def printRow(row,names):
 def getTargetValue(row,field,names,sourceName,targetName):
     # get the current value for the row/field
     targetValue = None
-    if sourceName != "" and not sourceName.startswith("*") and sourceName != "(None)":
+    if sourceName != "" and not sourceName.startswith("*") and sourceName != dla._noneFieldName:
         try:
             if sourceName != targetName and sourceName.upper() == targetName.upper():
                 # special case for same name but different case - should already have the target name from extract functions
@@ -451,44 +484,6 @@ def getSourceValue(row,names,sourceName,targetName):
         else:        
             sourceValue = None
     return sourceValue
-
-def getValue(names,ftypes,lengths,targetName,targetValue,val):
-    retVal = val # init to the value calculated so far. This function will alter as needed for field type 
-    try:
-        idx = names.index(targetName)
-        if str(retVal) == 'None':
-            retVal = None
-        if str(retVal) != str(targetValue):
-            if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
-                # if the type is numeric then try to cast to float
-                try:
-                    valTest = float(val)
-                    retVal = val
-                except:
-                    err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
-                    dla.addError(err)
-                    dla._errCount += 1
-            elif ftypes[idx] == 'String':
-                # if a string then cast to string or encode utf-8
-                if type(val) == 'str':
-                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
-                else:
-                    retVal = str(val)
-                # check length to make sure it is not too long.
-                if len(retVal) > int(lengths[idx]):
-                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"
-                    dla.addError(err)
-                    dla._errCount += 1
-
-            else:
-                retVal = val
-    except:
-        err = "Exception caught: unable to get value for value=" + str(val) + " fieldname=" + targetName
-        dla.showTraceback()
-        dla.addError(err)
-        dla._errCount += 1
-
-    return retVal
 
 if __name__ == "__main__":
     main()

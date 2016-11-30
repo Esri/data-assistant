@@ -42,7 +42,7 @@ _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 _project = None
 
-
+_noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 noneName = '(None)'

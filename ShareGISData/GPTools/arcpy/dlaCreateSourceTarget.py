@@ -166,7 +166,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
                 nodecount = int(node.get('count'))
                 if nodecount > count:
                     sname = node.find("SourceName").text
-                    if sname in sourceNames or sname == '' or sname == None or sname == dla.noneName:
+                    if sname in sourceNames or sname == '' or sname == None or sname == dla._noneFieldName:
                         enode = node
                         count = nodecount
             except:
@@ -187,7 +187,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
         addFieldElement(xmlDoc,fNode,"Method",'Copy')
     else:
         # otherwise just add None
-        addFieldElement(xmlDoc,fNode,"SourceName",dla.noneName)
+        addFieldElement(xmlDoc,fNode,"SourceName",dla._noneFieldName)
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
         addFieldElement(xmlDoc,fNode,"Method",'None')
 
@@ -217,10 +217,9 @@ def setSourceTarget(root,xmlDoc,name,dataset):
 def setSourceFields(root,xmlDoc,fields):
     # Set SourceFields section of document
     sourceFields = xmlDoc.createElement("SourceFields")
-    # add a blank entry at the start for "dla.noneName"
     fNode = xmlDoc.createElement("SourceField")
     sourceFields.appendChild(fNode)
-    fNode.setAttribute("Name",dla.noneName)
+    fNode.setAttribute("Name",dla._noneFieldName)
         
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")
@@ -258,25 +257,14 @@ def addFieldElement(xmlDoc,node,name,value):
 
 def getFields(desc):
     fields = []
-    ignore = ['FID','OBJECTID','GlobalID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLength()','StArea()']
-    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:
-        val = getFieldExcept(desc,name)
-        if val != None:
-            val = val[val.rfind('.')+1:] 
-            ignore.append(val)
+    ignore = dla.getIgnoreFieldNames(desc)
+    ignore = [nm.upper() for nm in ignore]
+
     for field in desc.fields:
-        if field.name[field.name.rfind('.')+1:] not in ignore:
+        if field.name[field.name.rfind('.')+1:].upper() not in ignore:
             fields.append(field)
 
     return fields
-
-def getFieldExcept(desc,name):
-    val = None
-    try:
-        val = eval("desc." + name)
-    except:
-        val = None
-    return val
 
 def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     # get a subset of data for preview and other purposes

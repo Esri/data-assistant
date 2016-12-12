@@ -1,6 +1,5 @@
 *.pyc
-ShareGISData/obj/Release/*
-ShareGISData/obj/Debug/*
+ShareGISData/obj/*
 ShareGISData/bin/*
 !ShareGISData/bin/Debug
 ShareGISData/bin/Debug/*

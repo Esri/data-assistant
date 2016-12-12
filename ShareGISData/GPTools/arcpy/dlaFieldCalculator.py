@@ -87,14 +87,8 @@ def calculate(xmlFileName,workspace,name,ignore):
     names = []
     ftypes = []
     lengths = []
-    ignore = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLENGTH()','STAREA()']
-    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID']:
-        try:
-            val = eval("desc." + name)
-            val = val[val.rfind('.')+1:] 
-            ignore.append(val).upper()
-        except:
-            pass
+    ignore = dla.getIgnoreFieldNames(desc)
+    ignore = [nm.upper() for nm in ignore]
 
     for field in desc.fields:
         if field.name.upper() not in ignore:
@@ -102,7 +96,7 @@ def calculate(xmlFileName,workspace,name,ignore):
 
     for field in allFields:
         nm = field.getAttributeNode("Name").nodeValue
-        if nm != dla.noneName and nm.upper() not in ignore and nm.upper() in layerNames:
+        if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:
             try:
                 names.index(nm)
             except:
@@ -122,11 +116,6 @@ def calculate(xmlFileName,workspace,name,ignore):
     if ignore == True:
         success = True
     return success
-
-def getFieldExcept(desc,name):
-    val = None
-    return val
-
 
 def calcValue(row,names,calcString):
     # calculate a value based on source fields and/or other expressions
@@ -191,66 +180,69 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
-                fnum = names.index(targetName)
-
-                if method == "None" or (method == "Copy" and sourceName == '(None)'):
-                    method = "None"
-                    val = None
-                elif method == "Copy":
-                    val = sourceValue
-                elif method == "DefaultValue":
-                    val = dla.getNodeValue(field,"DefaultValue")
-                elif method == "SetValue":
-                    val = dla.getNodeValue(field,"SetValue")
-                elif method == "ValueMap":
-                    val = getValueMap(row,names,sourceValue,field)
-                elif method == "ChangeCase":
-                    case = dla.getNodeValue(field,method)                    
-                    expression = getChangeCase(sourceValue,case)
-                    val = getExpression(row,names,expression)
-                elif method == "Concatenate":
-                    val = getConcatenate(row,names,field)
-                elif method == "Left":
-                    chars = dla.getNodeValue(field,"Left")
-                    val = getSubstring(sourceValue,"0",chars)
-                elif method == "Right":
-                    chars = dla.getNodeValue(field,"Right")
-                    val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
-                elif method == "Substring":
-                    start = dla.getNodeValue(field,"Start")
-                    length = dla.getNodeValue(field,"Length")
-                    val = getSubstring(sourceValue,start,length)
-                elif method == "Split":
-                    splitter = dla.getNodeValue(field,"SplitAt")
-                    splitter = splitter.replace("(space)"," ")
-                    part = dla.getNodeValue(field,"Part")
-                    val = getSplit(sourceValue,splitter,part)
-                elif method == "ConditionalValue":
-                    sname = dla.getNodeValue(field,"SourceName")
-                    oper = dla.getNodeValue(field,"Oper")
-                    iif = dla.getNodeValue(field,"If")
-                    if iif != " " and type(iif) == 'str':
+                try: 
+                    fnum = names.index(targetName)
+                except:
+                    fnum = None # defensive check to skip fields that do not exist even though they are listed in Xml
+                if fnum != None:
+                    if method == "None" or (method == "Copy" and sourceName == '(None)'):
+                        method = "None"
+                        val = None
+                    elif method == "Copy":
+                        val = sourceValue
+                    elif method == "DefaultValue":
+                        val = dla.getNodeValue(field,"DefaultValue")
+                    elif method == "SetValue":
+                        val = dla.getNodeValue(field,"SetValue")
+                    elif method == "ValueMap":
+                        val = getValueMap(row,names,sourceValue,field)
+                    elif method == "ChangeCase":
+                        case = dla.getNodeValue(field,method)                    
+                        expression = getChangeCase(sourceValue,case)
+                        val = getExpression(row,names,expression)
+                    elif method == "Concatenate":
+                        val = getConcatenate(row,names,field)
+                    elif method == "Left":
+                        chars = dla.getNodeValue(field,"Left")
+                        val = getSubstring(sourceValue,"0",chars)
+                    elif method == "Right":
+                        chars = dla.getNodeValue(field,"Right")
+                        val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
+                    elif method == "Substring":
+                        start = dla.getNodeValue(field,"Start")
+                        length = dla.getNodeValue(field,"Length")
+                        val = getSubstring(sourceValue,start,length)
+                    elif method == "Split":
+                        splitter = dla.getNodeValue(field,"SplitAt")
+                        splitter = splitter.replace("(space)"," ")
+                        part = dla.getNodeValue(field,"Part")
+                        val = getSplit(sourceValue,splitter,part)
+                    elif method == "ConditionalValue":
+                        sname = dla.getNodeValue(field,"SourceName")
+                        oper = dla.getNodeValue(field,"Oper")
+                        iif = dla.getNodeValue(field,"If")
+                        if iif != " " and type(iif) == 'str':
+                            for name in names:
+                                if name in iif:
+                                    iif = iif.replace(name,"|"+name+"|")
+                        tthen = dla.getNodeValue(field,"Then")
+                        eelse = dla.getNodeValue(field,"Else")
                         for name in names:
-                            if name in iif:
-                                iif = iif.replace(name,"|"+name+"|")
-                    tthen = dla.getNodeValue(field,"Then")
-                    eelse = dla.getNodeValue(field,"Else")
-                    for name in names:
-                        if name in eelse:
-                            eelse = eelse.replace(name,"|"+name+"|")
-                    expression = "|" + tthen + "| " + " if |" + sname + "| " + oper + " |" + iif + "| else " + eelse
-                    val = getExpression(row,names,expression)
-                elif method == "Expression":
-                    expression = dla.getNodeValue(field,method)
-                    for name in names:
-                        expression = expression.replace(name,"|" + name + "|")
-                    val = getExpression(row,names,expression)
-                # set field value
-                if method != "None":
-                    newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
-                    row[fnum] = newVal
+                            if name in eelse:
+                                eelse = eelse.replace(name,"|"+name+"|")
+                        expression = "|" + tthen + "| " + " if |" + sname + "| " + oper + " |" + iif + "| else " + eelse
+                        val = getExpression(row,names,expression)
+                    elif method == "Expression":
+                        expression = dla.getNodeValue(field,method)
+                        for name in names:
+                            expression = expression.replace(name,"|" + name + "|")
+                        val = getExpression(row,names,expression)
+                    # set field value
+                    if method != "None":
+                        newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
+                        row[fnum] = newVal
                     
-                    #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                        #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
                 #printRow(row,names)
@@ -406,17 +398,16 @@ def getExpression(row,names,expression):
     return calcNew
 
 def setProgressor(i,numFeat):
-    if i % 100 == 0:
-        dla.addMessage("Feature " + str(i) + " processed")
+    if i % getProgressUpdate(numFeat) == 0:
+        dla.addMessage(str(i) + " processed")
     if i % getProgressUpdate(numFeat) == 0:
         arcpy.SetProgressorPosition(i)
-        #dla.addMessage("Processing feature " + str(i))
 
 def getProgressUpdate(numFeat):
-    if numFeat > 500:
+    if numFeat > 1000:
         progressUpdate = 1000 #int(numFeat/500)
     else:
-        progressUpdate = 250
+        progressUpdate = 100
     return progressUpdate
 
 def printRow(row,names):

@@ -45,7 +45,9 @@ _project = None
 _noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
-noneName = '(None)'
+
+_ignoreFields = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','ShapeLength','ShapeArea','STLENGTH()','STAREA()','raster']
+_ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID','RasterFieldName']
 
 # helper functions
 def timer(input):
@@ -126,6 +128,24 @@ def getFields(xmlFile):
         fields = getXmlElements(xmlFile,atype)
         if fields != []:
             return fields
+
+def getIgnoreFieldNames(desc):
+
+    ignore = _ignoreFields
+    for name in _ignoreFieldNames:
+        val = getFieldExcept(desc,name)
+        if val != None:
+            val = val[val.rfind('.')+1:] 
+            ignore.append(val)
+    return ignore
+
+def getFieldExcept(desc,name):
+    val = None
+    try:
+        val = eval("desc." + name)
+    except:
+        val = None
+    return val
 
 def collect_text(node):
     # "A function that collects text inside 'node', returning that text."
@@ -302,7 +322,7 @@ def deleteRows(table,expr):
     if debug:
         addMessageLocal(table)
     retcode = False
-    tname = getTargetName(target)
+    tname = getDatasetName(table)
     vname = tname + "_ViewDelete"
     if arcpy.Exists(vname):
         arcpy.Delete_management(vname) # delete view if it exists
@@ -476,6 +496,9 @@ def getFieldValues(mode,fields,datasets):
 
 def addDlaField(table,targetName,field,attrs,ftype,flength):
     # add a field to a dla Geodatabase
+    if targetName == _noneFieldName:
+        return True
+
     retcode = False
     try:
         attrs.index(targetName) # check if field exists, compare uppercase
@@ -486,13 +509,13 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
             tupper = targetName.upper()
             for nm in attrs:
                 nupper = nm.upper()
-                if tupper == nupper and nupper != 'GLOBALID': # if case insensitive match, note GlobalID cannot be renamed
+                if tupper == nupper and nupper != 'GLOBALID' and nm != _noneFieldName: # if case insensitive match, note GlobalID cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
                     addMessage("Field altered: " + nm + " to " + targetName)
                     upfield = True
-            if upfield == False:
+            if upfield == False and nm != _noneFieldName:
                 retcode = addField(table,targetName,ftype,flength)
                 addMessage("Field added: " + targetName)
         except :
@@ -706,21 +729,22 @@ def repairName(name):
 
 
 def getSourceName(xmlDoc):
-    name = getDatasetName(xmlDoc,"Source")
+    path = getNodeValue(xmlDoc,"Source")
+    name = getDatasetName(path)
     return name
 
 def getTargetName(xmlDoc):
-    name = getDatasetName(xmlDoc,"Target")
+    path = getNodeValue(xmlDoc,"Target")
+    name = getDatasetName(path)
     return name
 
-def getDatasetName(xmlDoc,doctype):
-    layer = getNodeValue(xmlDoc,doctype)
+def getDatasetName(path):
     fullname = ''
-    if layer.find("/") > -1:
-        parts = layer.split("/")
+    if path.find("/") > -1:
+        parts = path.split("/")
         fullname = parts[len(parts)-3]
     else:
-        fullname = layer[layer.rfind(os.sep)+1:]
+        fullname = path[path.rfind(os.sep)+1:]
     trimname = baseName(fullname)    
     name = repairName(trimname)
 

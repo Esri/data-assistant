@@ -84,8 +84,12 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
             if not arcpy.Exists(sourceLayer):
                 dla.addError("Layer " + sourceLayer + " does not exist, exiting")
                 return
-            
-            retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit)
+            if dla.isTable(sourceLayer) or dla.isTable(targetFC):
+                datasetType = 'Table'
+            else:
+                datasetType = 'FeatureClass'
+
+            retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit,datasetType)
             if retVal == False:
                 success = False
 
@@ -101,7 +105,7 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
 
     return success
     
-def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
+def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit,datasetType):
     result = True
     xmlFields = xmlDoc.getElementsByTagName("Field")
     dla.addMessage("Exporting Layer from " + sourceLayer)
@@ -123,7 +127,11 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     #sourceRef = getSpatialReference(xmlDoc,"Source")
     
     if targetRef != '':
-        isTable = dla.isTable(sourceLayer)
+        if datasetType == 'Table':
+            isTable = True
+        else:
+            isTable = False
+
         arcpy.env.workspace = workspace
         if isTable:
             view = dla.makeTableView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
@@ -133,7 +141,7 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
         dla.addMessage("View Created")            
         srcCount = arcpy.GetCount_management(view).getOutput(0)
         dla.addMessage(str(srcCount) + " source rows")
-        if srcCount == 0:
+        if str(srcCount) == '0':
             result = False
             dla.addError("Failed to extract " + sourceName + ", Nothing to export")
         else:

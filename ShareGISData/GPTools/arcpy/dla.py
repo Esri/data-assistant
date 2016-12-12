@@ -42,7 +42,7 @@ _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 _project = None
 
-
+_noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 noneName = '(None)'
@@ -302,8 +302,7 @@ def deleteRows(table,expr):
     if debug:
         addMessageLocal(table)
     retcode = False
-    tname = table[table.rfind(os.sep) + 1:]
-    #if arcpy.Exists(table):
+    tname = getTargetName(target)
     vname = tname + "_ViewDelete"
     if arcpy.Exists(vname):
         arcpy.Delete_management(vname) # delete view if it exists
@@ -371,7 +370,7 @@ def listDatasets(gdb):
                 for fc in fcs:
                     descfc = arcpy.Describe(fc)
                     if descfc.DatasetType == "FeatureClass":
-                        dsNames.append(nameTrimmer(fc))
+                        dsNames.append(baseName(fc))
                         dsFullNames.append(desc.CatalogPath + os.sep + fc)
                         if debug:
                             arcpy.AddMessage(desc.CatalogPath + os.sep + fc)
@@ -382,7 +381,7 @@ def listDatasets(gdb):
     for fClass in fcs:
         descfc = arcpy.Describe(fClass)
         if descfc.DatasetType == "FeatureClass":
-            dsNames.append(nameTrimmer(fClass))
+            dsNames.append(baseName(fClass))
             dsFullNames.append(gdb + os.sep + fClass)
             if debug:
                 arcpy.AddMessage(gdb + os.sep + fClass)
@@ -391,7 +390,7 @@ def listDatasets(gdb):
     for table in wsTables:
         descfc = arcpy.Describe(table)
         if descfc.DatasetType == "Table":
-            dsNames.append(nameTrimmer(table))
+            dsNames.append(baseName(table))
             dsFullNames.append(gdb + os.sep + table)
             if debug:
                 arcpy.AddMessage(gdb + os.sep + table)
@@ -411,7 +410,7 @@ def getFullName(searchName,names,fullNames):
 
     return ""
 
-def nameTrimmer(name):
+def baseName(name):
     # trim any database prefixes from table names
     if name.count(".") > 0:
         return name.split(".")[name.count(".")].upper()
@@ -722,7 +721,7 @@ def getDatasetName(xmlDoc,doctype):
         fullname = parts[len(parts)-3]
     else:
         fullname = layer[layer.rfind(os.sep)+1:]
-    trimname = nameTrimmer(fullname)    
+    trimname = baseName(fullname)    
     name = repairName(trimname)
 
     return name
@@ -847,7 +846,7 @@ def doInlineAppend(source,target):
         addMessage("Target: " + target + " does not exist")
         success = False
 
-    cleanupGarbage()
+    #cleanupGarbage()
     return success
 
 def setWorkspace():
@@ -883,6 +882,19 @@ def getLayerVisibility(layer,xmlFileName):
                 addMessage("Hiding Field: " + name)
                 fieldInfo.setVisible(index,"HIDDEN")
     return fieldInfo
+
+def refreshLayerVisibility():
+    prj = getProject()
+    maps = prj.listMaps("*")
+    for map in maps:
+        lyrs = map.listLayers("*")
+        for lyr in lyrs:
+            try:
+                isviz = lyr.visible # flip viz to redraw layer.
+                lyr.visible = True if isviz == False else False
+                lyr.visible = isviz
+            except:
+                addMessage("Could not set layer visibility")
 
 def sendRequest(url, qDict=None, headers=None):
     """Robust request maker - from github https://github.com/khibma/ArcGISProPythonAssignedLicensing/blob/master/ProLicense.py"""
@@ -1120,3 +1132,11 @@ def getcp(cp,name):
     except:
         pass
     return retval
+
+def isTable(ds):
+    desc = arcpy.Describe(ds)
+    if desc.datasetType.lower() == 'table':
+        return True
+    else:
+        return False
+

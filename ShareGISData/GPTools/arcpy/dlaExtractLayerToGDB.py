@@ -123,9 +123,13 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     #sourceRef = getSpatialReference(xmlDoc,"Source")
     
     if targetRef != '':
-            
+        isTable = dla.isTable(sourceLayer)
         arcpy.env.workspace = workspace
-        view = dla.makeFeatureView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+        if isTable:
+            view = dla.makeTableView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+        elif not isTable:
+            view = dla.makeFeatureView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+
         dla.addMessage("View Created")            
         srcCount = arcpy.GetCount_management(view).getOutput(0)
         dla.addMessage(str(srcCount) + " source rows")
@@ -136,15 +140,23 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
             arcpy.env.preserveGlobalIds = False # need to run this way until support added for GlobalIDs
             #dla.addMessage("names: " + sourceName + "|" + targetName)
             arcpy.env.overwriteOutput = True
-            try:
-                arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
-            except:
-                arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
-                return False
-            fc = workspace + os.sep + targetName
-            arcpy.Append_management(view,fc,schema_type="NO_TEST")
+            if isTable:
+                try:
+                    arcpy.CreateTable_management(workspace,targetName,template=sourceLayer)
+                except:
+                    arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
+                    return False
+            elif not isTable:
+                try:
+                    arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+                except:
+                    arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
+                    return False
+
+            ds = workspace + os.sep + targetName
+            arcpy.Append_management(view,ds,schema_type="NO_TEST")
             dla.addMessage(arcpy.GetMessages(2)) # only serious errors
-            count = arcpy.GetCount_management(fc).getOutput(0)
+            count = arcpy.GetCount_management(ds).getOutput(0)
             dla.addMessage(str(count) + " source rows exported to " + targetName)
             if str(count) == '0':
                 result = False

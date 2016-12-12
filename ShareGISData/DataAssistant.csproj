@@ -109,6 +109,9 @@
     <Content Include="GPTools\arcpy\dla.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="GPTools\arcpy\dlaAGOService.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="GPTools\arcpy\dlaAppendData.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

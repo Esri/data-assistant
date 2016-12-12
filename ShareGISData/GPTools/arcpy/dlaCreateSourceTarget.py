@@ -138,6 +138,8 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     xmlDoc.unlink()
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
+    if desc.datasetType.lower() == 'table':
+        return
     try:
         spref = str(desc.spatialReference.factoryCode)
         if spref == None or spref == '' or spref == '0':

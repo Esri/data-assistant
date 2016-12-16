@@ -17,7 +17,6 @@
  """
 # dlaPreview.py - Preview one source to a target with a limited number of rows
 # ------------------------------------------------------------------------------------
-
 import arcpy, os, dlaExtractLayerToGDB,dlaFieldCalculator,dla,datetime
 
 arcpy.AddMessage("Data Assistant - Preview")
@@ -31,14 +30,14 @@ try:
 except:
     rowLimit = None
 _success = 2 # the last param is the derived output layer
-sourceLayer = None
-targetLayer = None
+source = None
+target = None
         
 def main(argv = None):
     preview(xmlFileName)
 
 def preview(xmlFileName):
-    global sourceLayer,targetLayer,rowLimit
+    global source,target,rowLimit
 
     dla.setWorkspace()
     dla._errCount = 0
@@ -47,14 +46,18 @@ def preview(xmlFileName):
     #arcpy.AddMessage("rowLimit = " + str(rowLimit) )
     if rowLimit == "" or rowLimit == None:
         rowLimit = 100
-    if sourceLayer == "" or sourceLayer == None:
-        sourceLayer = dla.getNodeValue(xmlDoc,"Source")
-    if targetLayer == "" or targetLayer == None:
-        targetLayer = dla.getNodeValue(xmlDoc,"Target")
-        dte = datetime.datetime.now().strftime("%Y%m%d%H%M")
-        targetName = dla.getTargetName(xmlDoc) + dte
-        targetDS = os.path.join(dla.workspace,targetName)
-    res = dlaExtractLayerToGDB.extract(xmlFileName,rowLimit,dla.workspace,sourceLayer,targetDS)
+    if source == "" or source == None:
+        source = dla.getNodeValue(xmlDoc,"Source")
+    if target == "" or target == None:
+        target = dla.getNodeValue(xmlDoc,"Target")
+    if dla.isTable(source) or dla.isTable(target):
+        datasetType = 'Table'
+    else:
+        datasetType = 'FeatureClass'
+    dte = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    targetName = dla.getDatasetName(target) + dte
+    targetDS = os.path.join(dla.workspace,targetName)
+    res = dlaExtractLayerToGDB.extract(xmlFileName,rowLimit,dla.workspace,source,targetDS,datasetType)
     if res == True:
         res = dlaFieldCalculator.calculate(xmlFileName,dla.workspace,targetName,False)
 

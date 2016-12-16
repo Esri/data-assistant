@@ -64,22 +64,21 @@ def calculate(xmlFileName,workspace,name,ignore):
     sourceFields = dla.getXmlElements(xmlFileName,"SourceField")
     targetFields = dla.getXmlElements(xmlFileName,"TargetField")
     attrs = [f.name for f in arcpy.ListFields(table)]
-
     for field in fields:
         arcpy.env.Workspace = dla.workspace
         targetName = dla.getNodeValue(field,"TargetName")
         sourceName = dla.getNodeValue(field,"SourceName")
-            
+
         ftype = "String"
-        length = "50"
+        flength = "50"
         for target in targetFields:
             nm = target.getAttributeNode("Name").nodeValue
             if  nm == targetName:
                 ftype = target.getAttributeNode("Type").nodeValue
-                length = target.getAttributeNode("Length").nodeValue
+                flength = target.getAttributeNode("Length").nodeValue
         # uppercase compare, later need to check for orig/upper name for calc
         #ups = [nm.upper() for nm in attrs]
-        dla.addDlaField(table,targetName,field,attrs,ftype,length)
+        dla.addDlaField(table,targetName,field,attrs,ftype,flength)
 
     allFields = sourceFields + targetFields
     desc = arcpy.Describe(table)
@@ -95,7 +94,7 @@ def calculate(xmlFileName,workspace,name,ignore):
             layerNames.append(field.name.upper())
 
     for field in allFields:
-        nm = field.getAttributeNode("Name").nodeValue
+        nm = field.getAttributeNode("Name").nodeValue.replace('.','_')
         if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:
             try:
                 names.index(nm)
@@ -174,8 +173,8 @@ def setFieldValues(table,fields,names,ftypes,lengths):
             
             for field in fields:
                 method = "None"
-                sourceName = dla.getNodeValue(field,"SourceName")
-                targetName = dla.getNodeValue(field,"TargetName")
+                sourceName = dla.getNodeValue(field,"SourceName").replace('.','_')
+                targetName = dla.getNodeValue(field,"TargetName").replace('.','_')
                     
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)

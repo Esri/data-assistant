@@ -19,7 +19,7 @@
 # December 2015
 # Loop through the source and target datasets and write an xml document
 
-import os, sys, traceback, time, xml.dom.minidom, arcpy, dla
+import os, sys, traceback, time, xml.dom.minidom, arcpy, dla, dlaService
 from xml.dom.minidom import Document, parse, parseString
 import xml.etree.ElementTree as etree
 import re
@@ -68,8 +68,8 @@ def createDlaFile(source,target,xmlFileName):
     # entry point for calling this tool from another python script
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
-    elif source == target:
-        dla.addError("2 layers with the same name is not supported by this tool, please rename one of the layers, exiting.")
+    elif str(source) == str(target):
+        dla.addError("2 string layers with the same value is not supported by this tool, please rename one of the layers, exiting.")
     else:
         sourcePath = dla.getLayerPath(source)
         targetPath = dla.getLayerPath(target)
@@ -83,9 +83,9 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
         return False
 
     ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
-    if not dla.checkServiceCapabilities(sourcePath,False):
+    if not dlaService.checkServiceCapabilities(sourcePath,False):
         return False
-    if not dla.checkServiceCapabilities(targetPath,False):
+    if not dlaService.checkServiceCapabilities(targetPath,False):
         return False
 
     desc = arcpy.Describe(sourcePath)
@@ -114,7 +114,8 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
 
     fields = getFields(descT)
     sourceFields = getFields(desc)
-    sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
+    #sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields] ***
+    sourceNames = [field.name for field in sourceFields]
     upperNames = [nm.upper() for nm in sourceNames]
 
     #try:
@@ -122,7 +123,7 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
 
         fNode = xmlDoc.createElement("Field")
         fieldroot.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name #[field.name.rfind(".")+1:] ***
         matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)
 
     # write the source field values
@@ -158,6 +159,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
     enode = None
     count = 0
     nmupper = fieldName.upper()
+    strippedNames = [name[name.rfind('.')+1:].upper() for name in sourceNames] # look for first match if there are prefixes
     if matchLibrary == True: # only do this if matchLibrary parameter is True
         doc = etree.parse(matchfile)
         nodes = doc.findall(".//Field[TargetName='"+fieldName+"']")
@@ -182,6 +184,22 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
     elif nmupper in upperNames and enode == None:
         # logic for uppercase field name match, later the field will be renamed to essentially force a copy/rename unless something else set by user
         idx = upperNames.index(nmupper)
+        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
+        addFieldElement(xmlDoc,fNode,"Method",'Copy')
+    elif nmupper in upperNames and enode == None:
+        # logic for uppercase field name match, later the field will be renamed to essentially force a copy/rename unless something else set by user
+        idx = upperNames.index(nmupper)
+        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
+        addFieldElement(xmlDoc,fNode,"Method",'Copy')
+    elif nmupper in strippedNames and enode == None:
+        # logic for prefixed field name match
+        idx = None
+        for i in range(0,len(strippedNames)):
+            if strippedNames[i] == nmupper:
+                idx = i # take the last matching value - if it exists again through a join more likely to want that value...
+        #idx = strippedNames.index(nmupper)
         addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
         addFieldElement(xmlDoc,fNode,"Method",'Copy')
@@ -224,7 +242,7 @@ def setSourceFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")
         sourceFields.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name # ***[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -240,7 +258,7 @@ def setTargetFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("TargetField")
         targetFields.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name #[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -272,10 +290,15 @@ def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     data = xmlDoc.createElement("Data")
     root.appendChild(data)
 
+    #if sourcePath.endswith('.lyrx'):
+    #    desc = arcpy.Describe(sourcePath) # dataset path/source as parameter
+    #    fields = desc.fields
+    #    sourceFields = [field.name for field in fields]
+
     cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
 
     i = 0
-    #dla.addMessage(str(sourceFields))
+    prefixes = []
     for row in cursor:
         if i == 10:
             return

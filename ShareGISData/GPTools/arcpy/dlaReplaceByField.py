@@ -25,7 +25,7 @@ Data will be deleted in the target dataset using the Replace By Settings, and al
 '''
 import dlaPublish, arcpy, dla
 
-dlaPublish.useReplaceSettings = True # setting this to True will use ReplaceByField logic
+dlaPublish._useReplaceSettings = True # setting this to True will use ReplaceByField logic
 
 arcpy.AddMessage("Replacing by Field Value")
 

@@ -24,9 +24,9 @@ import os, sys, traceback, time, arcpy, dla
 
 xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
 try:
-    sourceLayer = arcpy.GetParameterAsText(1) # Source Layer File to load from
+    source = arcpy.GetParameterAsText(1) # Source Layer File to load from
 except:
-    sourceLayer = None
+    source = None
 try:
     dla.workspace = arcpy.GetParameterAsText(2) # Geodatabase
 except:
@@ -38,22 +38,26 @@ except:
 SUCCESS = 4 # parameter number for output success value
 
 def main(argv = None):
-    global sourceLayer,targetLayer
+    global source,target
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
     if dla.workspace == "" or dla.workspace == "#" or dla.workspace == None:  
         dla.workspace = arcpy.env.scratchGDB
-    if sourceLayer == "" or sourceLayer == None:
-        sourceLayer = dla.getNodeValue(xmlDoc,"Source")
-    if targetLayer == "" or targetLayer == None:
-        targetLayer = dla.getNodeValue(xmlDoc,"Target")
+    if source == "" or source == None:
+        source = dla.getNodeValue(xmlDoc,"Source")
+    if target == "" or target == None:
+        target = dla.getNodeValue(xmlDoc,"Target")
     if success == False:
         dla.addError("Errors occurred during process")
+    if dla.isTable(source) or dla.isTable(target):
+        datasetType = 'Table'
+    else:
+        datasetType = 'FeatureClass'
 
-    success = extract(xmlFileName,rowLimit,dla.workspace,sourceLayer,targetLayer)
+    success = extract(xmlFileName,rowLimit,dla.workspace,source,target,datasetType)
     arcpy.SetParameter(SUCCESS, success)
 
-def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):          
+def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):          
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
     if workspace == "" or workspace == "#" or workspace == None:  
@@ -70,26 +74,22 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
         if len(fields) > 0:
             arcpy.SetProgressor("step", "Importing Layer...",0,1,1)
 
-            if sourceLayer == '' or sourceLayer == '#':                
+            if source == '' or source == '#':                
                 source = dla.getNodeValue(xmlDoc,"Datasets/Source")
             else:
-                source = sourceLayer
-            if targetFC == '' or targetFC == '#':
-                targetName = dla.getTargetName(xmlDoc)
-            else:
-                targetName = targetFC[targetFC.rfind(os.sep)+1:]
+                source = source
+            if target == '' or target == '#':
+                target = dla.getNodeValue(xmlDoc,"Datasets/Target")
 
-            sourceName = dla.getSourceName(xmlDoc)
+            targetName = dla.getDatasetName(target)
+            sourceName = dla.getDatasetName(source)
             arcpy.SetProgressorLabel("Loading " + sourceName + " to " + targetName +"...")
-            if not arcpy.Exists(sourceLayer):
-                dla.addError("Layer " + sourceLayer + " does not exist, exiting")
-                return
-            if dla.isTable(sourceLayer) or dla.isTable(targetFC):
-                datasetType = 'Table'
-            else:
-                datasetType = 'FeatureClass'
 
-            retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit,datasetType)
+            if not arcpy.Exists(source):
+                dla.addError("Layer " + source + " does not exist, exiting")
+                return
+
+            retVal = exportDataset(xmlDoc,source,dla.workspace,targetName,rowLimit,datasetType)
             if retVal == False:
                 success = False
 
@@ -105,16 +105,16 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
 
     return success
     
-def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit,datasetType):
+def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     result = True
     xmlFields = xmlDoc.getElementsByTagName("Field")
-    dla.addMessage("Exporting Layer from " + sourceLayer)
+    dla.addMessage("Exporting Layer from " + source)
     whereClause = ""
     if rowLimit != None:
         #try:
-        whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
+        whereClause = getObjectIdWhereClause(source,rowLimit)
         #except:
-        #    dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
+        #    dla.addMessage("Unable to obtain where clause to Preview " + source + ", continuing with all records")
             
     if whereClause != '' and whereClause != ' ':
         #dla.addMessage("rowLimit " + str(rowLimit))
@@ -134,9 +134,9 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit,datasetType):
 
         arcpy.env.workspace = workspace
         if isTable:
-            view = dla.makeTableView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+            view = dla.makeTableView(dla.workspace,source,viewName,whereClause,xmlFields)
         elif not isTable:
-            view = dla.makeFeatureView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
+            view = dla.makeFeatureView(dla.workspace,source,viewName,whereClause,xmlFields)
 
         dla.addMessage("View Created")            
         srcCount = arcpy.GetCount_management(view).getOutput(0)
@@ -148,21 +148,19 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit,datasetType):
             arcpy.env.preserveGlobalIds = False # need to run this way until support added for GlobalIDs
             #dla.addMessage("names: " + sourceName + "|" + targetName)
             arcpy.env.overwriteOutput = True
+            fieldMap = []
             if isTable:
-                try:
-                    arcpy.CreateTable_management(workspace,targetName,template=sourceLayer)
-                except:
+                if not createDataset('Table',workspace,targetName,xmlDoc,source,None):
                     arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
                     return False
             elif not isTable:
-                try:
-                    arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
-                except:
+                if not createDataset('FeatureClass',workspace,targetName,source,targetRef):
                     arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
                     return False
 
             ds = workspace + os.sep + targetName
-            arcpy.Append_management(view,ds,schema_type="NO_TEST")
+            fieldMap = getFieldMap(view,ds)
+            arcpy.Append_management(view,ds,schema_type="NO_TEST",field_mapping=fieldMap)
             dla.addMessage(arcpy.GetMessages(2)) # only serious errors
             count = arcpy.GetCount_management(ds).getOutput(0)
             dla.addMessage(str(count) + " source rows exported to " + targetName)
@@ -171,6 +169,52 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit,datasetType):
                 dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
                 dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
     return result
+
+def getFieldMap(view,ds):
+
+    fieldMap = arcpy.FieldMappings()
+    fieldMap.addTable(ds)
+    inFields = [field.name for field in arcpy.ListFields(view) if not field.required]
+    for inField in inFields:
+        for i in range(fieldMap.fieldCount):
+            fmap = fieldMap.getFieldMap(i)
+            if fmap.getInputFieldName(0) == inField.replace('.','_'):
+                fmap.addInputField(view,inField)
+                fieldMap.replaceFieldMap(i,fmap)
+    return fieldMap
+
+def createDataset(dsType,workspace,targetName, xmlDoc,source,targetRef):
+
+    if source.lower().endswith('.lyrx'):
+        if dsType == 'Table':
+            arcpy.CreateTable_management(workspace,targetName)
+        else:
+            arcpy.CreateFeatureclass_management(workspace,targetName,spatial_reference=targetRef)
+
+        sourceFields = xmlDoc.getElementsByTagName("SourceField")
+        for sfield in sourceFields:
+            #<SourceField AliasName="FIPS_CNTRY" Length="2" Name="SampleData.FIPS_CNTRY" Type="String" />
+            fname = sfield.getAttributeNode('Name').nodeValue
+            if fname.count('.') > 0:
+                fname = fname.replace('.','_')
+                ftype = sfield.getAttributeNode('Type').nodeValue
+                flength = sfield.getAttributeNode('Length').nodeValue
+                dla.addDlaField(os.path.join(workspace,targetName),fname,sfield,[],ftype,flength) # attrs is empty list
+    else:
+        if dsType == 'Table':
+            try:
+                arcpy.CreateTable_management(workspace,targetName,template=source)
+            except:
+                dla.addError("Unable to Create intermediate table")
+                return False
+        else:
+            try:
+                arcpy.CreateFeatureclass_management(workspace,targetName,template=source,spatial_reference=targetRef)
+            except:
+                dla.addError("Unable to Create intermediate feature class")
+                return False
+
+    return True
 
 def getSpatialReference(xmlDoc,lyrtype):
     spref = None
@@ -236,14 +280,14 @@ def theProjectWay():
         inttable = workspace+os.sep+targetName+"_prj"
         arcpy.env.workspace = workspace
         xform = None
-        desc = arcpy.Describe(sourceLayer)
+        desc = arcpy.Describe(source)
         xforms = arcpy.ListTransformations(desc.spatialReference, targetRef, desc.extent)            
         #if sourceRef.exportToString().find("NAD_1983") > -1 and targetRef.exportToString().find("WGS_1984") > -1:
         xform = xforms[0]
         #for xform in xforms:
         dla.addMessage("Transform: " + xform)
         try:
-            res = arcpy.Project_management(sourceLayer,inttable,out_coor_system=targetRef,transform_method=xform)
+            res = arcpy.Project_management(source,inttable,out_coor_system=targetRef,transform_method=xform)
         except:
             dla.showTraceback()
             err = "Unable to project the data to the target spatial reference, please check settings and try projecting manually in ArcGIS"
@@ -257,7 +301,7 @@ def theProjectWay():
         count = arcpy.GetCount_management(view).getOutput(0)
         dla.addMessage(str(count) + " source rows")
         #sourceRef = getSpatialReference(xmlDoc,"Source")
-        #res = arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+        #res = arcpy.CreateFeatureclass_management(workspace,targetName,template=source,spatial_reference=targetRef)
         res = arcpy.CopyFeatures_management(view,targetName)
         dla.addMessage("Features copied")     
 

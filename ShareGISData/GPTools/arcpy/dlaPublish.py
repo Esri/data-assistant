@@ -27,14 +27,13 @@ parameters. By default this will use the Append approach, to use replace by sett
 useReplaceSettings variable to change the behavior (see example at the end of this script).
 '''
 
-import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dlaAGOService,dla,xml.dom.minidom,os
+import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dlaService,dla,dlaService,xml.dom.minidom,os
 
 arcpy.AddMessage("Data Assistant")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
 _outParam = 1
-useReplaceSettings = False # change this from a calling script to make this script replace data.
-
+_useReplaceSettings = False # change this from a calling script to make this script replace data.
 
 _chunkSize = 100
 
@@ -44,6 +43,7 @@ def main(argv = None):
 
 def publish(xmlFileNames):
     # function called from main or from another script, performs the data update processing
+    global _useReplaceSettings
     dla._errCount = 0
 
     arcpy.SetProgressor("default","Data Assistant")
@@ -57,32 +57,38 @@ def publish(xmlFileNames):
             return
         source = dla.getNodeValue(xmlDoc,"Source")
         target = dla.getNodeValue(xmlDoc,"Target")
+        targetName = dla.getDatasetName(target)
         dla.addMessage(source)
         dla.addMessage(target)
 
-        svceS = dla.checkLayerIsService(source)
-        svceT = dla.checkLayerIsService(target)
+        svceS = dlaService.checkLayerIsService(source)
+        svceT = dlaService.checkLayerIsService(target)
 
         ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
-        if not dla.checkServiceCapabilities(source,True):
+        if not dlaService.checkServiceCapabilities(source,True):
             return False
-        if not dla.checkServiceCapabilities(target,True):
+        if not dlaService.checkServiceCapabilities(target,True):
             return False
 
         if svceS == True or svceT == True:
-            token = dla.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
+            token = dlaService.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
             if token == None:
                 dla.addError("User must be signed in for this tool to work with services")
                 return
 
         expr = getWhereClause(xmlDoc)
-        if useReplaceSettings == True and (expr == '' or expr == None):
+        if _useReplaceSettings == True and (expr == '' or expr == None):
             dla.addError("There must be an expression for replacing by field value, current value = " + str(expr))
             return False
 
         dla.setWorkspace()
-        targetName = dla.getTargetName(xmlDoc)
-        res = dlaExtractLayerToGDB.extract(xmlFile,None,dla.workspace,source,targetName)
+
+        if dla.isTable(source) or dla.isTable(target):
+            datasetType = 'Table'
+        else:
+            datasetType = 'FeatureClass'
+        
+        res = dlaExtractLayerToGDB.extract(xmlFile,None,dla.workspace,source,target,datasetType)
         if res != True:
             table = dla.getTempTable(targetName)
             msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
@@ -95,7 +101,7 @@ def publish(xmlFileNames):
             res = dlaFieldCalculator.calculate(xmlFile,dla.workspace,targetName,False)
             if res == True:
                 dlaTable = dla.getTempTable(targetName)
-                res = doPublish(xmlDoc,dlaTable,target)
+                res = doPublish(xmlDoc,dlaTable,target,_useReplaceSettings)
 
         arcpy.ResetProgressor()
         if res == False:
@@ -107,7 +113,7 @@ def publish(xmlFileNames):
 
     arcpy.SetParameter(_outParam,';'.join(layers))
 
-def doPublish(xmlDoc,dlaTable,target):
+def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
     # either truncate and replace or replace by field value
     # run locally or update agol
     success = False
@@ -121,7 +127,7 @@ def doPublish(xmlDoc,dlaTable,target):
         return False
     target = dla.getLayerPath(target)
     if target.startswith("http") == True:
-        success = dlaAGOService.doPublishPro(dlaTable,target,expr)
+        success = dlaService.doPublishPro(dlaTable,target,expr,useReplaceSettings)
     else:
         # logic change - if not replace field settings then only append
         if expr != '' and useReplaceSettings == True:
@@ -174,7 +180,7 @@ def handleGeometryChanges(sourceDataset,target):
     return dataset
 
 def simplifyPolygons(sourceDataset):
-    # simplfy polygons using approach developed by Chris Bus.
+    # simplify polygons using approach developed by Chris Bus.
     dla.addMessage("Simplifying (densifying) Geometry")
     arcpy.Densify_edit(sourceDataset)
     simplify = sourceDataset + '_simplified'

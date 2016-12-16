@@ -1,5 +1,4 @@
-﻿
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -515,7 +514,7 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
                     addMessage("Field altered: " + nm + " to " + targetName)
                     upfield = True
-            if upfield == False and nm != _noneFieldName:
+            if upfield == False and targetName != _noneFieldName:
                 retcode = addField(table,targetName,ftype,flength)
                 addMessage("Field added: " + targetName)
         except :
@@ -798,9 +797,37 @@ def getLayerPath(layer):
 
     # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
     pth = repairLayerSourceUrl(pth,layer) 
+    # handle special case for joined layers
+    pth = getJoinedLayer(layer,pth) 
 
     return pth
 
+def getJoinedLayer(layer,pth):
+    # if there is a join then save a layer file and return that path
+    path = pth
+    if isinstance(layer, str): # map layer as parameter
+        layer = getMapLayer(layer)
+
+    try:
+        conn = layer.connectionProperties.get("source", None) # check for a joined layer
+    except:
+        conn = None
+
+    if conn != None and not arcpy.Exists(path):
+
+        lname = layer.name + '.lyrx'
+        result = arcpy.MakeFeatureLayer_management(layer,lname)
+        layer = result.getOutput(0)
+
+        arcpy.env.overwriteOutput = True
+        projFolder = os.path.dirname(getProject().filePath)
+        lyrFile = os.path.join(projFolder,lname)
+        arcpy.SaveToLayerFile_management(layer,lyrFile)
+
+        desc = arcpy.Describe(lyrFile)
+        path = desc.catalogPath
+ 
+    return path
 
 def repairLayerSourceUrl(layerPath,lyr):
     # take a layer path or layer name and return the data source or repaired source
@@ -920,69 +947,6 @@ def refreshLayerVisibility():
             except:
                 addMessage("Could not set layer visibility")
 
-def sendRequest(url, qDict=None, headers=None):
-    """Robust request maker - from github https://github.com/khibma/ArcGISProPythonAssignedLicensing/blob/master/ProLicense.py"""
-    #Need to handle chunked response / incomplete reads. 2 solutions here: http://stackoverflow.com/questions/14442222/how-to-handle-incompleteread-in-python
-    #This function sends a request and handles incomplete reads. However its found to be very slow. It adds 30 seconds to chunked
-    #responses. Forcing the connection to HTTP 10 (1.0) at the top, for some reason makes it faster.         
-    
-    qData = parse.urlencode(qDict).encode('UTF-8') if qDict else None    
-    reqObj = request.Request(url)
-    
-    if headers != None:
-        for k, v in headers.items():
-            reqObj.add_header(k, v)
-            
-    try:
-        if qDict == None:  #GET            
-            r = request.urlopen(reqObj)
-        else:  #POST            
-            r = request.urlopen(reqObj, qData)
-        responseJSON=""
-        while True:
-            try:                            
-                responseJSONpart = r.read()                
-            except client.IncompleteRead as icread:                
-                responseJSON = responseJSON + icread.partial.decode('utf-8')
-                continue
-            else:                
-                responseJSON = responseJSON + responseJSONpart.decode('utf-8')
-                break       
-        
-        return (json.loads(responseJSON))
-       
-    except Exception as RESTex:
-        print("Exception occurred making REST call: " + RESTex.__str__()) 
-
-def openRequest(url,params):
-    """
-    Open an http request, handles the difference between urllib and urllib2 implementations if the includes are
-    done correctly in the imports section of this file. Currently disabled.
-    """
-    response = None
-    if uselib2 == True:
-        data = urllib.urlencode(params)
-        data = data.encode('utf8')
-        req = urllib2.Request(url,data)  
-        response = urllib2.urlopen(req)
-    else:
-        data = parse.urlencode(params)
-        data = data.encode('utf8')
-        req = request.Request(url,data)
-        response = request.urlopen(req)
-    
-    return response
-
-def getSigninToken():
-    data = arcpy.GetSigninToken()
-    token = None
-    if data is not None:
-        token = data['token']
-        #expires = data['expires']
-        #referer = data['referer']
-    else:
-        arcpy.AddMessage("Error: No token - Please sign in to ArcGIS Online or your Portal to continue")
-    return token
 
 def getXmlDoc(xmlFile):
     # open the xmldoc and return contents
@@ -997,96 +961,6 @@ def getXmlDoc(xmlFile):
 
     return xmlDoc
 
-## Added May 2016 
-def hasCapabilities(url,token,checkList):
-    hasit = False
-    if token != None and isFeatureLayerUrl(url):
-        params = {'f': 'pjson', 'token':token}
-        response = sendRequest(url,params)
-        if response != None:
-            try:
-                error = json.dumps(response['error'])
-                addError('Unable to access service properties ' + error)
-                return False
-            except:
-                hasit = True
-            
-            try:
-                capabilities = json.dumps(response['capabilities'])
-                addMessage('Service REST capabilities: ' + capabilities)
-                for item in checkList:
-                    if capabilities.find(item) == -1:
-                        addMessage('Service does not support: ' + item)
-                        hasit = False
-                    else:
-                        addMessage('Service supports: ' + item)
-            except:
-                addError('Unable to access service capabilities')                
-                hasit = False
-        else:
-            addError('Unable to access service')                
-            hasit = False
-        
-    return hasit
-
-def getServiceName(url):
-    parts = url.split('/')
-    lngth = len(parts)
-    if len(parts) > 8:
-        addMessage("Service Name: " + parts[7])
-        return parts[7]
-
-def isFeatureLayerUrl(url):
-    # assume layer string has already had \ and GIS Servers or other characters switched to be a url
-    parts = url.split('/')
-    lngth = len(parts)
-    try: 
-        # check for number at end
-        # last = int(parts[lngth-1])
-        if parts[lngth-2] == 'FeatureServer':
-            return True
-    except:
-        addError("2nd last part of url != 'FeatureServer'")
-        return False
-
-def checkLayerIsService(layerStr):
-    ## moved here from dlaPublish
-    # Check if the layer string is a service
-    if layerStr.lower().startswith("http") == True or layerStr.lower().startswith("gis servers") == True:
-        return True
-    else:
-        return False
-
-def checkServiceCapabilities(sourcePath,required):
-    ## Added May2016. Ensure that feature layer has been added and warn if capabilities are not available
-    if sourcePath == None:
-        addMessage('Error: No path available for layer')            
-        return False
-    #addMessage('Checking: ' + sourcePath)    
-    if checkLayerIsService(sourcePath):
-        url = sourcePath
-        if isFeatureLayerUrl(url):
-            data = arcpy.GetSigninToken()
-            token = data['token']
-            name = getServiceName(url)
-            #print('Service',name)
-            res = hasCapabilities(url,token,['Create','Delete'])
-            if res != True and required == False:
-                addMessage('WARNING: ' + name + ' does not have Create and Delete privileges')
-                addMessage('Verify the service properties for: ' + url)
-                addMessage('This tool might continue but other tools will not run until this is addressed')
-            elif res != True and required == True:
-                addError('WARNING: ' + name + ' does not have Create and Delete privileges')
-                addMessage('Verify the service properties for: ' + url)
-                addMessage('This tool will not run until this is addressed')
-            return res
-        else:
-            addMessage(sourcePath + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
-            return False
-    else:
-        return True
-
-## end May 2016 section
     
 def getSpatialReference(desc): # needs gp Describe object
     try:

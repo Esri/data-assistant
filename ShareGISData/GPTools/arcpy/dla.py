@@ -1,4 +1,4 @@
-
+﻿
 """
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
@@ -37,10 +37,12 @@ startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
 maxErrorCount = 20 # max errors before a script will stop
-_errorCount = 0 # count the errors and only report things > maxRowCount errors...
+_errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
+_project = None
 
+_noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 noneName = '(None)'
@@ -87,16 +89,16 @@ def addMessageLocal(val):
 def addError(val):
     # add an error to the screen output
     #arcpy.AddMessage("Error: " + str(val))
-    global _errorCount
-    _errorCount += 1
+    global _errCount
+    _errCount += 1
     arcpy.AddError(str(val))
 
 def writeFinalMessage(msg):
-    global _errorCount    
+    global _errCount    
     if msg != None:
         addMessage(str(msg))
-    addMessage("Process completed with " + str(_errorCount) + " errors")
-    if _errorCount > 0:
+    addMessage("Process completed with " + str(_errCount) + " errors")
+    if _errCount > 0:
         addMessage("When any errors are encountered tools will report a general failure - even though the results may be still be satisfactory.")
         addMessage("Check the Geoprocessing log and errors reported along with the output data to confirm.")
 
@@ -473,7 +475,7 @@ def getFieldValues(mode,fields,datasets):
 
     return [theValues,theDiff]
 
-def addDlaField(table,targetName,field,attrs,type,length):
+def addDlaField(table,targetName,field,attrs,ftype,flength):
     # add a field to a dla Geodatabase
     retcode = False
     try:
@@ -489,11 +491,11 @@ def addDlaField(table,targetName,field,attrs,type,length):
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
-                    addMessageLocal("Field altered: " + nm + " to " + targetName)
+                    addMessage("Field altered: " + nm + " to " + targetName)
                     upfield = True
             if upfield == False:
-                retcode = addField(table,targetName,type,length)
-                addMessageLocal("Field added: " + targetName)
+                retcode = addField(table,targetName,ftype,flength)
+                addMessage("Field added: " + targetName)
         except :
             showTraceback()
             for attr in attrs: # drop any field prefix from the source layer (happens with map joins)
@@ -717,7 +719,7 @@ def getDatasetName(xmlDoc,doctype):
     fullname = ''
     if layer.find("/") > -1:
         parts = layer.split("/")
-        fullname = parts[len(parts)-2]
+        fullname = parts[len(parts)-3]
     else:
         fullname = layer[layer.rfind(os.sep)+1:]
     trimname = nameTrimmer(fullname)    
@@ -725,33 +727,93 @@ def getDatasetName(xmlDoc,doctype):
 
     return name
 
-def getLayerSourceUrl(targetLayer):
+def getProject():
+    global _project
+    if _project == None:
+        try:
+            _project = arcpy.mp.ArcGISProject("CURRENT")
+        except:
+            addError("Unable to obtain a reference to the current project, exiting")
+            _project = None
+    return _project
 
-    if targetLayer.startswith('GIS Servers\\'):
-        targetLayer = targetLayer.replace("GIS Servers\\","http://")
-    if targetLayer.find('\\') > -1:
-        targetLayer = targetLayer.replace("\\",'/')
-        
-    return targetLayer
+def getMapLayer(layerName):
+    name = layerName[layerName.rfind('\\')+1:]
+    layer = None
+    try:
+        prj = getProject()
+        maps = prj.listMaps("*")
+        found = False
+        for map in maps:
+            if not found:
+                lyrs = map.listLayers(name)
+                for lyr in lyrs:
+                    if lyr.name == name and not found:
+                        if lyr.supports("DataSource"):
+                            layer = lyr
+                            found = True # take the first layer with matching name
+    except:
+        addMessage("Unable to get layer from maps")
+        return None
+       
+    return layer
+
+def getLayerPath(layer):
+    # get the source data path for a layer
+    pth = ''
+    if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
+        pth = layer.dataSource
+    else:
+        try:
+            desc = arcpy.Describe(layer) # dataset path/source as parameter
+            pth = desc.catalogPath
+        except:
+            lyr = getMapLayer(layer) # layer name in the project/map
+            if lyr != None and lyr.supports("DataSource"):
+                pth = lyr.dataSource
+                layer = lyr
+
+    # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
+    pth = repairLayerSourceUrl(pth,layer) 
+
+    return pth
 
 
-def getLayerServiceUrl(targetLayer):
-    targetLayer = getLayerSourceUrl(targetLayer)
-    if targetLayer.startswith('http'):
-        parts = targetLayer.split("/")
+def repairLayerSourceUrl(layerPath,lyr):
+    # take a layer path or layer name and return the data source or repaired source
+    # lyr parameter is here but only used in CIMWKSP case.
+    if layerPath == "" or layerPath == None:
+        return layerPath
+    path = None
+
+    if layerPath.startswith('GIS Servers\\'):
+        # turn into url 
+        layerPath = layerPath.replace("GIS Servers\\","http://")
+        if layerPath.find('\\') > -1:
+            path = layerPath.replace("\\",'/')
+            layerPath = path
+
+    elif layerPath.startswith('CIMWKSP'):
+        # create database connection and use that path
+        connfile = getConnectionFile(lyr.connectionProperties)
+        path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
+        path = path.replace("\\\\","\\")
+
+    if layerPath.startswith('http'): # sometimes get http path to start with, need to handle non-integer layerid in both cases
+        # fix for non-integer layer ids
+        parts = layerPath.split("/")
         lastPart = parts[len(parts)-1]
-        #if lastPart.startswith('L'): # Thought the Pro 1.3 bug involved 'L' prefix, seems like not always...
-        #    suffix = parts[len(parts)-3]
-        #    lastPart = lastPart[1:].replace(suffix,'')
-        ints = [int(s) for s in re.findall(r'\d+',lastPart )]
+        ints = [int(s) for s in re.findall(r'\d+',lastPart )] # scan for the integer value in the string
         if ints != []:
             lastPart = str(ints[0])
-
         parts[len(parts) - 1] = lastPart
-        targetLayer = "/".join(parts)
+        path = "/".join(parts)
 
-    return targetLayer
-
+    elif path == None: 
+        # nothing done here
+        path = layerPath
+    
+    return path
 
 def getTempTable(name):
     tname = workspace + os.sep + name
@@ -785,7 +847,7 @@ def doInlineAppend(source,target):
         addMessage("Target: " + target + " does not exist")
         success = False
 
-    cleanupGarbage()
+    #cleanupGarbage()
     return success
 
 def setWorkspace():
@@ -811,7 +873,7 @@ def getLayerVisibility(layer,xmlFileName):
     xmlDoc = getXmlDoc(xmlFileName)
     targets = xmlDoc.getElementsByTagName("TargetName")
     names = [collect_text(node).upper() for node in targets]
-    esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH']
+    esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH','GlobalID','GLOBALID']
     desc = arcpy.Describe(layer)
     if desc.dataType == "FeatureLayer":
         fieldInfo = desc.fieldInfo
@@ -821,6 +883,19 @@ def getLayerVisibility(layer,xmlFileName):
                 addMessage("Hiding Field: " + name)
                 fieldInfo.setVisible(index,"HIDDEN")
     return fieldInfo
+
+def refreshLayerVisibility():
+    prj = getProject()
+    maps = prj.listMaps("*")
+    for map in maps:
+        lyrs = map.listLayers("*")
+        for lyr in lyrs:
+            try:
+                isviz = lyr.visible # flip viz to redraw layer.
+                lyr.visible = True if isviz == False else False
+                lyr.visible = isviz
+            except:
+                addMessage("Could not set layer visibility")
 
 def sendRequest(url, qDict=None, headers=None):
     """Robust request maker - from github https://github.com/khibma/ArcGISProPythonAssignedLicensing/blob/master/ProLicense.py"""
@@ -964,9 +1039,9 @@ def checkServiceCapabilities(sourcePath,required):
     if sourcePath == None:
         addMessage('Error: No path available for layer')            
         return False
-    addMessage('Checking: ' + sourcePath)    
+    #addMessage('Checking: ' + sourcePath)    
     if checkLayerIsService(sourcePath):
-        url = getLayerSourceUrl(sourcePath)
+        url = sourcePath
         if isFeatureLayerUrl(url):
             data = arcpy.GetSigninToken()
             token = data['token']
@@ -983,12 +1058,23 @@ def checkServiceCapabilities(sourcePath,required):
                 addMessage('This tool will not run until this is addressed')
             return res
         else:
-            addMessage('Service does not appear to be a feature layer')
+            addMessage(sourcePath + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
             return False
     else:
         return True
 
 ## end May 2016 section
+    
+def getSpatialReference(desc): # needs gp Describe object
+    try:
+        spref = str(desc.spatialReference.factoryCode)
+    except:
+        try:
+            spref = desc.spatialReference.exportToString()
+        except:
+            arcpy.AddError("Could not get Spatial Reference")
+
+    return spref
 
 def setupProxy():
     proxies = {}
@@ -1003,3 +1089,47 @@ def setupProxy():
         opener = urllib.build_opener(proxy)
         urllib.install_opener(opener)
 
+def getConnectionFile(connectionProperties):
+
+    dir = os.path.dirname(os.path.realpath(__file__))
+    cp = connectionProperties['connection_info']
+    srvr = getcp(cp,'server')
+    inst = getcp(cp,'db_connection_properties')
+    db = getcp(cp,'database')
+    fname = (srvr+inst+db+".sde").replace(":","").replace("\\","")
+    connfile = os.path.join(dir,fname)
+    if os.path.exists(connfile):
+        os.remove(connfile)
+
+    arcpy.CreateDatabaseConnection_management (out_folder_path=dir,
+                                            out_name=fname,
+                                            database_platform=getcp(cp,'dbclient'),
+                                            instance=inst,
+                                            account_authentication=getcp(cp,'authentication_mode'),
+                                            username=getcp(cp,'username'),
+                                            password=getcp(cp,'password'),
+                                            database=db,
+                                            schema=getcp(cp,'schema'),
+                                            version=getcp(cp,'version'),
+                                            date=getcp(cp,'date'))
+    return connfile
+
+def getcp(cp,name):
+    retval = ""
+    try:
+        retval = cp[name]
+        if name.lower() == 'authentication_mode':
+            if retval == 'OSA':
+                retval = 'OPERATING_SYSTEM_AUTH'
+            else:
+                retval = 'DATABASE_AUTH'
+        elif name.lower() == 'dbclient':
+            srcs = ['','altibase','db2 for z/os','informix','netezza','oracle','postgresql','sap hana','sqlserver','teradata']
+            targs = ['','ALTIBASE','DB2 for z/OS','Informix','Netezza','Oracle','PostgreSQL','SAP HANA','Sql Server','Teradata']
+            try:
+                retval = targs[srcs.index(retval.lower())]
+            except:
+                retval = retval
+    except:
+        pass
+    return retval

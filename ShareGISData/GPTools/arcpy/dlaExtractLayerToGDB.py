@@ -1,4 +1,4 @@
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -81,9 +81,9 @@ def extract(xmlFileName,rowLimit,workspace,sourceLayer,targetFC):
 
             sourceName = dla.getSourceName(xmlDoc)
             arcpy.SetProgressorLabel("Loading " + sourceName + " to " + targetName +"...")
-            #if not arcpy.Exists(sourceLayer):
-            #    dla.addError("Layer " + sourceLayer + " does not exist, exiting")
-            #    return
+            if not arcpy.Exists(sourceLayer):
+                dla.addError("Layer " + sourceLayer + " does not exist, exiting")
+                return
             
             retVal = exportDataset(xmlDoc,sourceLayer,dla.workspace,targetName,rowLimit)
             if retVal == False:
@@ -107,12 +107,13 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
     dla.addMessage("Exporting Layer from " + sourceLayer)
     whereClause = ""
     if rowLimit != None:
-        try:
-            whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
-        except:
-            dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
+        #try:
+        whereClause = getObjectIdWhereClause(sourceLayer,rowLimit)
+        #except:
+        #    dla.addMessage("Unable to obtain where clause to Preview " + sourceLayer + ", continuing with all records")
             
     if whereClause != '' and whereClause != ' ':
+        #dla.addMessage("rowLimit " + str(rowLimit))
         dla.addMessage("Where " + str(whereClause))
     sourceName = dla.getSourceName(xmlDoc)
     viewName = sourceName + "_View"
@@ -126,29 +127,38 @@ def exportDataset(xmlDoc,sourceLayer,workspace,targetName,rowLimit):
         arcpy.env.workspace = workspace
         view = dla.makeFeatureView(dla.workspace,sourceLayer,viewName,whereClause,xmlFields)
         dla.addMessage("View Created")            
-        count = arcpy.GetCount_management(view).getOutput(0)
-        dla.addMessage(str(count) + " source rows")
-
-        arcpy.env.overwriteOutput = True
-        arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
-        fc = workspace + os.sep + targetName
-        arcpy.Append_management(view,fc,schema_type="NO_TEST")
-        dla.addMessage(arcpy.GetMessages(2)) # only serious errors
-        count = arcpy.GetCount_management(fc).getOutput(0)
-        dla.addMessage(str(count) + " source rows exported to " + targetName)
-        if str(count) == '0':
+        srcCount = arcpy.GetCount_management(view).getOutput(0)
+        dla.addMessage(str(srcCount) + " source rows")
+        if srcCount == 0:
             result = False
-            dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
-            dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
+            dla.addError("Failed to extract " + sourceName + ", Nothing to export")
+        else:
+            arcpy.env.preserveGlobalIds = False # need to run this way until support added for GlobalIDs
+            #dla.addMessage("names: " + sourceName + "|" + targetName)
+            arcpy.env.overwriteOutput = True
+            try:
+                arcpy.CreateFeatureclass_management(workspace,targetName,template=sourceLayer,spatial_reference=targetRef)
+            except:
+                arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
+                return False
+            fc = workspace + os.sep + targetName
+            arcpy.Append_management(view,fc,schema_type="NO_TEST")
+            dla.addMessage(arcpy.GetMessages(2)) # only serious errors
+            count = arcpy.GetCount_management(fc).getOutput(0)
+            dla.addMessage(str(count) + " source rows exported to " + targetName)
+            if str(count) == '0':
+                result = False
+                dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
+                dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
     return result
 
 def getSpatialReference(xmlDoc,lyrtype):
-    spref = ''
+    spref = None
     # try factoryCode first
     sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "FactoryCode")
-    if sprefstr != '':
+    if sprefstr != '' and sprefstr != '0':
         #arcpy.AddMessage(lyrtype + ":" + sprefstr)
-        spref = arcpy.SpatialReference(sprefstr)
+        spref = arcpy.SpatialReference(int(sprefstr))
     else:    
         sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "SpatialReference")
         if sprefstr != '':
@@ -165,21 +175,30 @@ def getObjectIdWhereClause(table,rowLimit):
     # build a where clause, assume that oids are sequential or at least in row order...
     oidname = arcpy.Describe(table).oidFieldName
     searchCursor = arcpy.da.SearchCursor(table,["OID@"])
-    i = 0
+    #i = 0
     ids = []
     # use the oidname in the where clause
     where = oidname + " <= " + str(rowLimit)
+    
     for row in searchCursor:
-        if i < rowLimit:
-            ids.append(row[0])
-        elif i == rowLimit:
-            break
-        i += 1
+        ids.append(row[0]) # sql server db does not always return OBJECTIDs sorted, no shortcut
+        #if i < rowLimit:
+        #    dla.addMessage("row " + str(i) + ':' + str(row[0]))
+        #elif i == rowLimit:
+        #    break
+        #i += 1
 
-    if i > 0:
-        minoid = min(ids)
-        maxoid = max(ids)
+    if len(ids) > 0:
+        ids.sort() # sort the list and take the rowLimit number of rows
+        minoid = ids[0]
+        if len(ids) > rowLimit:
+            maxoid = ids[rowLimit-1]
+        else:
+            maxoid = ids[len(ids)-1]
+
         where = oidname + " >= " + str(minoid) + " AND " + oidname + " <= " + str(maxoid)
+
+    del ids
     del searchCursor
     return where
 

@@ -1,4 +1,4 @@
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -18,7 +18,7 @@
 # dlaPreview.py - Preview one source to a target with a limited number of rows
 # ------------------------------------------------------------------------------------
 
-import arcpy,os,dlaExtractLayerToGDB,dlaFieldCalculator,dla,datetime
+import arcpy, os, dlaExtractLayerToGDB,dlaFieldCalculator,dla,datetime
 
 arcpy.AddMessage("Data Assistant - Preview")
 
@@ -53,9 +53,10 @@ def preview(xmlFileName):
     global sourceLayer,targetLayer,rowLimit
 
     dla.setWorkspace()
-    dla._errorCount = 0
+    dla._errCount = 0
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
+    #arcpy.AddMessage("rowLimit = " + str(rowLimit) )
     if rowLimit == "" or rowLimit == None:
         rowLimit = 100
     if sourceLayer == "" or sourceLayer == None:

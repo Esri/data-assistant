@@ -1,4 +1,4 @@
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -46,7 +46,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)
     xmlDoc = dla.getXmlDoc(xmlFileName)
-    
+    dla.addMessage("Field Calculator: " + xmlFileName)
     arcpy.env.Workspace = dla.workspace
     table = dla.getTempTable(name)
 
@@ -70,31 +70,49 @@ def calculate(xmlFileName,workspace,name,ignore):
         targetName = dla.getNodeValue(field,"TargetName")
         sourceName = dla.getNodeValue(field,"SourceName")
             
-        type = "String"
+        ftype = "String"
         length = "50"
         for target in targetFields:
             nm = target.getAttributeNode("Name").nodeValue
             if  nm == targetName:
-                type = target.getAttributeNode("Type").nodeValue
+                ftype = target.getAttributeNode("Type").nodeValue
                 length = target.getAttributeNode("Length").nodeValue
         # uppercase compare, later need to check for orig/upper name for calc
         #ups = [nm.upper() for nm in attrs]
-        dla.addDlaField(table,targetName,field,attrs,type,length)
+        dla.addDlaField(table,targetName,field,attrs,ftype,length)
 
     allFields = sourceFields + targetFields
+    desc = arcpy.Describe(table)
+    layerNames = []
     names = []
-    types = []
+    ftypes = []
     lengths = []
+    ignore = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLENGTH()','STAREA()','raster']
+    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalIDFieldName','RasterFieldName']:
+        try:
+            val = eval("desc." + name)
+            val = val[val.rfind('.')+1:] 
+            ignore.append(val).upper()
+        except:
+            pass
+
+    for field in desc.fields:
+        if field.name.upper() not in ignore:
+            layerNames.append(field.name.upper())
+
     for field in allFields:
         nm = field.getAttributeNode("Name").nodeValue
-        if nm != dla.noneName:
-            names.append(nm)
-            typ = field.getAttributeNode("Type").nodeValue
-            leng = field.getAttributeNode("Length").nodeValue      
-            types.append(typ)
-            lengths.append(leng)
+        if nm != dla.noneName and nm.upper() not in ignore and nm.upper() in layerNames:
+            try:
+                names.index(nm)
+            except:
+                names.append(nm)
+                typ = field.getAttributeNode("Type").nodeValue
+                leng = field.getAttributeNode("Length").nodeValue      
+                ftypes.append(typ)
+                lengths.append(leng)
 
-    retVal = setFieldValues(table,fields,names,types,lengths)
+    retVal = setFieldValues(table,fields,names,ftypes,lengths)
     if retVal == False:
         success = False
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -134,7 +152,7 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
-def setFieldValues(table,fields,names,types,lengths):
+def setFieldValues(table,fields,names,ftypes,lengths):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
     row = None
@@ -159,6 +177,7 @@ def setFieldValues(table,fields,names,types,lengths):
                 return True
             i = i + 1
             setProgressor(i,numFeat)
+            
             for field in fields:
                 method = "None"
                 sourceName = dla.getNodeValue(field,"SourceName")
@@ -167,9 +186,11 @@ def setFieldValues(table,fields,names,types,lengths):
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
-                if method == "None" or (method == "Copy" and sourceName == '(None)'):
-                    method = "None"
+                fnum = names.index(targetName)
+
+                if method == "None" or (method == "Copy" and sourceName == dla._noneFieldName):
                     val = None
+                    method = "None"
                 elif method == "Copy":
                     val = sourceValue
                 elif method == "DefaultValue":
@@ -191,9 +212,11 @@ def setFieldValues(table,fields,names,types,lengths):
                     chars = dla.getNodeValue(field,"Right")
                     val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
                 elif method == "Substring":
-                    start = dla.getNodeValue(field,"Start")
-                    length = dla.getNodeValue(field,"Length")
-                    val = getSubstring(sourceValue,start,length)
+                    start = int(dla.getNodeValue(field,"Start"))
+                    lngth = int(dla.getNodeValue(field,"Length"))
+                    if sourceValue != None:
+                        lngth = start + lngth
+                    val = getSubstring(sourceValue,start,lngth)
                 elif method == "Split":
                     splitter = dla.getNodeValue(field,"SplitAt")
                     splitter = splitter.replace("(space)"," ")
@@ -220,8 +243,11 @@ def setFieldValues(table,fields,names,types,lengths):
                         expression = expression.replace(name,"|" + name + "|")
                     val = getExpression(row,names,expression)
                 # set field value
-                if method != "None":
-                    setValue(row,names,types,lengths,targetName,targetValue,val)
+                if method != "None" and val != None:
+                    newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
+                    row[fnum] = newVal
+                else:
+                    row[fnum] = val
             try:
                 updateCursor.updateRow(row)
             except:
@@ -247,6 +273,43 @@ def setFieldValues(table,fields,names,types,lengths):
 
     return success
 
+def getValue(names,ftypes,lengths,targetName,targetValue,val):
+    retVal = val # init to the value calculated so far. This function will alter as needed for field type 
+    try:
+        idx = names.index(targetName)
+        if str(retVal) == 'None':
+            retVal = None
+        if str(retVal) != str(targetValue):
+            if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double' or ftypes[idx] == 'Float':
+                # if the type is numeric then try to cast to float
+                try:
+                    valTest = float(val)
+                    retVal = val
+                except:
+                    err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
+                    dla.addError(err)
+                    dla._errCount += 1
+            elif ftypes[idx] == 'String':
+                # if a string then cast to string or encode utf-8
+                if type(val) == 'str':
+                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
+                else:
+                    retVal = str(val)
+                # check length to make sure it is not too long.
+                if len(retVal) > int(lengths[idx]):
+                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"
+                    dla.addError(err)
+                    dla._errCount += 1
+
+            else:
+                retVal = val
+    except:
+        err = "Exception caught: unable to get value for value=" + str(val) + " fieldname=" + targetName
+        dla.showTraceback()
+        dla.addError(err)
+        dla._errCount += 1
+
+    return retVal
 
 def getSplit(sourceValue,splitter,part):
 
@@ -263,7 +326,7 @@ def getSubstring(sourceValue,start,chars):
     try:
         start = int(start)
         chars = int(chars)
-        strVal = str(sourceValue)[start:chars]        
+        strVal = sourceValue[start:chars]        
     except:
         pass
     return strVal
@@ -392,7 +455,7 @@ def getProgressUpdate(numFeat):
 def printRow(row,names):
     r = 0
     for item in row:
-        msg = str(names[r]) + ": " + str(item)
+        msg = str(names[r]) + ":" + str(item) + ' #' + str(r)
         print(msg)
         arcpy.AddMessage(msg)
         r += 1
@@ -400,7 +463,7 @@ def printRow(row,names):
 def getTargetValue(row,field,names,sourceName,targetName):
     # get the current value for the row/field
     targetValue = None
-    if sourceName != "" and not sourceName.startswith("*") and sourceName != "(None)":
+    if sourceName != "" and not sourceName.startswith("*") and sourceName != dla._noneFieldName:
         try:
             if sourceName != targetName and sourceName.upper() == targetName.upper():
                 # special case for same name but different case - should already have the target name from extract functions
@@ -421,44 +484,6 @@ def getSourceValue(row,names,sourceName,targetName):
         else:        
             sourceValue = None
     return sourceValue
-
-def setValue(row,names,types,lengths,targetName,targetValue,val):
-  
-    try:
-        if val == 'None':
-            val = None
-        if val != targetValue:
-            idx = names.index(targetName)
-            if types[idx] == 'Integer' or types[idx] == 'Double':
-                # if the type is numeric then try to cast to float
-                try:
-                    valTest = float(val)
-                    row[idx] = val
-                except:
-                    err = "Exception caught: unable to cast " + targetName + " to " + types[idx] + "  : '" + str(val) + "'"
-                    dla.addError(err)
-                    print(err)
-                    dla._errCount += 1
-            elif types[idx] == 'String':
-                # if a string then cast to string and check length
-                if type(val) != 'str':
-                   val = str(val)
-                if len(val) > int(lengths[idx]):
-                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(val) + "'"
-                    dla.addError(err)
-                    print(err)
-                    dla._errCount += 1
-                else:
-                    row[idx] = val
-            else:
-                row[idx] = val
-    except:
-        success = False
-        err = "Exception caught: unable to set value for value=" + str(val) + " fieldname=" + targetName
-        dla.showTraceback()
-        dla.addError(err)
-        print(err)
-        dla._errCount += 1
 
 if __name__ == "__main__":
     main()

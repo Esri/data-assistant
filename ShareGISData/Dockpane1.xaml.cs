@@ -634,10 +634,17 @@ namespace DataAssistant
                     if (cname == sourcename)
                         found = true;
                 }
-                if(!found && sourcename != _noneField)
-                    grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
+                if (!found && sourcename != _noneField && sourcename != null && sourcename != "")
+                {
+                    try
+                        { grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename }); }
+                    catch (Exception e)
+                    {   
+                        MessageBox.Show(e.Message.ToString());
+                        return; 
+                    }
+                }
             }
-            
         }
 
         private void setSubstringValues(string start, string length)
@@ -771,10 +778,11 @@ namespace DataAssistant
             if (val == false)
                 Method5ClearAll.IsEnabled = false;
         }
-
-        private void Method5Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Method5_BeginningEdit(object sender, SelectionChangedEventArgs e)
         {
+            // not editable
         }
+
         private void Method5Check_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox check = sender as CheckBox;
@@ -793,11 +801,22 @@ namespace DataAssistant
                         {
                             bool chk = (check.IsChecked.HasValue) ? check.IsChecked.Value : false;
                             row.Checked = chk;
-                            if (chk == true)
+                            bool present = false;
+                            for (int c = 0; c < _concat.Count; c++)
+                            {
+                                if ( Equals(row.Name,_concat[c]))
+                                    present = true;
+                            }
+                            if (chk && ! present)
+                            {
                                 _concat.Add(row.Name);
-                            else
+                                setConcatValues();
+                            }
+                            else if (! chk && present)
+                            {
                                 _concat.Remove(row.Name);
-                            setConcatValues();
+                                setConcatValues();
+                            }  
                         }
                     }
                 }

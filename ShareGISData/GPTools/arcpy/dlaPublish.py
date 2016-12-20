@@ -1,4 +1,4 @@
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -37,21 +37,7 @@ arcpy.AddMessage("Data Assistant")
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
 
 useReplaceSettings = False # change this from a calling script to make this script replace data.
-    
-try:
-    sourceLayer = arcpy.GetParameterAsText(1) # Source Layer File to load from
-    if sourceLayer == "" or sourceLayer == "#":
-        sourceLayer = None
-except:
-    sourceLayer = None
-
-try:
-    targetLayer = arcpy.GetParameterAsText(2) # Target Layer File to load to
-    if targetLayer == "" or targetLayer == "#":
-        targetLayer = None
-except:
-    targetLayer = None
-
+_outParam = 1
 _chunkSize = 100
 
 def main(argv = None):
@@ -61,11 +47,13 @@ def main(argv = None):
 def publish(xmlFileNames):
     # function called from main or from another script, performs the data update processing
     global sourceLayer,targetLayer,_success
-    dla._errorCount = 0
+    dla._errCount = 0
 
     arcpy.SetProgressor("default","Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")
     xmlFiles = xmlFileNames.split(";")
+    layers = []
+
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
         dla.addMessage("Configuration file: " + xmlFile)
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
@@ -73,12 +61,10 @@ def publish(xmlFileNames):
             return
         svceS = False
         svceT = False
-        if sourceLayer == "" or sourceLayer == None:
-            sourceLayer = dla.getNodeValue(xmlDoc,"Source")
-            svceS = dla.checkLayerIsService(sourceLayer)
-        if targetLayer == "" or targetLayer == None:
-            targetLayer = dla.getNodeValue(xmlDoc,"Target")
-            svceT = dla.checkLayerIsService(targetLayer)
+        sourceLayer = dla.getNodeValue(xmlDoc,"Source")
+        svceS = dla.checkLayerIsService(sourceLayer)
+        targetLayer = dla.getNodeValue(xmlDoc,"Target")
+        svceT = dla.checkLayerIsService(targetLayer)
 
         dla.addMessage(targetLayer)
         ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
@@ -104,7 +90,7 @@ def publish(xmlFileNames):
         if res != True:
             table = dla.getTempTable(targetName)
             msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
-            if arcpy.TestSchemaLock(table) != True:
+            if arcpy.TestSchemaLock(table) != True and arcpy.Exists(table) == True:
                 msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
             dla.addError(msg)
             print(msg)
@@ -115,13 +101,16 @@ def publish(xmlFileNames):
                 dlaTable = dla.getTempTable(targetName)
                 res = doPublish(xmlDoc,dlaTable,targetLayer)
 
+        #dla.refreshLayerVisibility()
         arcpy.ResetProgressor()
-        sourceLayer = None # set source and target back to None for multiple file processing
-        targetLayer = None
+        
         if res == False:
             err = "Data Assistant Update Failed, see messages for details"
             dla.addError(err)
             print(err)
+        layers.append(targetLayer)
+
+    arcpy.SetParameter(_outParam,";".join(layers))
 
 def doPublish(xmlDoc,dlaTable,targetLayer):
     # either truncate and replace or replace by field value
@@ -135,9 +124,8 @@ def doPublish(xmlDoc,dlaTable,targetLayer):
     if useReplaceSettings == True and (expr == '' or expr == None):
         dla.addError("There must be an expression for replacing by field value, current value = '" + str(expr) + "'")
         return False
-
-    if targetLayer.startswith("GIS Servers\\") == True or targetLayer.startswith("http") == True:
-        targetLayer = dla.getLayerSourceUrl(targetLayer)
+    targetLayer = dla.getLayerPath(targetLayer)
+    if targetLayer.startswith("http") == True:
         success = doPublishPro(dlaTable,targetLayer,expr)
     else:
         # logic change - if not replace field settings then only append
@@ -251,7 +239,10 @@ def addFeatures(sourceLayer,targelUrl,expr):
         arcpy.SetProgressorLabel("Adding Features")
         featurejs = featureclass_to_json(sourceLayer)
         url = targelUrl + '/addFeatures'  
-        numFeat = len(featurejs['features'])
+        try:
+            numFeat = len(featurejs['features'])
+        except:
+            numFeat = 0
         if numFeat == 0:
             dla.addMessage("0 Features to Add, exiting")            
             return True # nothing to add is OK
@@ -284,9 +275,9 @@ def addFeatures(sourceLayer,targelUrl,expr):
                     retval = True
                 except:
                     retval = False
-                    dla.addMessage("Add features to Feature Service failed")
-                    dla.showTraceback()
-                    dla.addError(json.dumps(result))
+                    dla.addMessage("Add features to Feature Service failed. Unfortunately you will need to re-run this tool.")
+                    #dla.showTraceback()
+                    #dla.addError(json.dumps(result))
                     error = True
             featuresProcessed += chunk
     except:

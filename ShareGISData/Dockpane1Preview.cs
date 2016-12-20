@@ -1,4 +1,19 @@
-﻿using System;
+﻿/***
+Copyright 2016 Esri
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.​
+ ***/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -336,33 +351,49 @@ namespace DataAssistant
             for (int i = 0; i < _datarows.Count; i++)
             {
                 string textval = "";
-                try
+              
+                if (attrName == null)
+                    textval = targName + "=None";
+                else
                 {
-                    if (attrName == null)
-                        textval = targName + "=None";
-                    else
+                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                    if (att != null)
                     {
-                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                        if (att != null)
+                        int len = length;
+                        int startat = start;
+                        if (att.InnerText != "")
+                            textval = att.InnerText;
+                        else
+                            textval = "None"; // att.InnerText should be "None" but make sure if ""
+                        try
                         {
-                            try
+                            if (length == -1 && textval != "None") // right
                             {
-                                if (length == -1)
+                                if (start >= att.InnerText.Length)
                                 {
-                                    // num chars for right function
-                                    textval = targName + "=" + att.InnerText.Substring(att.InnerText.Length - start);
+                                    startat = 0;
+                                    len = att.InnerText.Length;
                                 }
                                 else
                                 {
-                                    textval = targName + "=" + att.InnerText.Substring(start, length);
+                                    startat = att.InnerText.Length - start;
+                                    len = start;
                                 }
+                                textval = att.InnerText.Substring(startat, len); 
                             }
-                            catch { textval = targName + "=" + "None"; }
+                            else if (length > -1 && textval != "None")
+                            {
+                                if (start + length > att.InnerText.Length)
+                                    len = att.InnerText.Length - start;
+                                textval = att.InnerText.Substring(start, len); 
+                            }
+                        }
+                        catch
+                        { // initialized to value None or InnerText
                         }
                     }
                 }
-                catch { textval = targName + "=" + "None"; }
-                grid.Items.Add(new PreviewRow() { Value = textval });
+                grid.Items.Add(new PreviewRow() { Value = targName + "=" + textval });
             }
         }
         private void setPreviewValueMapRows(string attrName)

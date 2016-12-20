@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("DataAssistant")]
-[assembly: AssemblyCopyright("Copyright © Esri 2015")]
+[assembly: AssemblyCopyright("Copyright © Esri 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

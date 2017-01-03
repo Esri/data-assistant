@@ -96,7 +96,10 @@ def deleteRows(source,targetUrl,expr):
             except:
                 try:
                     lenDeleted = len(result['deleteResults'])
-                    msg = str(lenDeleted) + " rows deleted, " + str(rowsProcessed + chunk) + "/" + str(numFeat)
+                    total = rowsProcessed + chunk
+                    if total > numFeat:
+                        total = numFeat
+                    msg = str(lenDeleted) + " rows deleted, " + str(total) + "/" + str(numFeat)
                     print(msg)
                     dla.addMessage(msg)
                     retval = True
@@ -156,7 +159,10 @@ def addRows(source,targetUrl,expr):
             except:
                 try:
                     lenAdded = len(result['addResults']) 
-                    msg = str(lenAdded) + " rows added, " + str(rowsProcessed + chunk) + "/" + str(numFeat)
+                    total = rowsProcessed + chunk
+                    if total > numFeat:
+                        total = numFeat
+                    msg = str(lenAdded) + " rows added, " + str(total) + "/" + str(numFeat)
                     print(msg)
                     dla.addMessage(msg)
                     retval = True
@@ -176,7 +182,7 @@ def addRows(source,targetUrl,expr):
 
     return retval
     
-def doPublishPro(source,targetUrl,expr,useReplaceSettings):
+def doPublishHttp(source,targetUrl,expr,useReplaceSettings):
     # logic for publishing to service registered on Portal or ArcGIS Online
     retval = True
     token = getSigninToken()
@@ -185,9 +191,14 @@ def doPublishPro(source,targetUrl,expr,useReplaceSettings):
         return False
     dla.setupProxy()
     if expr != '' and useReplaceSettings == True:
+        arcpy.SetProgressor("default","Deleting Existing Rows")
+        arcpy.SetProgressorLabel("Deleting Existing Rows")
         retval = deleteRows(source,targetUrl,expr)
     if retval == True:
-        retval = addRows(source,targetUrl,expr)
+        #retval = addRows(source,targetUrl,expr)
+        arcpy.SetProgressor("default","Appending Rows")
+        arcpy.SetProgressorLabel("Appending Rows")
+        retval = dla.appendRows(source,targetUrl,expr)
 
     return retval
 

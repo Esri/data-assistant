@@ -127,7 +127,7 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
         return False
     target = dla.getLayerPath(target)
     if target.startswith("http") == True:
-        success = dlaService.doPublishPro(dlaTable,target,expr,useReplaceSettings)
+        success = dlaService.doPublishHttp(dlaTable,target,expr,useReplaceSettings)
     else:
         # logic change - if not replace field settings then only append
         if expr != '' and useReplaceSettings == True:

@@ -32,7 +32,7 @@ is provided with each solution on the ArcGIS Solution Site.
 
 ## Requirements
 
-* ArcGIS Pro 1.3.1
+* ArcGIS Pro 1.4
 
 ## Resources
 

@@ -17,6 +17,7 @@ using System.Data;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Controls.Primitives;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
@@ -463,9 +464,13 @@ namespace DataAssistant
                 case 10: // Conditional Value
                     setConditionValues();
                     break;
-                case 11: // Expression
-                    Method11Value.Text = getPanelValue(11, "Expression");
+                case 11: // Domain Map
+                    setDomainMapValues(11, getPanelValue(11, "DomainMap"));
                     break;
+
+                    //case 11: // Expression
+                    //Method11Value.Text = getPanelValue(11, "Expression");
+                    //break;
 
             }
 
@@ -575,7 +580,69 @@ namespace DataAssistant
             else
                 ValueMapRemove.IsEnabled = false;
         }
- 
+
+        private void setDomainMapValues(int combonum, string nodename)
+        {
+            if (FieldGrid.SelectedIndex == -1)
+                return;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            System.Xml.XmlNodeList nodes = getFieldNodes(fieldnum);
+            System.Xml.XmlNodeList sValueNodes, sLabelNodes, tValueNodes, tLabelNodes;
+            
+            //<Method>ValueMap</Method>
+            //<ValueMap>
+            //  <sValue>1</sValue>
+            //  <sLabel>A things</sLabel>
+            //  <tValue>12</tValue>
+            //  <tLabel>12 things</tLabel>
+            //  <sValue>2</sValue>
+            //  <sLabel>2 things</sLabel>
+            //  <tValue>22</tValue>
+            //  <tLabel>22 things</tLabel>
+            //  <Otherwise>
+            //  </Otherwise>
+            //</ValueMap>
+            tValueNodes = nodes[0].SelectNodes("DomainMap/tValue");
+            tLabelNodes = nodes[0].SelectNodes("DomainMap/tLabel");
+
+            sValueNodes = nodes[0].SelectNodes("DomainMap/sValue");
+            sLabelNodes = nodes[0].SelectNodes("DomainMap/sLabel");
+
+            string name = "Method" + combonum + "Grid";
+            Object ctrl = this.FindName(name);
+            DataGrid grid = ctrl as DataGrid;
+            if (grid == null)
+                return;
+
+            List<ComboData> combo = getDomainValues(SourceLayer.Text, getSourceFieldName());
+
+            grid.Items.Clear();
+            for (int i = 0; i < tValueNodes.Count; i++)
+            {
+                
+                System.Xml.XmlNode sourcenode = sValueNodes.Item(i);
+                if (sourcenode == null)
+                    return;
+                string sVal = sourcenode.InnerText;
+                int selected = -1;
+                string sTooltip = "";
+                for(int s=0;s<combo.Count;s++)
+                {
+                    if (combo[s].Id.ToString().Equals(sVal))
+                        selected = s;
+                }
+                sourcenode = sLabelNodes.Item(i);
+                sTooltip = sourcenode.InnerText;
+
+                System.Xml.XmlNode targetnode = tValueNodes.Item(i);
+                string tVal = targetnode.InnerText;
+                targetnode = tLabelNodes.Item(i);
+                string tTooltip = targetnode.InnerText;
+
+                grid.Items.Add(new DomainMapRow() { Source = combo, SourceSelectedItem = selected, SourceTooltip=sTooltip, TargetTooltip=tTooltip, Target = tVal });
+            }
+        }
+
         private void setSpaceVal(string separator,TextBox txt)
         {
             if (txt != null && separator != txt.Text)
@@ -994,7 +1061,6 @@ namespace DataAssistant
             var comboBox = sender as ComboBox;
             if (this._skipSelectionChanged || comboBox.IsLoaded == false)
                 return;
-            int temp = _selectedRowNum;
             bool doSave = false;
             
             if (((ComboBox)sender).IsLoaded && (e.AddedItems.Count > 0 || e.RemovedItems.Count > 0) && FieldGrid.SelectedIndex != -1)
@@ -1230,6 +1296,180 @@ namespace DataAssistant
                 copyXml(_revertname, _filename);
                 loadFile(_filename);
             }
+
+        }
+
+
+        private void ImportTarget_Click(object sender, RoutedEventArgs e)
+        {
+            // Need to get the domain values from the target dataset - NB do domain but could also be based on values if no domain
+            
+            // = new List<ComboData>();
+            List<ComboData> domainValues = getDomainValues(this.TargetLayer.Text, getTargetFieldName());
+            List<ComboData> sourceValues = getDomainValues(this.SourceLayer.Text, getSourceFieldName());
+
+            Method11Grid.Items.Clear();
+            for (int i = 0; i < domainValues.Count; i++)
+            {
+                ComboData domainValue = domainValues[i];
+                string target = domainValue.Id;
+                int selected = -1;
+                for (int s = 0; s < sourceValues.Count; s++)
+                {
+                    string dvalue = sourceValues[s].Id;
+                    if (target.Equals(dvalue))
+                        selected = s;
+                }
+                Method11Grid.Items.Add(new DomainMapRow() { Source = domainValues, SourceSelectedItem = selected, SourceTooltip=domainValues[selected].Tooltip, Target = domainValue.Id, TargetTooltip = domainValue.Value });
+            }
+            Method11Grid.InvalidateArrange();
+        }
+
+        private void ImportSource_Click(object sender, RoutedEventArgs e)
+        {
+            // replace source domain values
+            List<ComboData> domainValues = new List<ComboData>();
+            domainValues = getDomainValues(this.SourceLayer.Text, getSourceFieldName());
+            Method11Grid.Items.Clear();
+            for (int s = 0; s < domainValues.Count; s++)
+            {
+                Method11Grid.Items.Add(new DomainMapRow() { Source = domainValues, SourceSelectedItem = s, SourceTooltip = domainValues[s].Tooltip, Target = "" });
+            }
+        }
+
+        public List<ComboData> getDomainValues(string dataset, string fieldName)
+        {
+            List<ComboData> domainValues = new List<ComboData>(); // *** does not work for layers currently... grab dataset from before the "." in field name... 
+            string table = dataset.Substring(dataset.LastIndexOf("\\")+1);
+            string db = dataset.Substring(0,dataset.LastIndexOf("\\" + table));
+            if(fieldName.Equals(_noneField))
+            {
+                MessageBox.Show("No field to map");
+                return domainValues;
+            }
+            try
+            {
+                using (ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(db))
+                using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                {
+                    ArcGIS.Core.Data.TableDefinition def = tab.GetDefinition();
+                    IReadOnlyList<ArcGIS.Core.Data.Field> fields = def.GetFields();
+                    ArcGIS.Core.Data.Field thefield = fields.First(field => field.Name.ToLower() == fieldName.ToLower());
+                    Domain domain = thefield.GetDomain();
+                    if (domain is CodedValueDomain)
+                    {
+                        var codedValueDomain = domain as CodedValueDomain;
+                        SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
+                        //IEnumerable<KeyValuePair<object, string>> filteredPairs = codedValuePairs.Where(pair => Convert.ToDouble(pair.Key) > 20.0d);
+                        for (int i = 0; i < codedValuePairs.Count; i++)
+                        {
+                            //string str = codedValuePairs.ElementAt(i).Key.ToString() + " | " + codedValuePairs.ElementAt(i).Value.ToString();
+                            ComboData item = new ComboData();
+                            item.Id = codedValuePairs.ElementAt(i).Key.ToString();
+                            item.Value = codedValuePairs.ElementAt(i).Value.ToString();
+                            item.Tooltip = codedValuePairs.ElementAt(i).Value.ToString();
+                            domainValues.Add(item);
+                        }
+                    }
+                }
+            }
+            catch {
+                MessageBox.Show("Unable to retrieve domain values for " + fieldName);
+                return domainValues;
+            }
+            return domainValues;
+        }
+
+        private void Method11Source_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //*** fix to change selected item and values
+            //if (this._skipDomainSelChanged)
+            //    return;
+            ComboBox cb = sender as ComboBox;
+            if(cb != null)
+            { 
+                if (cb.SelectedIndex == -1)
+                    return;
+                else
+                {
+                    DataGrid grid = this.Method11Grid as DataGrid;
+                    if (grid == null || grid.SelectedIndex == -1)
+                        return;
+
+                    //object values = grid.Items[grid.SelectedIndex];
+                    DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
+                    DomainMapRow rowSource = grid.Items.GetItemAt(cb.SelectedIndex) as DomainMapRow;
+                    if (row!=null)
+                    {
+                        row.SourceSelectedItem = cb.SelectedIndex;
+                        row.SourceTooltip = rowSource.SourceTooltip;
+                        cb.ToolTip = rowSource.SourceTooltip;
+                    }
+                }
+            }
+        }
+
+        private void Method11Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+        private void Method11Target_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+            if (tb != null)
+            {
+                DataGrid grid = this.Method11Grid as DataGrid;
+                if (grid == null || grid.SelectedIndex == -1)
+                    return;
+
+                DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
+                if (row != null)
+                {
+                    row.Target = tb.Text;
+                    if (tb.Text != "")
+                    {
+                        row.TargetTooltip = tb.Text;
+                        tb.ToolTip = tb.Text;
+                        for (int s = 0; s < row.Source.Count; s++)
+                        {
+                            string dvalue = row.Source[s].Id;
+                            if (tb.Text.Equals(dvalue))
+                            {
+                                tb.ToolTip = row.Source[s].Tooltip;
+                                row.TargetTooltip = row.Source[s].Tooltip;
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        private void Method11TextChanged(object sender, string sourcetarget)
+        {
+            //TextBox txt = sender as TextBox;
+
+            //if (Method11Grid.SelectedIndex == -1)
+            //    return;
+
+            //if (txt != null)
+            //{
+            //    for (int i = 0; i < Method11Grid.Items.Count; i++)
+            //    {
+            //        if (i == Method11Grid.SelectedIndex)
+            //        {
+            //            object item = Method11Grid.Items.GetItemAt(i);
+            //            ValueMapRow row = item as ValueMapRow;
+            //            if (row != null)
+            //            {
+            //                if (sourcetarget == "Source")
+            //                    row.Source = txt.Text;
+            //                else if (sourcetarget == "Target")
+            //                    row.Target = txt.Text;
+            //            }
+            //        }
+            //    }
+
+            //}
 
         }
 

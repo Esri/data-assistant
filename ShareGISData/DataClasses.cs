@@ -21,6 +21,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 
+using System.Windows;
+using System.Windows.Controls;
+
+
 namespace DataAssistant
 {
     public class ConcatRow
@@ -33,9 +37,22 @@ namespace DataAssistant
         public string Source { get; set; }
         public string Target { get; set; }
     }
+    public class DomainMapRow
+    {
+        public List<ComboData> Source { get; set; }
+        public int SourceSelectedItem { get; set; }
+        public string SourceTooltip { get; set; }
+        public string Target { get; set; }
+        public string TargetTooltip { get; set; }
+    }
     public class PreviewRow
     {
         public string Value { get; set; }
     }
-
+    public class ComboData
+    {
+        public string Id { get; set; }
+        public string Value { get; set; }
+        public string Tooltip { get; set; }
+    }
 }

@@ -212,7 +212,7 @@ namespace DataAssistant
 
         private void Method11Preview_Click()
         {
-            setPreviewRows(Method11Value.Text);
+            setPreviewDomainMapRows(getSourceFieldName());
         }
         private void showResult(string value)
         {
@@ -423,6 +423,47 @@ namespace DataAssistant
                 grid.Items.Add(new PreviewRow() { Value = textval });
             }
         }
+
+        private void setPreviewDomainMapRows(string attrName)
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            for (int i = 0; i < _datarows.Count; i++)
+            {
+                string textval = "";
+                try
+                {
+                    if (attrName == null)
+                        textval = targName + "=None";
+                    else
+                    {
+                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName]; // the data rows from source dataset
+                        if (att != null)
+                        {
+                            try
+                            {
+                                textval = att.InnerText.ToString();
+                                for (int r = 0; r < Method11Grid.Items.Count; r++)
+                                {
+                                    // domain map replace function
+                                    DomainMapRow row = Method11Grid.Items.GetItemAt(r) as DomainMapRow;
+                                    if (att.InnerText.ToString() == row.Source[row.SourceSelectedItem].Id)
+                                    {
+                                        textval = textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target);
+                                    }
+                                }
+                                textval = targName + "=" + textval;
+                            }
+                            catch { textval = targName + "=" + "None"; }
+                        }
+                    }
+                }
+                catch { textval = targName + "=" + "None"; }
+                grid.Items.Add(new PreviewRow() { Value = textval });
+            }
+        }
+
         private string replaceFieldValues(string expr, int rownum)
         {
             for (int i = 0; i < _datarows.Count; i++)

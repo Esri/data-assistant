@@ -176,7 +176,6 @@ namespace DataAssistant
             }
         }
 
-        
         private void saveM4()
         {
             // Change Case
@@ -392,25 +391,80 @@ namespace DataAssistant
         }
         private void saveM11()
         {
-            // Expression
+            // Value Map
             System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
             if (nodes != null)
             {
+                DataGrid grid = this.Method11Grid as DataGrid;
+                if (grid == null)
+                    return;
+
                 try
                 {
-                    nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
-                    System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("Expression");
+                    string method = getMethodVal();
+                    nodes[0].SelectSingleNode("Method").InnerText = method;
                     trimNodes(nodes, 3);
-                    if (node != null)
-                        node.InnerText = Method11Value.Text;
-                    else
-                        addNode(nodes, getMethodVal(), Method11Value.Text);
+                    System.Xml.XmlNode noder = nodes[0].SelectSingleNode(method);
+                    if (noder == null)
+                    {
+                        noder = _xml.CreateElement(method);
+                        nodes[0].AppendChild(noder);
+                    }
+                    noder.RemoveAll();
+                    for (int s = 0; s < grid.Items.Count; s++)
+                    {
+                        object values = grid.Items[s];
+                        DomainMapRow row = grid.Items.GetItemAt(s) as DomainMapRow;
+                        if (row != null)
+                        {
+                            System.Xml.XmlNode snode = _xml.CreateElement("sValue");
+                            if (row.SourceSelectedItem > -1) // there may not be a selection
+                            {
+                                snode.InnerText = row.Source[row.SourceSelectedItem].Id;
+                                noder.AppendChild(snode);
+                                snode = _xml.CreateElement("sLabel");
+                                snode.InnerText = row.Source[row.SourceSelectedItem].Tooltip;
+                                noder.AppendChild(snode);
+                            }
+
+                            System.Xml.XmlNode tnode = _xml.CreateElement("tValue");
+                            tnode.InnerText = row.Target;
+                            noder.AppendChild(tnode);
+
+                            tnode = _xml.CreateElement("tLabel");
+                            tnode.InnerText = row.TargetTooltip;
+                            noder.AppendChild(tnode);
+                        }
+                    }
+                    //System.Xml.XmlNode othnode = _xml.CreateElement("Otherwise");
+                    //othnode.InnerText = Method3Otherwise.Text;
+                    //noder.AppendChild(othnode);
                     saveFieldGrid();
                 }
                 catch { }
             }
-
         }
+        //private void saveM11()
+        //{
+        //    // Expression
+        //    System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
+        //    if (nodes != null)
+        //    {
+        //        try
+        //        {
+        //            nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
+        //            System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("Expression");
+        //            trimNodes(nodes, 3);
+        //            if (node != null)
+        //                node.InnerText = Method11Value.Text;
+        //            else
+        //                addNode(nodes, getMethodVal(), Method11Value.Text);
+        //            saveFieldGrid();
+        //        }
+        //        catch { }
+        //    }
+
+        //}
         private string getMethodVal()
         {
             string method = comboMethod.SelectedValue.ToString();

@@ -60,7 +60,7 @@
         </TabControl.Resources>
 
         <TabItem x:Name="FileTab" Header="File" BorderThickness="1" IsSelected="True"  >
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" ScrollViewer.CanContentScroll="True"
           MinWidth="300" x:Name="FileGrid">
                     <Grid.RowDefinitions>
@@ -107,8 +107,7 @@
                          Text="" MinWidth="100" Width="110" VerticalAlignment="Top" TextChanged="ReplaceValue_SelectionChanged" 
                          ToolTip="The field value to use for replacement, or optionally a Where Expression like 'WHERE OBJECTID &gt; 100'"/>
                     </StackPanel>
-
-
+                    
                     <StackPanel x:Name="TargetStack" Grid.Row="4" IsEnabled="False" Visibility="Hidden">
                         <Label x:Name="TargetLabel" Margin="0,5,5,0" Content="Target Layer"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Top"/>
                         <TextBox x:Name="TargetLayer" HorizontalAlignment="Stretch" Margin="5,5,80,5" TextWrapping="NoWrap" 
@@ -118,199 +117,232 @@
                 </Grid>
             </ScrollViewer>
         </TabItem>
-        
+
         <TabItem x:Name="FieldsTab" Header="Fields" BorderThickness="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
 
-            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" MinHeight="400" MinWidth="300" 
-                  x:Name="FieldsGrid">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="110"/>
-                    <RowDefinition Height="220*"/>
-                    <RowDefinition Height="170"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="320"/>
-                    <ColumnDefinition Width="160*"/>
-                </Grid.ColumnDefinitions>
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" MinHeight="400" MinWidth="300" 
+                  x:Name="FieldsGrid" Margin="0,0,-3,0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="110"/>
+                        <RowDefinition Height="220*"/>
+                        <RowDefinition Height="170"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320"/>
+                        <ColumnDefinition Width="160*"/>
+                    </Grid.ColumnDefinitions>
 
-                <DataGrid x:Name="FieldGrid" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" ItemsSource="{Binding XPath=/SourceTargetMatrix/Fields/Field}" 
+                    <DataGrid x:Name="FieldGrid" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" ItemsSource="{Binding XPath=/SourceTargetMatrix/Fields/Field}" 
                   Width="Auto" MinHeight="250" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="200" 
                   AutoGenerateColumns="False" 
                   CanUserResizeColumns="True" SelectedCellsChanged="FieldGrid_Selected"  
                       ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                       ScrollViewer.CanContentScroll="True" 
                       SelectionChanged="FieldGrid_SelectionChanged" Margin="5,5,5,5">
-                    <DataGrid.DataContext>
-                        <XmlDataProvider Source="ConfigData.xml" XPath="/SourceTargetMatrix/Fields/Field"/>
-                    </DataGrid.DataContext>
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn x:Name="aSourceFieldName" MinWidth="100" Header="Source">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <ComboBox x:Name="SourceField" ItemsSource="{Binding XPath=//SourceField/@Name}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" 
+                        <DataGrid.DataContext>
+                            <XmlDataProvider Source="ConfigData.xml" XPath="/SourceTargetMatrix/Fields/Field"/>
+                        </DataGrid.DataContext>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn x:Name="aSourceFieldName" MinWidth="100" Header="Source">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <ComboBox x:Name="SourceField" ItemsSource="{Binding XPath=//SourceField/@Name}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" 
                                                 ToolTip="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}">
-                                        </ComboBox>
-                                    </Grid>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}"  
+                                            </ComboBox>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}"  
                                     ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="100" Width="*" >
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="ToolTip" Value="{Binding XPath=TargetName,Converter={StaticResource gridTooltipCreator}}" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
-                        </DataGridTextColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="0" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Visibility="Visible" IsEnabled="False">
-                    <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Show Results" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False"/>
-                    <Label x:Name="lbl1" Content="Method" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <ComboBox x:Name="comboMethod"  Margin="5,5,5,5" SelectedIndex="0" SelectionChanged="comboMethod_SelectionChanged" >
-                        <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
-                        <ComboBoxItem Content="Copy" ToolTip="Copy Source Field values to Target Fields."/>
-                        <ComboBoxItem Content="SetValue" ToolTip="Target Field values will be set to a constant value."/>
-                        <ComboBoxItem Content="ValueMap" ToolTip="Set Target values based on Source values."/>
-                        <ComboBoxItem Content="ChangeCase" ToolTip="Change the case of the source text strings."/>
-                        <ComboBoxItem Content="Concatenate" ToolTip="Concatenate Source values into a string."/>
-                        <ComboBoxItem Content="Left" ToolTip="Extract a number of characters from the left."/>
-                        <ComboBoxItem Content="Right" ToolTip="Extract a number of characters from the right."/>
-                        <ComboBoxItem Content="Substring" ToolTip="Extract a set of characters from a string."/>
-                        <ComboBoxItem Content="Split" ToolTip="Split a string into parts and use one part."/>
-                        <ComboBoxItem Content="ConditionalValue" ToolTip="Construct an If/Else Statement."/>
-                        <!--<ComboBoxItem Content="Expression" ToolTip="Enter any Python Expression."/>-->
-                    </ComboBox>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method0" Visibility="Hidden">
-                    <TextBlock VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,5,5,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Set Target Values to null."/></TextBlock>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method1" Visibility="Hidden">
-                    <TextBlock VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,5,0,0"  LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap">
+                                <DataGridTextColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="ToolTip" Value="{Binding XPath=TargetName,Converter={StaticResource gridTooltipCreator}}" />
+                                    </Style>
+                                </DataGridTextColumn.CellStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="0" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Visibility="Visible" IsEnabled="False">
+                        <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Show Results" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False"/>
+                        <Label x:Name="lbl1" Content="Method" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <ComboBox x:Name="comboMethod"  Margin="5,5,5,5" SelectedIndex="0" SelectionChanged="comboMethod_SelectionChanged" >
+                            <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
+                            <ComboBoxItem Content="Copy" ToolTip="Copy Source Field values to Target Fields."/>
+                            <ComboBoxItem Content="SetValue" ToolTip="Target Field values will be set to a constant value."/>
+                            <ComboBoxItem Content="ValueMap" ToolTip="Set Target values based on Source values."/>
+                            <ComboBoxItem Content="ChangeCase" ToolTip="Change the case of the source text strings."/>
+                            <ComboBoxItem Content="Concatenate" ToolTip="Concatenate Source values into a string."/>
+                            <ComboBoxItem Content="Left" ToolTip="Extract a number of characters from the left."/>
+                            <ComboBoxItem Content="Right" ToolTip="Extract a number of characters from the right."/>
+                            <ComboBoxItem Content="Substring" ToolTip="Extract a set of characters from a string."/>
+                            <ComboBoxItem Content="Split" ToolTip="Split a string into parts and use one part."/>
+                            <ComboBoxItem Content="ConditionalValue" ToolTip="Construct an If/Else Statement."/>
+                            <ComboBoxItem Content="DomainMap" ToolTip="Map Geodatabase Domain values."/>
+                            <!--<ComboBoxItem Content="Expression" ToolTip="Enter any Python Expression."/>-->
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method0" Visibility="Hidden">
+                        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,5,5,0" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap"><Run Text="Set Target Values to null."/></TextBlock>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method1" Visibility="Hidden">
+                        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,5,0,0"  LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap">
                         <Run Text="Copy Source Field values to Target Fields."/></TextBlock>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method2" Visibility="Hidden">
-                    <Label Content="Set Value" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method2Value" Margin="5,0,5,0" Text="" ToolTip="Set a Constant Value" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method3" Visibility="Hidden">
-                    <Label Content="Value Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <Button x:Name="ValueMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="ValueMapAdd_Click"/>
-                    <Button x:Name="ValueMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,25,5" Click="ValueMapRemove_Click"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method2" Visibility="Hidden">
+                        <Label Content="Set Value" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method2Value" Margin="5,0,5,0" Text="" ToolTip="Set a Constant Value" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method3" Visibility="Hidden">
+                        <Label Content="Value Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <Button x:Name="ValueMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="ValueMapAdd_Click"/>
+                        <Button x:Name="ValueMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,25,5" Click="ValueMapRemove_Click"/>
 
-                    <DataGrid x:Name="Method3Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
+                        <DataGrid x:Name="Method3Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
                       Height="Auto" Width="Auto" MinWidth="150">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn x:Name="Method3Sources" MinWidth="75" Header="Sources">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn x:Name="Method3Sources" MinWidth="75" Header="Sources">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="75" Header="Targets" Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <TextBox x:Name="Method3Target" Text="{Binding Path=Target}" TextChanged="Method3Target_TextChanged"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <Label Content="Otherwise:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method3Otherwise" Margin="5,5,5,5" ToolTip="Otherwise set to value" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method4" Visibility="Hidden">
-                    <Label Content="String Function" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <ComboBox x:Name="Method4Combo"  Margin="5,5,5,5" SelectedIndex="0" >
-                        <ComboBoxItem Content="Uppercase"/>
-                        <ComboBoxItem Content="Lowercase"/>
-                        <ComboBoxItem Content="Title"/>
-                        <ComboBoxItem Content="Capitalize"/>
-                    </ComboBox>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method5" Visibility="Hidden" ScrollViewer.CanContentScroll="True">
-                    <Label Content="Select Fields" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <Button x:Name="Method5ClearAll" Content="Clear" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False"  Width="60" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10,5" Click="Method5ClearAll_Click"/>
-                    <DataGrid x:Name="Method5Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
+                                <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="75" Header="Targets" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <TextBox x:Name="Method3Target" Text="{Binding Path=Target}" TextChanged="Method3Target_TextChanged"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Label Content="Otherwise:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method3Otherwise" Margin="5,5,5,5" ToolTip="Otherwise set to value" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method4" Visibility="Hidden">
+                        <Label Content="String Function" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <ComboBox x:Name="Method4Combo"  Margin="5,5,5,5" SelectedIndex="0" >
+                            <ComboBoxItem Content="Uppercase"/>
+                            <ComboBoxItem Content="Lowercase"/>
+                            <ComboBoxItem Content="Title"/>
+                            <ComboBoxItem Content="Capitalize"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method5" Visibility="Hidden" ScrollViewer.CanContentScroll="True">
+                        <Label Content="Select Fields" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <Button x:Name="Method5ClearAll" Content="Clear" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False"  Width="60" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10,5" Click="Method5ClearAll_Click"/>
+                        <DataGrid x:Name="Method5Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" 
                       Height="150" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn x:Name="Method5Checked" MinWidth="20" Header="Include">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <CheckBox x:Name="Method5Check" VerticalAlignment="Center"  HorizontalAlignment="Center" IsChecked="{Binding Path=Checked}" Checked="Method5Check_Checked" Unchecked="Method5Check_Checked" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn x:Name="Method5Field" Header="Fields" Binding="{Binding Path=Name}" MinWidth="100" IsReadOnly="True" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <Label Content="Separate With" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method5Value" Margin="5,0,5,5" Text="-" ToolTip="Separate values with a string (optional)" TextChanged="Method5Value_TextChanged" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method6" Visibility="Hidden">
-                    <TextBox Text="{Binding ElementName=Method6Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                    <Slider x:Name="Method6Slider" Minimum="0" Maximum="20" Margin="5,10,5,5" Value="2" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Number of Left Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method7" Visibility="Hidden">
-                    <TextBox Text="{Binding ElementName=Method7Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                    <Slider x:Name="Method7Slider" IsDirectionReversed="True" Maximum="20" Minimum="0" Margin="5,10,5,5" Value="18" SmallChange="1" Cursor="None" ToolTip="Number of Right Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method8" Visibility="Hidden">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn x:Name="Method5Checked" MinWidth="20" Header="Include">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <CheckBox x:Name="Method5Check" VerticalAlignment="Center"  HorizontalAlignment="Center" IsChecked="{Binding Path=Checked}" Checked="Method5Check_Checked" Unchecked="Method5Check_Checked" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn x:Name="Method5Field" Header="Fields" Binding="{Binding Path=Name}" MinWidth="100" IsReadOnly="True" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Label Content="Separate With" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method5Value" Margin="5,0,5,5" Text="-" ToolTip="Separate values with a string (optional)" TextChanged="Method5Value_TextChanged" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method6" Visibility="Hidden">
+                        <TextBox Text="{Binding ElementName=Method6Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider x:Name="Method6Slider" Minimum="0" Maximum="20" Margin="5,10,5,5" Value="2" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Number of Left Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method7" Visibility="Hidden">
+                        <TextBox Text="{Binding ElementName=Method7Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider x:Name="Method7Slider" IsDirectionReversed="True" Maximum="20" Minimum="0" Margin="5,10,5,5" Value="18" SmallChange="1" Cursor="None" ToolTip="Number of Right Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method8" Visibility="Hidden">
 
-                    <Label Content="Start at position" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox Text="{Binding ElementName=Method81Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                    <Slider x:Name="Method81Slider" Margin="5,10,5,5" Value="0" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Position to start at" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
-                    <Label Content="Number of characters" Margin="5,15,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox Text="{Binding ElementName=Method82Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                    <Slider x:Name="Method82Slider" Margin="5,10,5,5" Value="9" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Number of Characters to extract" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method9" Visibility="Hidden">
-                    <Label Content="Character to split with" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method91Value" Margin="5,0,5,0" Text="' '" ToolTip="String value to split the string with" TextChanged="Method91Value_TextChanged"/>
-                    <Label Content="Part Number to use (0 or higher)" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method92Value" Margin="5,0,5,0" Text="0" ToolTip="Each part will have a number starting with 0" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method10" Visibility="Hidden">
-                    <Label x:Name="Method10Label" Content="If value is:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <ComboBox x:Name="Method10Value" MinWidth="20"  Margin="5,5,5,5"  VerticalAlignment="Top" Width="50" HorizontalAlignment="Left">
-                        <ComboBoxItem Content="==" ToolTip="Equal To"/>
-                        <ComboBoxItem Content="!=" ToolTip="Not Equal To"/>
-                        <ComboBoxItem Content="&lt;" ToolTip="Less Than"/>
-                        <ComboBoxItem Content="&gt;" ToolTip="Greater Than"/>
-                    </ComboBox>
-                    <TextBox x:Name="Method101Value" Margin="65,-30,5,0" MinWidth="70" Text="" ToolTip="Condition to test" HorizontalAlignment="Left" />
-                    <Label Content="Then set value to:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method102Value" Margin="5,0,5,0" Text="" ToolTip="Value to set" />
-                    <Label Content="Else:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                    <TextBox x:Name="Method103Value" Margin="5,0,5,0" Text="" ToolTip="Else set to" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method11" Visibility="Hidden">
-                    <Label Content="Expression" Margin="5,5,5,5"/>
-                    <TextBox x:Name="Method11Value" Margin="5,0,5,5" ToolTip="Enter the expression" Height="100" TextWrapping="Wrap" AcceptsReturn="True"/>
-                </StackPanel>
+                        <Label Content="Start at position" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox Text="{Binding ElementName=Method81Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider x:Name="Method81Slider" Margin="5,10,5,5" Value="0" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Position to start at" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
+                        <Label Content="Number of characters" Margin="5,15,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox Text="{Binding ElementName=Method82Slider, Path=Value}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider x:Name="Method82Slider" Margin="5,10,5,5" Value="9" SmallChange="1" Ticks="{x:Null}" Cursor="None" ToolTip="Number of Characters to extract" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method9" Visibility="Hidden">
+                        <Label Content="Character to split with" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method91Value" Margin="5,0,5,0" Text="' '" ToolTip="String value to split the string with" TextChanged="Method91Value_TextChanged"/>
+                        <Label Content="Part Number to use (0 or higher)" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method92Value" Margin="5,0,5,0" Text="0" ToolTip="Each part will have a number starting with 0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method10" Visibility="Hidden">
+                        <Label x:Name="Method10Label" Content="If value is:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <ComboBox x:Name="Method10Value" MinWidth="20"  Margin="5,5,5,5"  VerticalAlignment="Top" Width="50" HorizontalAlignment="Left">
+                            <ComboBoxItem Content="==" ToolTip="Equal To"/>
+                            <ComboBoxItem Content="!=" ToolTip="Not Equal To"/>
+                            <ComboBoxItem Content="&lt;" ToolTip="Less Than"/>
+                            <ComboBoxItem Content="&gt;" ToolTip="Greater Than"/>
+                        </ComboBox>
+                        <TextBox x:Name="Method101Value" Margin="65,-30,5,0" MinWidth="70" Text="" ToolTip="Condition to test" HorizontalAlignment="Left" />
+                        <Label Content="Then set value to:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method102Value" Margin="5,0,5,0" Text="" ToolTip="Value to set" />
+                        <Label Content="Else:" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <TextBox x:Name="Method103Value" Margin="5,0,5,0" Text="" ToolTip="Else set to" />
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method11" Visibility="Visible">
+                        <Label Content="Domain Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
+                        <Button x:Name="ImportTarget" Content="Import Domains..." ToolTip="Import Domains from both datasets and attempt to match values" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,5" Click="ImportTarget_Click"/>
+                        <Button x:Name="ImportSource" Content="Import Source..." ToolTip="Load Domain values from source dataset only" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="130,-35,0,5" Click="ImportSource_Click" />
 
-                <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="2" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="100" ScrollViewer.HorizontalScrollBarVisibility="Auto">
-                    <Button x:Name="MethodPanelApply" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="MethodPanelApply_Click"/>
-                    <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  
+                        <DataGrid x:Name="Method11Grid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
+                          AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
+                          MinWidth="250" Width="400" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                          SelectionChanged="Method11Grid_SelectionChanged" >
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn x:Name="Method11Sources" MinWidth="120" Width="195" Header="Source Values" CanUserResize="True" CanUserSort="True" >
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <ComboBox x:Name="Method11Source"  Margin="5,5,5,5" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Id" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
+                                                </ComboBox>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn x:Name="Method11Targets" MinWidth="120" Header="Target Values" Width="195" CanUserResize="True" CanUserSort="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <TextBox x:Name="Method11Target" Text="{Binding Path=Target}" TextChanged="Method11Target_TextChanged" ToolTip="{Binding Path=TargetTooltip}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+
+                    <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="2" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="100" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                        <Button x:Name="MethodPanelApply" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="MethodPanelApply_Click"/>
+                        <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  
                       AutoGenerateColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       Height="0" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged" Margin="0,0,0,0">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="100" IsReadOnly="True" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </StackPanel>
-            </Grid>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="200" IsReadOnly="True" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
         </TabItem>
     </TabControl>
 </UserControl>

@@ -1399,8 +1399,9 @@ namespace DataAssistant
                     //object values = grid.Items[grid.SelectedIndex];
                     DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
                     DomainMapRow rowSource = grid.Items.GetItemAt(cb.SelectedIndex) as DomainMapRow;
-                    if (row!=null)
+                    if (row!=null) // if there is a matching source domain value for the selection
                     {
+                        // Then update the row DomainMapValues and set the tooltip to the value for the code 
                         row.SourceSelectedItem = cb.SelectedIndex;
                         row.SourceTooltip = rowSource.SourceTooltip;
                         cb.ToolTip = rowSource.SourceTooltip;
@@ -1433,8 +1434,9 @@ namespace DataAssistant
                         for (int s = 0; s < row.Source.Count; s++)
                         {
                             string dvalue = row.Source[s].Id;
-                            if (tb.Text.Equals(dvalue))
+                            if (tb.Text.Equals(dvalue)) // if there is a match to a source domain value 
                             {
+                                // then updaste the tooltip to domain value to provide feedback
                                 tb.ToolTip = row.Source[s].Tooltip;
                                 row.TargetTooltip = row.Source[s].Tooltip;
                             }
@@ -1443,34 +1445,6 @@ namespace DataAssistant
                     }
                 }
             }
-        }
-        private void Method11TextChanged(object sender, string sourcetarget)
-        {
-            //TextBox txt = sender as TextBox;
-
-            //if (Method11Grid.SelectedIndex == -1)
-            //    return;
-
-            //if (txt != null)
-            //{
-            //    for (int i = 0; i < Method11Grid.Items.Count; i++)
-            //    {
-            //        if (i == Method11Grid.SelectedIndex)
-            //        {
-            //            object item = Method11Grid.Items.GetItemAt(i);
-            //            ValueMapRow row = item as ValueMapRow;
-            //            if (row != null)
-            //            {
-            //                if (sourcetarget == "Source")
-            //                    row.Source = txt.Text;
-            //                else if (sourcetarget == "Target")
-            //                    row.Target = txt.Text;
-            //            }
-            //        }
-            //    }
-
-            //}
-
         }
 
     }

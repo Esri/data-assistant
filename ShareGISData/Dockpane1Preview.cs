@@ -447,6 +447,7 @@ namespace DataAssistant
                                 for (int r = 0; r < Method11Grid.Items.Count; r++)
                                 {
                                     // domain map replace function
+                                    // match source code to target code
                                     DomainMapRow row = Method11Grid.Items.GetItemAt(r) as DomainMapRow;
                                     if (att.InnerText.ToString() == row.Source[row.SourceSelectedItem].Id)
                                     {

@@ -27,32 +27,33 @@ using System.Windows.Controls;
 
 namespace DataAssistant
 {
-    public class ConcatRow
+    // Data Classes used for various methods
+    public class ConcatRow // concatenate method
     {
         public bool Checked { get; set; }  
         public string Name  { get; set; }
     }
-    public class ValueMapRow
+    public class ValueMapRow // ValueMap method
     {
-        public string Source { get; set; }
-        public string Target { get; set; }
+        public string Source { get; set; } // source values
+        public string Target { get; set; } // target values to set
     }
-    public class DomainMapRow
+    public class DomainMapRow // for DomainMap method
     {
-        public List<ComboData> Source { get; set; }
-        public int SourceSelectedItem { get; set; }
-        public string SourceTooltip { get; set; }
-        public string Target { get; set; }
-        public string TargetTooltip { get; set; }
+        public List<ComboData> Source { get; set; } // combo items 
+        public int SourceSelectedItem { get; set; } // selected item num
+        public string SourceTooltip { get; set; } // tooltip on source control - show domain value for code
+        public string Target { get; set; } // target textbox, will try to match to source domain values, always display all target values
+        public string TargetTooltip { get; set; } // tooltip for target, wil be set to matching domain value if available
     }
-    public class PreviewRow
+    public class ComboData // combobox data for DomainMap
+    {
+        public string Id { get; set; } // domain code
+        public string Value { get; set; } // domain value
+        public string Tooltip { get; set; } // set tooltip - just using value seems like the best idea
+    }
+    public class PreviewRow // preview rows
     {
         public string Value { get; set; }
-    }
-    public class ComboData
-    {
-        public string Id { get; set; }
-        public string Value { get; set; }
-        public string Tooltip { get; set; }
     }
 }

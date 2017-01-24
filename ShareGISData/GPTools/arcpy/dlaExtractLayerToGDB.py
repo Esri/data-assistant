@@ -108,66 +108,69 @@ def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):
 def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     result = True
     xmlFields = xmlDoc.getElementsByTagName("Field")
-    dla.addMessage("Exporting Layer from " + source)
+    dla.addMessage("Exporting Data from " + source)
     whereClause = ""
     if rowLimit != None:
-        #try:
         whereClause = getObjectIdWhereClause(source,rowLimit)
-        #except:
-        #    dla.addMessage("Unable to obtain where clause to Preview " + source + ", continuing with all records")
             
     if whereClause != '' and whereClause != ' ':
-        #dla.addMessage("rowLimit " + str(rowLimit))
         dla.addMessage("Where " + str(whereClause))
     sourceName = dla.getSourceName(xmlDoc)
     viewName = sourceName + "_View"
     dla.addMessage(viewName)
     
     targetRef = getSpatialReference(xmlDoc,"Target")
-    #sourceRef = getSpatialReference(xmlDoc,"Source")
+    sourceRef = getSpatialReference(xmlDoc,"Source")
     
-    if targetRef != '':
-        if datasetType == 'Table':
-            isTable = True
-        else:
-            isTable = False
+    if datasetType == 'Table':
+        isTable = True
+    elif targetRef != '':
+        isTable = False
 
-        arcpy.env.workspace = workspace
-        if isTable:
-            view = dla.makeTableView(dla.workspace,source,viewName,whereClause,xmlFields)
-        elif not isTable:
-            view = dla.makeFeatureView(dla.workspace,source,viewName,whereClause,xmlFields)
+    arcpy.env.workspace = workspace
+    if isTable:
+        view = dla.makeTableView(dla.workspace,source,viewName,whereClause,xmlFields)
+    elif not isTable:
+        view = dla.makeFeatureView(dla.workspace,source,viewName,whereClause,xmlFields)
 
-        dla.addMessage("View Created")            
-        srcCount = arcpy.GetCount_management(view).getOutput(0)
-        dla.addMessage(str(srcCount) + " source rows")
-        if str(srcCount) == '0':
-            result = False
-            dla.addError("Failed to extract " + sourceName + ", Nothing to export")
-        else:
-            arcpy.env.preserveGlobalIds = False # need to run this way until support added for GlobalIDs
-            #dla.addMessage("names: " + sourceName + "|" + targetName)
-            arcpy.env.overwriteOutput = True
-            fieldMap = []
+    dla.addMessage("View Created")            
+    srcCount = arcpy.GetCount_management(view).getOutput(0)
+    dla.addMessage(str(srcCount) + " source rows")
+    if str(srcCount) == '0':
+        result = False
+        dla.addError("Failed to extract " + sourceName + ", Nothing to export")
+    else:
+        arcpy.env.overwriteOutput = True
+        ds = workspace + os.sep + targetName
+
+        if dla.processGlobalIds(xmlDoc): # both datasets have globalids and the spatial references match
+            arcpy.env.preserveGlobalIds = True # try to preserve
+            addMessage("Proceeding to copy rows and attempt to preserve GlobalIDs")
             if isTable:
-                if not createDataset('Table',workspace,targetName,xmlDoc,source,None):
+                arcpy.CopyRows_management(in_rows=view,out_table=ds)
+            else:
+                arcpy.CopyFeatures_management(in_features=view,out_feature_class=ds)
+        else:
+            arcpy.env.preserveGlobalIds = False # try to preserve
+            if isTable:
+                if not createDataset('Table',workspace,targetName,xmlDoc,source,None,None):
                     arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
                     return False
+
             elif not isTable:
-                if not createDataset('FeatureClass',workspace,targetName,source,targetRef):
+                if not createDataset('FeatureClass',workspace,targetName,xmlDoc,source,sourceRef,targetRef):
                     arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
                     return False
-
-            ds = workspace + os.sep + targetName
             fieldMap = getFieldMap(view,ds)
             arcpy.Append_management(view,ds,schema_type="NO_TEST",field_mapping=fieldMap)
-            dla.addMessage(arcpy.GetMessages(2)) # only serious errors
-            count = arcpy.GetCount_management(ds).getOutput(0)
-            dla.addMessage(str(count) + " source rows exported to " + targetName)
-            if str(count) == '0':
-                result = False
-                dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
-                dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
+
+        dla.addMessage(arcpy.GetMessages(2)) # only serious errors
+        count = arcpy.GetCount_management(ds).getOutput(0)
+        dla.addMessage(str(count) + " source rows exported to " + targetName)
+        if str(count) == '0':
+            result = False
+            dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
+            dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
     return result
 
 def getFieldMap(view,ds):
@@ -183,7 +186,7 @@ def getFieldMap(view,ds):
                 fieldMap.replaceFieldMap(i,fmap)
     return fieldMap
 
-def createDataset(dsType,workspace,targetName, xmlDoc,source,targetRef):
+def createDataset(dsType,workspace,targetName,xmlDoc,source,sourceRef,targetRef):
 
     if source.lower().endswith('.lyrx'):
         if dsType == 'Table':
@@ -193,7 +196,7 @@ def createDataset(dsType,workspace,targetName, xmlDoc,source,targetRef):
 
         sourceFields = xmlDoc.getElementsByTagName("SourceField")
         for sfield in sourceFields:
-            #<SourceField AliasName="FIPS_CNTRY" Length="2" Name="SampleData.FIPS_CNTRY" Type="String" />
+            # <SourceField AliasName="FIPS_CNTRY" Length="2" Name="SampleData.FIPS_CNTRY" Type="String" />
             fname = sfield.getAttributeNode('Name').nodeValue
             if fname.count('.') > 0:
                 fname = fname.replace('.','_')
@@ -246,11 +249,6 @@ def getObjectIdWhereClause(table,rowLimit):
     
     for row in searchCursor:
         ids.append(row[0]) # sql server db does not always return OBJECTIDs sorted, no shortcut
-        #if i < rowLimit:
-        #    dla.addMessage("row " + str(i) + ':' + str(row[0]))
-        #elif i == rowLimit:
-        #    break
-        #i += 1
 
     if len(ids) > 0:
         ids.sort() # sort the list and take the rowLimit number of rows

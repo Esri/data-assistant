@@ -136,7 +136,7 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
             else:
                 success = False       
         else:
-            success = dla.doInlineAppend(dlaTable,target)
+            success = dla.appendRows(dlaTable,target,'')
     return success
 
 def getWhereClause(xmlDoc):

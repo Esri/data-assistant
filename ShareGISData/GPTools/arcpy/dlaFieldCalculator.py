@@ -195,6 +195,8 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                         val = dla.getNodeValue(field,"SetValue")
                     elif method == "ValueMap":
                         val = getValueMap(row,names,sourceValue,field)
+                    elif method == "DomainMap":
+                        val = getValueMap(row,names,sourceValue,field)
                     elif method == "ChangeCase":
                         case = dla.getNodeValue(field,method)                    
                         expression = getChangeCase(sourceValue,case)
@@ -380,6 +382,42 @@ def getValueMap(row,names,sourceValue,field):
             success = False
             err = "Unable to find map value (otherwise) for " + str(targetName) + ", value = " + str(sourceValue)
             dla.addError(err)
+    return newValue
+
+def getValueMap(row,names,sourceValue,field):
+
+    # run value map function for a row
+    valueMaps = field.getElementsByTagName("DomainMap")
+    newValue = None
+    found = False
+    otherwise = None
+    for valueMap in valueMaps:
+        sourceValues = []
+        sourceValues = valueMap.getElementsByTagName("sValue")
+        targetValues = []
+        targetValues = valueMap.getElementsByTagName("tValue")
+        i = 0
+        for val in sourceValues:
+            sValue = dla.getTextValue(val)
+            try:
+                sourceTest = float(sValue)
+            except ValueError:
+                sourceTest = str(sValue)
+                if sourceTest == '':
+                    sourceTest = None
+            if sourceValue == sourceTest or sourceValue == sValue: # this will check numeric and non-numeric equivalency for current values in maps
+                found = True
+                try:
+                    newValue = dla.getTextValue(targetValues[i])
+                except:
+                    dla._errCount += 1
+                    success = False
+                    err = "Unable to map values for " + sourceValue + ", value = " + str(newValue)
+                    dla.showTraceback()
+                    dla.addError(err)
+                    print(err)
+            i = i + 1
+
     return newValue
 
 def getExpression(row,names,expression):

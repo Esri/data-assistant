@@ -45,8 +45,8 @@ _noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 
-_ignoreFields = ['FID','OBJECTID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','ShapeLength','ShapeArea','STLENGTH()','STAREA()','raster']
-_ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalID','RasterFieldName']
+_ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','ShapeLength','ShapeArea','STLENGTH()','STAREA()','raster','GLOBALID']
+_ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','globalIDFieldName']
 
 # helper functions
 def timer(input):
@@ -132,13 +132,13 @@ def getIgnoreFieldNames(desc):
 
     ignore = _ignoreFields
     for name in _ignoreFieldNames:
-        val = getFieldExcept(desc,name)
+        val = getFieldByName(desc,name)
         if val != None:
             val = val[val.rfind('.')+1:] 
             ignore.append(val)
     return ignore
 
-def getFieldExcept(desc,name):
+def getFieldByName(desc,name):
     val = None
     try:
         val = eval("desc." + name)
@@ -350,11 +350,20 @@ def appendRows(sourceTable,targetTable,expr):
     sTable = sourceTable[sourceTable.rfind("\\")+1:]
     viewName = sTable + "_ViewAppend"
     desc = arcpy.Describe(targetTable)
-    viewName = makeView(desc.dataElementType,workspace,sourceTable,viewName,expr,[])
+    if expr != None and expr != '':
+        viewName = makeView(desc.dataElementType,workspace,sourceTable,viewName,expr,[])
+    else:
+        viewName = sourceTable
 
     numSourceFeat = arcpy.GetCount_management(viewName).getOutput(0)
     addMessage("Appending " + sTable + " TO " + targTable)
-    result = arcpy.Append_management(viewName,targetTable,"NO_TEST")
+    try:
+        result = arcpy.Append_management(inputs=viewName,target=targetTable,schema_type='NO_TEST')
+    except:
+        msgs = arcpy.GetMessages()
+        addError(msgs)            
+        return False
+
     addMessageLocal(targTable + " rows Appended ")
 
     numTargetFeat = arcpy.GetCount_management(targetTable).getOutput(0)
@@ -508,7 +517,7 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
             tupper = targetName.upper()
             for nm in attrs:
                 nupper = nm.upper()
-                if tupper == nupper and nupper != 'GLOBALID' and nm != _noneFieldName: # if case insensitive match, note GlobalID cannot be renamed
+                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName: # if case insensitive match, note GlobalID and others cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
@@ -869,36 +878,41 @@ def getTempTable(name):
     tname = workspace + os.sep + name
     return tname
 
-def doInlineAppend(source,target):
+#def doInlineAppend(source,target):
     # perform the append from a source table to a target table
-    success = False
-    if arcpy.Exists(target):
-        numSourceFeat = arcpy.GetCount_management(source).getOutput(0)
+ #   success = False
+  #  if arcpy.Exists(target):
+   #     numSourceFeat = arcpy.GetCount_management(source).getOutput(0)
         #addMessage("Truncating  "  + target)
         #arcpy.TruncateTable_management(target)
-        addMessage("Appending " + source + " TO " + target)
-        result = arcpy.Append_management(source,target, "NO_TEST")
-        numTargetFeat = arcpy.GetCount_management(target).getOutput(0)
-        addMessage(numSourceFeat + " features in source dataset")
-        addMessage(numTargetFeat + " features in target dataset")
-        msgs = arcpy.GetMessages()
-        arcpy.AddMessage(msgs)
-        success = True
+    #    addMessage("Appending " + source + " TO " + target)
+     #   try:
+      #      result = arcpy.Append_management(inputs=source,target=target,schema_type=None)
+      #  except:
+      #      msgs = arcpy.GetMessages()
+      #      addError(msgs)            
+      #      return False
+      #  numTargetFeat = arcpy.GetCount_management(target).getOutput(0)
+      #  addMessage(numSourceFeat + " features in source dataset")
+      #  addMessage(numTargetFeat + " features in target dataset")
+      #  msgs = arcpy.GetMessages()
+      #  arcpy.AddMessage(msgs)
+      #  success = True
 
-        if int(numTargetFeat) != int(numSourceFeat):
-            arcpy.AddMessage("WARNING: Different number of rows in Target table, " + numTargetFeat )
-        if int(numTargetFeat) == 0:
-            addError("ERROR: 0 Features in target dataset")
-            success = False
-                       
-        if debug:
-            addMessage("completed")
-    else:
-        addMessage("Target: " + target + " does not exist")
-        success = False
+      #  if int(numTargetFeat) != int(numSourceFeat):
+      #      arcpy.AddMessage("WARNING: Different number of rows in Target table, " + numTargetFeat )
+      #  if int(numTargetFeat) == 0:
+      #      addError("ERROR: 0 Features in target dataset")
+      #      success = False
+      #                 
+      #  if debug:
+      #      addMessage("completed")
+    #else:
+   #     addMessage("Target: " + target + " does not exist")
+   #     success = False
 
     #cleanupGarbage()
-    return success
+    #return success
 
 def setWorkspace():
     global workspace
@@ -923,7 +937,7 @@ def getLayerVisibility(layer,xmlFileName):
     xmlDoc = getXmlDoc(xmlFileName)
     targets = xmlDoc.getElementsByTagName("TargetName")
     names = [collect_text(node).upper() for node in targets]
-    esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH','GlobalID','GLOBALID']
+    esrinames = _ignoreFields # ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH','GlobalID','GLOBALID']
     desc = arcpy.Describe(layer)
     if desc.dataType == "FeatureLayer":
         fieldInfo = desc.fieldInfo
@@ -1038,3 +1052,59 @@ def isTable(ds):
     else:
         return False
 
+def getSpatialReferenceString(xmlDoc,lyrtype):
+    sprefstr = ''
+    # try factoryCode first
+    try:
+        sprefstr = getNodeValue(xmlDoc,lyrtype + "FactoryCode")
+    except:
+        try:
+            sprefstr = getNodeValue(xmlDoc,lyrtype + "SpatialReference")
+        except:
+            pass
+    return sprefstr
+
+def checkGlobalIdIndex(desc,gidName):
+    valid = False
+    for index in desc.indexes:
+        try:
+            if index.isUnique and index.fields[0].name == gidName: # index must be on correct field and unique
+                valid = True
+        except:
+            pass
+    return valid
+
+def processGlobalIds(xmlDoc):
+
+    process = False
+
+    source = getNodeValue(xmlDoc,'Source')
+    descs = arcpy.Describe(source)
+
+    target = getNodeValue(xmlDoc,'Target')
+    desct = arcpy.Describe(target)
+
+    sGlobalId = getFieldByName(descs,'globalIDFieldName')
+    tGlobalId = getFieldByName(desct,'globalIDFieldName')
+
+    if sGlobalId != None and tGlobalId != None:
+        try:
+            if arcpy.ListFields(source,sGlobalId,'GlobalID')[0].type == arcpy.ListFields(target,tGlobalId,'GlobalID')[0].type:
+                addMessage("Source and Target datasets both have GlobalID fields")
+                sref = getSpatialReferenceString(xmlDoc,'Source')
+                tref = getSpatialReferenceString(xmlDoc,'Target')
+                if tref == sref:
+                    ids = checkGlobalIdIndex(descs,sGlobalId)
+                    idt = checkGlobalIdIndex(desct,tGlobalId)
+                    errmsg = "Dataset does not have a valid index on GlobalID field for preserving GlobalIDs"
+                    if not ids:
+                        addMessage("Source " + errmsg)
+                    if not idt:
+                        addMessage("Target " + errmsg)
+
+                    if ids and idt:
+                        process = True      
+        except:
+            pass
+
+    return process  

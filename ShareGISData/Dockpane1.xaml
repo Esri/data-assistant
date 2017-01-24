@@ -297,7 +297,7 @@
                         <TextBox x:Name="Method103Value" Margin="5,0,5,0" Text="" ToolTip="Else set to" />
                     </StackPanel>
                     
-                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method11" Visibility="Visible">
+                    <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method11" Visibility="Hidden">
                         <Label Content="Domain Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
                         <Button x:Name="ImportTarget" Content="Import Domains..." ToolTip="Import Domains from both datasets and attempt to match values" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,5" Click="ImportTarget_Click"/>
                         <Button x:Name="ImportSource" Content="Import Source..." ToolTip="Load Domain values from source dataset only" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="130,-35,0,5" Click="ImportSource_Click" />

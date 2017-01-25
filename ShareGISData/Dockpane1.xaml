@@ -200,21 +200,21 @@
                         <Button x:Name="ValueMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="ValueMapAdd_Click"/>
                         <Button x:Name="ValueMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,25,5" Click="ValueMapRemove_Click"/>
 
-                        <DataGrid x:Name="Method3Grid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
+                        <DataGrid x:Name="Method3Grid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
                       Height="Auto" Width="Auto" MinWidth="150">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn x:Name="Method3Sources" MinWidth="75" Header="Sources">
+                                <DataGridTemplateColumn x:Name="Method3Sources" MinWidth="100" Header="Sources" CanUserResize="True">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
-                                                <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged"/>
+                                                <TextBox x:Name="Method3Source" Text="{Binding Path=Source}" TextChanged="Method3Source_TextChanged" />
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="75" Header="Targets" Width="*">
+                                <DataGridTemplateColumn x:Name="Method3Targets" MinWidth="100" Header="Targets" Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
@@ -333,11 +333,11 @@
 
                     <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="2" Visibility="Visible" VerticalAlignment="Bottom" MinWidth="100" ScrollViewer.HorizontalScrollBarVisibility="Auto">
                         <Button x:Name="MethodPanelApply" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="MethodPanelApply_Click"/>
-                        <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  
-                      AutoGenerateColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                        <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  
+                      AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       Height="0" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged" Margin="0,0,0,0">
                             <DataGrid.Columns>
-                                <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="200" IsReadOnly="True" Width="*"/>
+                                <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="200" IsReadOnly="True" Width="400" CanUserResize="True"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>

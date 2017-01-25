@@ -195,10 +195,10 @@ def doPublishHttp(source,targetUrl,expr,useReplaceSettings):
         arcpy.SetProgressorLabel("Deleting Existing Rows")
         retval = deleteRows(source,targetUrl,expr)
     if retval == True:
-        #retval = addRows(source,targetUrl,expr)
         arcpy.SetProgressor("default","Appending Rows")
         arcpy.SetProgressorLabel("Appending Rows")
-        retval = dla.appendRows(source,targetUrl,expr)
+        #retval = dla.appendRows(source,targetUrl,expr) does this work from a local file gdb? I can't make it...
+        retval = addRows(source,targetUrl,expr)
 
     return retval
 

@@ -120,8 +120,6 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     dla.addMessage(viewName)
     
     targetRef = getSpatialReference(xmlDoc,"Target")
-    sourceRef = getSpatialReference(xmlDoc,"Source")
-    
     if datasetType == 'Table':
         isTable = True
     elif targetRef != '':
@@ -147,18 +145,18 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             arcpy.env.preserveGlobalIds = True # try to preserve
             addMessage("Proceeding to copy rows and attempt to preserve GlobalIDs")
             if isTable:
-                arcpy.CopyRows_management(in_rows=view,out_table=ds)
+                arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
             else:
-                arcpy.CopyFeatures_management(in_features=view,out_feature_class=ds)
+                arcpy.FeatureClassToFeatureClass_conversion(in_features=view,out_path=workspace,out_name=targetName)
         else:
             arcpy.env.preserveGlobalIds = False # try to preserve
             if isTable:
-                if not createDataset('Table',workspace,targetName,xmlDoc,source,None,None):
+                if not createDataset('Table',workspace,targetName,xmlDoc,source,None):
                     arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
                     return False
 
             elif not isTable:
-                if not createDataset('FeatureClass',workspace,targetName,xmlDoc,source,sourceRef,targetRef):
+                if not createDataset('FeatureClass',workspace,targetName,xmlDoc,source,targetRef):
                     arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
                     return False
             fieldMap = getFieldMap(view,ds)
@@ -186,7 +184,7 @@ def getFieldMap(view,ds):
                 fieldMap.replaceFieldMap(i,fmap)
     return fieldMap
 
-def createDataset(dsType,workspace,targetName,xmlDoc,source,sourceRef,targetRef):
+def createDataset(dsType,workspace,targetName,xmlDoc,source,targetRef):
 
     if source.lower().endswith('.lyrx'):
         if dsType == 'Table':

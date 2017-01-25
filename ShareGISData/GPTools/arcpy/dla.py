@@ -1074,6 +1074,31 @@ def checkGlobalIdIndex(desc,gidName):
             pass
     return valid
 
+def checkDatabaseTypes(sourceWS,targetWS):
+    # check database types - SQL source db and SQL gdb as target
+    supported = False
+    try:
+        smsg = 'Workspace type does not support preserving GlobalIDs'
+
+        wsType = arcpy.Describe(sourceWS).workspaceType
+        if wsType != 'RemoteDatabase':
+            addMessage(wsType + ' Source ' + smsg)
+            supported = False
+        else:
+            supported = True
+
+        wsType = arcpy.Describe(targetWS).workspaceType
+        if wsType != 'RemoteDatabase':
+            addMessage(wsType + ' Target ' + smsg)
+            supported = False
+        else:
+            supported = True
+    except:
+        supported = False
+
+    return supported
+
+
 def processGlobalIds(xmlDoc):
 
     process = False
@@ -1090,20 +1115,29 @@ def processGlobalIds(xmlDoc):
     if sGlobalId != None and tGlobalId != None:
         try:
             if arcpy.ListFields(source,sGlobalId,'GlobalID')[0].type == arcpy.ListFields(target,tGlobalId,'GlobalID')[0].type:
-                addMessage("Source and Target datasets both have GlobalID fields")
+                addMessage('Source and Target datasets both have GlobalID fields')
+
+                supportedWS = checkDatabaseTypes(descs.path,desct.path)
+                if not supportedWS:
+                    addMessage("Workspace types prevent preserving GlobalIDs")
+                    return process
+
                 sref = getSpatialReferenceString(xmlDoc,'Source')
                 tref = getSpatialReferenceString(xmlDoc,'Target')
                 if tref == sref:
                     ids = checkGlobalIdIndex(descs,sGlobalId)
                     idt = checkGlobalIdIndex(desct,tGlobalId)
-                    errmsg = "Dataset does not have a valid index on GlobalID field for preserving GlobalIDs"
+
+                    errmsg = 'Dataset does not have a valid index on GlobalID field for preserving GlobalIDs'
                     if not ids:
-                        addMessage("Source " + errmsg)
+                        addMessage('Source ' + errmsg)
                     if not idt:
-                        addMessage("Target " + errmsg)
+                        addMessage('Target ' + errmsg)
 
                     if ids and idt:
                         process = True      
+                else:
+                    addMessage('Spatial References do not match, unable to preserve GlobalIDs')
         except:
             pass
 

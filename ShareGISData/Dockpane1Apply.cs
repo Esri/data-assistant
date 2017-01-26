@@ -165,7 +165,10 @@ namespace DataAssistant
                         }
                     }
                     System.Xml.XmlNode othnode = _xml.CreateElement("Otherwise");
-                    othnode.InnerText = Method3Otherwise.Text;
+                    string oth = Method3Otherwise.Text;
+                    if (oth.StartsWith("\n ") || oth.Equals(""))
+                        oth = "None";
+                    othnode.InnerText = oth;
                     noder.AppendChild(othnode);
                     saveFieldGrid();
                 }

@@ -196,7 +196,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     elif method == "ValueMap":
                         val = getValueMap(row,names,sourceValue,field)
                     elif method == "DomainMap":
-                        val = getValueMap(row,names,sourceValue,field)
+                        val = getDomainMap(row,names,sourceValue,field)
                     elif method == "ChangeCase":
                         case = dla.getNodeValue(field,method)                    
                         expression = getChangeCase(sourceValue,case)
@@ -358,7 +358,7 @@ def getValueMap(row,names,sourceValue,field):
                 sourceTest = float(sValue)
             except ValueError:
                 sourceTest = str(sValue)
-                if sourceTest == '':
+                if sourceTest == '' or sourceTest == 'None':
                     sourceTest = None
             #if mapExpr and mapExpr != "":
             #    sourceValue = calcValue(row,names,mapExpr)
@@ -375,7 +375,9 @@ def getValueMap(row,names,sourceValue,field):
                     print(err)
             i = i + 1
     if not found:
-        if str(otherwise) != "None":
+        if str(otherwise) != "None" or otherwise == None:
+            if otherwise.startswith("\n ") or otherwise == "":
+                otherwise = None
             newValue = otherwise
         else:
             dla._errCount += 1
@@ -384,9 +386,9 @@ def getValueMap(row,names,sourceValue,field):
             dla.addError(err)
     return newValue
 
-def getValueMap(row,names,sourceValue,field):
+def getDomainMap(row,names,sourceValue,field):
 
-    # run value map function for a row
+    # run domain map function for a row
     valueMaps = field.getElementsByTagName("DomainMap")
     newValue = None
     found = False
@@ -403,7 +405,7 @@ def getValueMap(row,names,sourceValue,field):
                 sourceTest = float(sValue)
             except ValueError:
                 sourceTest = str(sValue)
-                if sourceTest == '':
+                if sourceTest == '' or sourceTest == 'None':
                     sourceTest = None
             if sourceValue == sourceTest or sourceValue == sValue: # this will check numeric and non-numeric equivalency for current values in maps
                 found = True

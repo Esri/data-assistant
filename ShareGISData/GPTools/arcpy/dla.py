@@ -35,7 +35,7 @@ debug = False
 startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
-maxErrorCount = 20 # max errors before a script will stop
+maxErrorCount = 200000 # max errors before a script will stop
 _errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
@@ -342,9 +342,6 @@ def deleteRows(table,expr):
 def appendRows(sourceTable,targetTable,expr):
     # append rows in feature class with a where clause
     workspace = sourceTable[:sourceTable.rfind("\\")]
-    arcpy.env.Workspace = workspace
-    if debug:
-        addMessageLocal(tableName)
     retcode = False
     targTable = targetTable[targetTable.rfind("\\")+1:]
     sTable = sourceTable[sourceTable.rfind("\\")+1:]
@@ -1142,3 +1139,38 @@ def processGlobalIds(xmlDoc):
             pass
 
     return process  
+
+def getStagingName(source,target):
+    stgName = getDatasetName(source) + "_" + getDatasetName(target)
+    return stgName
+
+def removeStagingElement(xmlDoc):
+    # remove staging element from xmlDoc
+    if len(xmlDoc.getElementsByTagName('Staged')) > 0:
+        root = xmlDoc.getElementsByTagName('Datasets')[0]
+        nodes = root.getElementsByTagName('Staged')
+        for node in nodes:
+            root.removeChild(node)
+
+    return xmlDoc
+
+def insertStagingElement(xmlDoc):
+    # insert an element to indicate that the data has been staged
+    if len(xmlDoc.getElementsByTagName('Staged')) == 0:
+        root = xmlDoc.getElementsByTagName('Datasets')[0]
+        staged = xmlDoc.createElement("Staged")
+        # set source and target elements
+        nodeText = xmlDoc.createTextNode('true')
+        staged.appendChild(nodeText)
+        root.appendChild(staged)  
+
+    return xmlDoc
+
+def isStaged(xmlDoc):
+    # insert an element to indicate that the data has been staged
+    if len(xmlDoc.getElementsByTagName('Staged')) > 0:
+        staged = True
+    else:
+        staged = False
+
+    return staged

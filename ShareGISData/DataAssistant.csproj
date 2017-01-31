@@ -87,7 +87,7 @@
       <SubType>Designer</SubType>
     </AddInContent>
     <AddInContent Include="Images\AddInDesktop16.png" />
-    <AddInContent Include="Images\AddInDesktop32.png" />
+    <AddInContent Include="Images\StageData.png" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataClasses.cs" />
@@ -141,6 +141,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dlaReplaceByField.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GPTools\arcpy\dlaStage.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\FieldMatcher.xsl">

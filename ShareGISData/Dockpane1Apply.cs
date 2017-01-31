@@ -419,11 +419,11 @@ namespace DataAssistant
                             }
 
                             System.Xml.XmlNode tnode = _xml.CreateElement("tValue");
-                            tnode.InnerText = row.Target;
+                            tnode.InnerText = row.Target[row.TargetSelectedItem].Id;
                             noder.AppendChild(tnode);
 
                             tnode = _xml.CreateElement("tLabel");
-                            tnode.InnerText = row.TargetTooltip;
+                            tnode.InnerText = row.Target[row.TargetSelectedItem].Tooltip;
                             noder.AppendChild(tnode);
                         }
                     }

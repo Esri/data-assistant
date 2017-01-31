@@ -491,13 +491,16 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
         if retVal != targetValue:
             if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
                 # if the type is numeric then try to cast to float
-                try:
-                    valTest = float(val)
-                    retVal = val
-                except:
-                    err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
-                    dla.addError(err)
-                    dla._errCount += 1
+                if str(val) == 'None':
+                    retVal = None
+                else:
+                    try:
+                        valTest = float(val)
+                        retVal = val
+                    except:
+                        err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
+                        dla.addError(err)
+                        dla._errCount += 1
             elif ftypes[idx] == 'String':
                 # if a string then cast to string or encode utf-8
                 if type(val) == 'str':

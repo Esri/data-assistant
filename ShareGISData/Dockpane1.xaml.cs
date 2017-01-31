@@ -17,6 +17,7 @@ using System.Data;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Controls.Primitives;
+
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Core;
@@ -80,6 +81,9 @@ namespace DataAssistant
         int _methodnum = -1;
         string _revertname = System.IO.Path.Combine(AddinAssemblyLocation(), "RevertFile.xml");
 
+        private List<ComboData> _domainTargetValues = new List<ComboData>();
+        private List<ComboData> _domainSourceValues = new List<ComboData>();
+
         public Dockpane1View()
         {
             InitializeComponent();
@@ -105,7 +109,7 @@ namespace DataAssistant
         {
             if (!System.IO.File.Exists(filename))
             {
-                MessageBox.Show(filename + " does not exist, please select a file");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(filename + " does not exist, please select a file");
                 return false;
             }
             string xmlstr = System.IO.File.ReadAllText(filename);
@@ -130,13 +134,13 @@ namespace DataAssistant
 
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
             if (node == null)
-                MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
             else
                 SourceLayer.Text = node.InnerText;
 
             node = _xml.SelectSingleNode("//Datasets/Target");
             if (node == null)
-                MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
             else
                 TargetLayer.Text = node.InnerText;
 
@@ -193,7 +197,7 @@ namespace DataAssistant
                         clearReplaceValues();
                     }
                 }
-                catch { MessageBox.Show("Error setting replace"); }
+                catch { ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error setting replace"); }
             }
             else
             {
@@ -300,7 +304,7 @@ namespace DataAssistant
                 }
                 catch
                 {
-                    MessageBox.Show("Error setting Xml data provider");
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error setting Xml data provider");
                 }
             }
         }
@@ -348,7 +352,7 @@ namespace DataAssistant
             }
             catch
             {
-                MessageBox.Show("Could not find SourceName element for field (row) number " + fieldnum.ToString());
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Could not find SourceName element for field (row) number " + fieldnum.ToString());
                 return nodes;
             }
             string xpath = "//SourceField[@Name='" + sname + "']"; // Source field values
@@ -491,6 +495,27 @@ namespace DataAssistant
             //PreviewText.Text = "";
         }
 
+        private bool getPanelEnabled(int methodnum)
+        {
+            bool theval = true;
+            if (FieldGrid.SelectedIndex == -1)
+                return theval;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes.Count == 1)
+            {
+                try
+                {
+                    var node = nodes.Item(0).Attributes.Item(0);
+                    if (node != null)
+                        bool.TryParse(node.InnerText.ToLower(), out theval);
+                }
+                catch
+                { }
+            }
+            return theval;
+        }
+
         private string getPanelValue(int methodnum,string nodename)
         {
             if (FieldGrid.SelectedIndex == -1)
@@ -614,33 +639,47 @@ namespace DataAssistant
             if (grid == null)
                 return;
 
-            List<ComboData> combo = getDomainValues(SourceLayer.Text, getSourceFieldName());
+            _domainSourceValues = getDomainValues(SourceLayer.Text, getSourceFieldName());
+            _domainTargetValues = getDomainValues(TargetLayer.Text, getTargetFieldName());
 
             grid.Items.Clear();
             for (int i = 0; i < tValueNodes.Count; i++)
             {
                 
                 System.Xml.XmlNode sourcenode = sValueNodes.Item(i);
-                if (sourcenode == null)
-                    return;
-                string sVal = sourcenode.InnerText;
+                string sVal = "";
+                if (sourcenode != null)
+                    sVal = sourcenode.InnerText;
                 int selected = -1;
                 string sTooltip = "";
-                for(int s=0;s<combo.Count;s++)
+                for(int s=0;s<_domainSourceValues.Count;s++)
                 {
-                    if (combo[s].Id.ToString().Equals(sVal))
+                    if (_domainSourceValues[s].Id.ToString().Equals(sVal))
                         selected = s;
                 }
                 sourcenode = sLabelNodes.Item(i);
-                sTooltip = sourcenode.InnerText;
+                if (sourcenode != null)
+                    sTooltip = sourcenode.InnerText;
 
                 System.Xml.XmlNode targetnode = tValueNodes.Item(i);
-                string tVal = targetnode.InnerText;
-                targetnode = tLabelNodes.Item(i);
-                string tTooltip = targetnode.InnerText;
 
-                grid.Items.Add(new DomainMapRow() { Source = combo, SourceSelectedItem = selected, SourceTooltip=sTooltip, TargetTooltip=tTooltip, Target = tVal });
+                string tVal = "";
+                if(targetnode != null)
+                    tVal = targetnode.InnerText;
+                targetnode = tLabelNodes.Item(i);
+                string tTooltip = "";
+                if (targetnode != null)
+                    tTooltip = targetnode.InnerText;
+
+                grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip=sTooltip, TargetTooltip=tTooltip, Target = _domainTargetValues, TargetSelectedItem=i });
             }
+            if (grid.Items.Count > 0)
+            {
+                DomainMapRemove.IsEnabled = true;
+            }
+            else
+                DomainMapRemove.IsEnabled = false;
+
         }
 
         private void setSpaceVal(string separator,TextBox txt)
@@ -709,7 +748,7 @@ namespace DataAssistant
                     }
                     catch
                     {
-                        MessageBox.Show("Error setting checkbox values");
+                        ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error setting checkbox values");
                     }
                 }
             }
@@ -778,6 +817,12 @@ namespace DataAssistant
                         try
                         {
                             panel.Visibility = System.Windows.Visibility.Visible;
+                            if(this.FieldGrid.SelectedIndex != -1)
+                            {
+                                bool enabled = getPanelEnabled(this.FieldGrid.SelectedIndex);
+                                panel.IsEnabled = enabled;
+                                comboMethod.IsEnabled = enabled;
+                            }
                             panel.InvalidateArrange();
                             panel.UpdateLayout();
                         }
@@ -892,45 +937,6 @@ namespace DataAssistant
             }
         }
 
-
-
-        //private DataGridCell GetCell(DataGrid grid, DataGridRow row, int column)
-        //{
-        //    if (row != null)
-        //    {
-        //        DataGridCellsPresenter presenter = GetVisualChild<DataGridCellsPresenter>(row);
-
-        //        if (presenter == null)
-        //        {
-        //            grid.ScrollIntoView(row, grid.Columns[column]);
-        //            presenter = GetVisualChild<DataGridCellsPresenter>(row);
-        //        }
-
-        //        DataGridCell cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(column);
-        //        return cell;
-        //    }
-        //    return null;
-        //}
-        //public T GetVisualChild<T>(Visual parent) where T : Visual
-        //{
-        //    T child = default(T);
-        //    int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
-        //    for (int i = 0; i < numVisuals; i++)
-        //    {
-        //        Visual v = (Visual)VisualTreeHelper.GetChild(parent, i);
-        //        child = v as T;
-        //        if (child == null)
-        //        {
-        //            child = GetVisualChild<T>(v);
-        //        }
-        //        if (child != null)
-        //        {
-        //            break;
-        //        }
-        //    }
-        //    return child;
-        //}
-
         private void Method3Target_TextChanged(object sender, TextChangedEventArgs e)
         {
             Method3TextChanged(sender, "Target");
@@ -993,41 +999,6 @@ namespace DataAssistant
                 loadFile(txt.Text);
             }
         }
-
-        //private DataRowView rowBeingEdited = null;
-
-        //private void Method3Grid_CurrentCellChanged(object sender, EventArgs e)
-        //{
-
-        //    DataGrid dataGrid = sender as DataGrid;
-        //    DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(0);
-        //    DataGridCell rowColumn = dataGrid.Columns[0].GetCellContent(row).Parent as DataGridCell;
-
-        //    DataGridCell cell = GetCell(Method3Grid, row, 1);
-        //    var cellValue = rowColumn.Content;
-        //    if (cellValue != null)
-        //    {
-        //        ValueMapRow vmrow = rowColumn.Content as ValueMapRow;
-        //        //string currValue = vmrow.Target;
-        //    }
-        //}
-        //private void Method3Grid_CellEditEndingx(object sender, DataGridCellEditEndingEventArgs e)
-        //{
-        //    DataRowView rowView = e.Row.Item as DataRowView;
-        //    rowBeingEdited = rowView;
-
-        //}
-        //private bool isManualEditCommit;
-        //private void Method3Grid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        //{
-        //    if (!isManualEditCommit)
-        //    {
-        //        isManualEditCommit = true;
-        //        DataGrid grid = (DataGrid)sender;
-        //        grid.CommitEdit(DataGridEditingUnit.Row, true);
-        //        isManualEditCommit = false;
-        //    }
-        //}
 
         private void ValueMapAdd_Click(object sender, RoutedEventArgs e)
         {
@@ -1236,7 +1207,7 @@ namespace DataAssistant
                 }
                 catch (Exception err2)
                 {
-                    MessageBox.Show(err2.ToString());
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(err2.ToString());
                     return false;
                 }
             }
@@ -1291,52 +1262,39 @@ namespace DataAssistant
 
         private void RevertButton_Click(object sender, RoutedEventArgs e)
         {
-            if (System.Windows.Forms.MessageBox.Show("Are you sure you want to re-open this file?", "Revert/Re-Open File", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Are you sure you want to re-open this file?", "Revert/Re-Open File", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 copyXml(_revertname, _filename);
                 loadFile(_filename);
             }
 
         }
-
-
-        private void ImportTarget_Click(object sender, RoutedEventArgs e)
+        private void LoadDomains_Click(object sender, RoutedEventArgs e)
         {
             // Need to get the domain values from the target dataset - NB do domain but could also be based on values if no domain
-            
-            // = new List<ComboData>();
-            List<ComboData> domainValues = getDomainValues(this.TargetLayer.Text, getTargetFieldName());
-            List<ComboData> sourceValues = getDomainValues(this.SourceLayer.Text, getSourceFieldName());
 
-            Method11Grid.Items.Clear();
-            for (int i = 0; i < domainValues.Count; i++)
+            if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                ComboData domainValue = domainValues[i];
-                string target = domainValue.Id;
-                int selected = -1;
-                for (int s = 0; s < sourceValues.Count; s++)
+                _domainTargetValues = getDomainValues(this.TargetLayer.Text, getTargetFieldName());
+                _domainSourceValues = getDomainValues(this.SourceLayer.Text, getSourceFieldName());
+
+                Method11Grid.Items.Clear();
+                for (int i = 0; i < _domainTargetValues.Count; i++)
                 {
-                    string dvalue = sourceValues[s].Id;
-                    if (target.Equals(dvalue))
-                        selected = s;
+                    ComboData domainValue = _domainTargetValues[i];
+                    Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = -1, SourceTooltip = "", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
                 }
-                Method11Grid.Items.Add(new DomainMapRow() { Source = domainValues, SourceSelectedItem = selected, SourceTooltip=domainValues[selected].Tooltip, Target = domainValue.Id, TargetTooltip = domainValue.Value });
-            }
-            Method11Grid.InvalidateArrange();
-        }
+                if (Method11Grid.Items.Count > 0)
+                {
+                    DomainMapRemove.IsEnabled = true;
+                }
+                else
+                    DomainMapRemove.IsEnabled = false;
 
-        private void ImportSource_Click(object sender, RoutedEventArgs e)
-        {
-            // replace source domain values
-            List<ComboData> domainValues = new List<ComboData>();
-            domainValues = getDomainValues(this.SourceLayer.Text, getSourceFieldName());
-            Method11Grid.Items.Clear();
-            for (int s = 0; s < domainValues.Count; s++)
-            {
-                Method11Grid.Items.Add(new DomainMapRow() { Source = domainValues, SourceSelectedItem = s, SourceTooltip = domainValues[s].Tooltip, Target = "" });
+                Method11Grid.InvalidateArrange();
             }
         }
-
+        
         public List<ComboData> getDomainValues(string dataset, string fieldName)
         {
             List<ComboData> domainValues = new List<ComboData>(); // *** does not work for layers currently... grab dataset from before the "." in field name... 
@@ -1344,47 +1302,89 @@ namespace DataAssistant
             string db = dataset.Substring(0,dataset.LastIndexOf("\\" + table));
             if(fieldName.Equals(_noneField))
             {
-                MessageBox.Show("No field to map");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("No field to map");
                 return domainValues;
             }
             try
             {
-                using (ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(db))
+                using (ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(db)) // *** deprecated at 1.4... needs improvement
                 using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
                 {
                     ArcGIS.Core.Data.TableDefinition def = tab.GetDefinition();
                     IReadOnlyList<ArcGIS.Core.Data.Field> fields = def.GetFields();
                     ArcGIS.Core.Data.Field thefield = fields.First(field => field.Name.ToLower() == fieldName.ToLower());
-                    Domain domain = thefield.GetDomain();
-                    if (domain is CodedValueDomain)
+                    IReadOnlyList<ArcGIS.Core.Data.Subtype> subtypes = def.GetSubtypes();
+                    if (subtypes.Count == 0)
                     {
-                        var codedValueDomain = domain as CodedValueDomain;
-                        SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
-                        //IEnumerable<KeyValuePair<object, string>> filteredPairs = codedValuePairs.Where(pair => Convert.ToDouble(pair.Key) > 20.0d);
-                        for (int i = 0; i < codedValuePairs.Count; i++)
+                        Domain domain = thefield.GetDomain();
+                        if (domain is CodedValueDomain)
                         {
-                            //string str = codedValuePairs.ElementAt(i).Key.ToString() + " | " + codedValuePairs.ElementAt(i).Value.ToString();
-                            ComboData item = new ComboData();
-                            item.Id = codedValuePairs.ElementAt(i).Key.ToString();
-                            item.Value = codedValuePairs.ElementAt(i).Value.ToString();
-                            item.Tooltip = codedValuePairs.ElementAt(i).Value.ToString();
-                            domainValues.Add(item);
+                            var codedValueDomain = domain as CodedValueDomain;
+                            SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
+                            for (int i = 0; i < codedValuePairs.Count; i++)
+                            {
+                                ComboData item = new ComboData();
+                                item.Id = codedValuePairs.ElementAt(i).Key.ToString();
+                                item.Value = codedValuePairs.ElementAt(i).Value.ToString();
+                                item.Tooltip = getDomainTooltip(item.Id, item.Value);
+                                domainValues.Add(item);
+                            }
+                        }
+                    }
+                    else if(subtypes.Count > 0)
+                    {
+                        List<string> domainNames = new List<string>();
+                        for (int s = 0; s < subtypes.Count; s++)
+                        {
+                            ArcGIS.Core.Data.Subtype stype = subtypes[s];
+                            Domain domain = thefield.GetDomain(stype);
+                            string dname = domain.GetName();
+                            if (domain is CodedValueDomain && ! domainNames.Contains(dname))
+                            {
+                                domainNames.Add(dname);
+                                var codedValueDomain = domain as CodedValueDomain;
+                                SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
+                                for (int i = 0; i < codedValuePairs.Count; i++)
+                                {
+                                    ComboData item = new ComboData();
+                                    item.Id = codedValuePairs.ElementAt(i).Key.ToString();
+                                    item.Value = codedValuePairs.ElementAt(i).Value.ToString();
+                                    item.Tooltip = getDomainTooltip(item.Id, item.Value) + " - " + dname;
+                                    bool found = false;
+                                    for (int cv = 0; cv < domainValues.Count; cv++)
+                                    {
+                                        ComboData dv = domainValues[cv];
+                                        if(item.Id.Equals(dv.Id) && item.Value.Equals(dv.Value) && item.Tooltip.Equals(dv.Tooltip))
+                                            found = true;
+                                    }
+                                    if(!found)
+                                        domainValues.Add(item);
+                                }
+                            }
                         }
                     }
                 }
             }
             catch {
-                MessageBox.Show("Unable to retrieve domain values for " + fieldName);
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Unable to retrieve domain values for " + fieldName);
                 return domainValues;
             }
+
             return domainValues;
         }
-
+        private string getDomainTooltip(string code, string value)
+        {
+            string ttip = "";
+            try
+            {
+                ttip = code + " (" + value + ")";
+            }
+            catch
+            { }
+            return ttip;
+        }
         private void Method11Source_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //*** fix to change selected item and values
-            //if (this._skipDomainSelChanged)
-            //    return;
             ComboBox cb = sender as ComboBox;
             if(cb != null)
             { 
@@ -1398,54 +1398,109 @@ namespace DataAssistant
 
                     //object values = grid.Items[grid.SelectedIndex];
                     DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
-                    DomainMapRow rowSource = grid.Items.GetItemAt(cb.SelectedIndex) as DomainMapRow;
+                    ComboData rowSource = _domainSourceValues[cb.SelectedIndex] as ComboData;
                     if (row!=null) // if there is a matching source domain value for the selection
                     {
                         // Then update the row DomainMapValues and set the tooltip to the value for the code 
                         row.SourceSelectedItem = cb.SelectedIndex;
-                        row.SourceTooltip = rowSource.SourceTooltip;
-                        cb.ToolTip = rowSource.SourceTooltip;
+                        row.SourceTooltip = rowSource.Tooltip;
+                        cb.ToolTip = rowSource.Tooltip;
                     }
                 }
             }
         }
+        private void Method11Target_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox cb = sender as ComboBox;
+            if (cb != null)
+            {
+                if (cb.SelectedIndex == -1)
+                    return;
+                else
+                {
+                    DataGrid grid = this.Method11Grid as DataGrid;
+                    if (grid == null || grid.SelectedIndex == -1)
+                        return;
+
+                    //object values = grid.Items[grid.SelectedIndex];
+                    DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
+                    ComboData rowSource = _domainTargetValues[cb.SelectedIndex] as ComboData;
+                    if (row != null) // if there is a matching target domain value for the selection
+                    {
+                        // Then update the row DomainMapValues and set the tooltip to the value for the code 
+                        row.TargetSelectedItem = cb.SelectedIndex;
+                        row.TargetTooltip = rowSource.Tooltip;
+                        cb.ToolTip = rowSource.Tooltip;
+                    }
+                }
+            }
+        }
+
+        private void DomainMapAdd_Click(object sender, RoutedEventArgs e)
+        {
+            Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, Target = _domainTargetValues});
+            Method11Grid.InvalidateArrange();
+            DomainMapRemove.IsEnabled = true;
+        }
+
+        private void DomainMapRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if (Method11Grid.SelectedIndex > -1 && Method11Grid.Items.Count > 0)
+                Method11Grid.Items.RemoveAt(Method11Grid.SelectedIndex);
+        }
+
 
         private void Method11Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
         }
-        private void Method11Target_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox tb = sender as TextBox;
-            if (tb != null)
-            {
-                DataGrid grid = this.Method11Grid as DataGrid;
-                if (grid == null || grid.SelectedIndex == -1)
-                    return;
-
-                DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
-                if (row != null)
-                {
-                    row.Target = tb.Text;
-                    if (tb.Text != "")
-                    {
-                        row.TargetTooltip = tb.Text;
-                        tb.ToolTip = tb.Text;
-                        for (int s = 0; s < row.Source.Count; s++)
-                        {
-                            string dvalue = row.Source[s].Id;
-                            if (tb.Text.Equals(dvalue)) // if there is a match to a source domain value 
-                            {
-                                // then updaste the tooltip to domain value to provide feedback
-                                tb.ToolTip = row.Source[s].Tooltip;
-                                row.TargetTooltip = row.Source[s].Tooltip;
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
 
     }
 }
+// scrap for auto-matching domain values
+//string target = domainValue.Id;
+//int selected = -1;
+//for (int s = 0; s < sourceValues.Count; s++) *** was trying to automatch here but sometimes want to match on Codes, other times values, other times None, other times both...
+//{
+//    string dvalue = sourceValues[s].Id;
+//    if (target.Equals(dvalue))
+//        selected = s;
+//}
+// string ttip = "";
+// if (selected > -1)
+//      ttip = sourceValues[selected].Tooltip; // get the tooltip for this domain value from source
+
+//private void Method11Target_TextChanged(object sender, TextChangedEventArgs e) scrap for text box on domain targets
+//{
+//    TextBox tb = sender as TextBox;
+//    if (tb != null)
+//    {
+//        DataGrid grid = this.Method11Grid as DataGrid;
+//        if (grid == null || grid.SelectedIndex == -1)
+//            return;
+
+//        DomainMapRow row = grid.Items.GetItemAt(grid.SelectedIndex) as DomainMapRow;
+//        if (row != null)
+//        {
+//            List<ComboData> domainValues = getDomainValues(this.TargetLayer.Text, getTargetFieldName());
+//            row.Target = tb.Text;
+//            if (tb.Text != "")
+//            {
+//                row.TargetTooltip = tb.Text + " (no target domain match)";
+//                tb.ToolTip = row.TargetTooltip;
+//                for (int s = 0; s < domainValues.Count; s++)
+//                {
+//                    string dvalue = domainValues[s].Id;
+//                    if (tb.Text.Equals(dvalue)) // if there is a match to a domain value 
+//                    {
+//                        // then update the tooltip to domain value to provide feedback
+//                        string ttip = domainValues[s].Tooltip;
+//                        tb.ToolTip = ttip;
+//                        row.TargetTooltip = ttip;
+//                    }
+//                }
+
+//            }
+//        }
+//    }
+//}

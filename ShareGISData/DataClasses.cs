@@ -43,7 +43,8 @@ namespace DataAssistant
         public List<ComboData> Source { get; set; } // combo items 
         public int SourceSelectedItem { get; set; } // selected item num
         public string SourceTooltip { get; set; } // tooltip on source control - show domain value for code
-        public string Target { get; set; } // target textbox, will try to match to source domain values, always display all target values
+        public List<ComboData> Target { get; set; } // target textbox, will try to match to source domain values, always display all target values
+        public int TargetSelectedItem { get; set; } // selected item num
         public string TargetTooltip { get; set; } // tooltip for target, wil be set to matching domain value if available
     }
     public class ComboData // combobox data for DomainMap

@@ -449,9 +449,16 @@ namespace DataAssistant
                                     // domain map replace function
                                     // match source code to target code
                                     DomainMapRow row = Method11Grid.Items.GetItemAt(r) as DomainMapRow;
-                                    if (att.InnerText.ToString() == row.Source[row.SourceSelectedItem].Id)
+                                    decimal numSource,numTarget;
+                                    bool canConvert1 = decimal.TryParse(att.InnerText, out numSource);
+                                    bool canConvert2 = decimal.TryParse(row.Source[row.SourceSelectedItem].Id, out numTarget);
+                                    if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
                                     {
-                                        textval = textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target);
+                                        textval = textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                    }
+                                    else if(att.InnerText == row.Source[row.SourceSelectedItem].Id)
+                                    {
+                                        textval = textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
                                     }
                                 }
                                 textval = targName + "=" + textval;

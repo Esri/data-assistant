@@ -148,15 +148,15 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <ComboBox x:Name="SourceField" ItemsSource="{Binding XPath=//SourceField/@Name}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" 
+                                            <ComboBox x:Name="SourceField" ItemsSource="{Binding XPath=//SourceField/@Name}" IsEnabled="{Binding XPath=@IsEnabled}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" 
                                                 ToolTip="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}">
                                             </ComboBox>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}"  
-                                    ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="100" Width="*" >
+                            <DataGridTextColumn x:Name="TargetFieldName" Binding="{Binding XPath=TargetName}" 
+                                    ClipboardContentBinding="{x:Null}" Header="Target" MinWidth="100" Width="*">
                                 <DataGridTextColumn.CellStyle>
                                     <Style TargetType="DataGridCell">
                                         <Setter Property="ToolTip" Value="{Binding XPath=TargetName,Converter={StaticResource gridTooltipCreator}}" />
@@ -198,7 +198,7 @@
                     <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method3" Visibility="Hidden">
                         <Label Content="Value Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
                         <Button x:Name="ValueMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="ValueMapAdd_Click"/>
-                        <Button x:Name="ValueMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-35,25,5" Click="ValueMapRemove_Click"/>
+                        <Button x:Name="ValueMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="125,-35,25,5" Click="ValueMapRemove_Click"/>
 
                         <DataGrid x:Name="Method3Grid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                       AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
@@ -299,9 +299,9 @@
                     
                     <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method11" Visibility="Hidden">
                         <Label Content="Domain Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
-                        <Button x:Name="ImportTarget" Content="Import Domains..." ToolTip="Import Domains from both datasets and attempt to match values" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,5" Click="ImportTarget_Click"/>
-                        <Button x:Name="ImportSource" Content="Import Source..." ToolTip="Load Domain values from source dataset only" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="130,-35,0,5" Click="ImportSource_Click" />
-
+                        <Button x:Name="LoadDomains" Content="Load Domains..." ToolTip="Import Domains from both datasets" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,5" Click="LoadDomains_Click"/>
+                        <Button x:Name="DomainMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="DomainMapAdd_Click"/>
+                        <Button x:Name="DomainMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="125,-35,25,5" Click="DomainMapRemove_Click"/>
                         <DataGrid x:Name="Method11Grid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                           AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
                           MinWidth="250" Width="400" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
@@ -311,7 +311,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
-                                                <ComboBox x:Name="Method11Source"  Margin="5,5,5,5" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Id" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
+                                                <ComboBox x:Name="Method11Source"  Margin="5,5,5,5" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
                                                 </ComboBox>
                                             </Grid>
                                         </DataTemplate>
@@ -322,7 +322,9 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
-                                                <TextBox x:Name="Method11Target" Text="{Binding Path=Target}" TextChanged="Method11Target_TextChanged" ToolTip="{Binding Path=TargetTooltip}"/>
+                                                <ComboBox x:Name="Method11Target"  Margin="5,5,5,5" ItemsSource="{Binding Path=Target}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=TargetTooltip}" SelectedIndex="{Binding Path=TargetSelectedItem}"  SelectionChanged="Method11Target_SelectionChanged">
+                                                </ComboBox>
+                                                <!--<TextBox x:Name="Method11Target" Text="{Binding Path=Target}" TextChanged="Method11Target_TextChanged" ToolTip="{Binding Path=TargetTooltip}"/>-->
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

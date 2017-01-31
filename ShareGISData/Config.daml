@@ -20,9 +20,11 @@
           <button refID="DataAssistant_Dockpane1_CreateFile" size="large" />
           <button refID="DataAssistant_Dockpane1_ShowButton" size="large" />
           <button refID="DataAssistant_Dockpane1_PreviewButton" size="large" />
+          <button refID="DataAssistant_Dockpane1_StageButton" size="large" />
           <button refID="DataAssistant_Dockpane1_AppendDataButton" size="large" />
           <button refID="DataAssistant_Dockpane1_ReplaceDataButton" size="large" />
           <button refID="DataAssistant_Dockpane2Settings_ShowButton" size="large" />
+          <button refID="DataAssistant_StageData" size="large" />
         </group>
       </groups>
       <controls>
@@ -37,19 +39,21 @@
           <tooltip heading="Preview Results">
             Preview Results in a local database using a subset of the records<disabledText /></tooltip>
         </button>
+        <button id="DataAssistant_Dockpane1_StageButton" caption="Stage Data" className="Dockpane1_StageDataButton" loadOnClick="true" smallImage="Images\StageData.png" largeImage="Images\StageData.png">
+          <tooltip heading="Stage data to Intermediate Database">
+            Stage Results in a local database using a subset of the records, skip final processing<disabledText /></tooltip>
+        </button>
         <button id="DataAssistant_Dockpane1_AppendDataButton" caption="Append Data" className="Dockpane1_AppendDataButton" loadOnClick="true" smallImage="Images\Icon3.png" largeImage="Images\Icon3.png">
           <tooltip heading="Append Data">
-            Append Data to a database or Portal service<disabledText /></tooltip>
+            Append Data to a database or Portal service, if data was previously staged the intermediate data will be used as a source<disabledText /></tooltip>
         </button>
         <button id="DataAssistant_Dockpane1_ReplaceDataButton" caption="Replace Data" className="Dockpane1_ReplaceDataButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
           <tooltip heading="Replace Data">
-            Replace Data by field value in a database or Portal service<disabledText />
-          </tooltip>
+            Replace Data by field value in a database or Portal service, if data was previously staged the intermediate data will be used as a source<disabledText /></tooltip>
         </button>
         <button id="DataAssistant_Dockpane2Settings_ShowButton" caption="Settings" className="Dockpane2Settings_ShowButton" loadOnClick="true" smallImage="Images\Icon5.png" largeImage="Images\Icon5.png">
           <tooltip heading="Change Settings">Change Optional Settings<disabledText /></tooltip>
         </button>
-        
       </controls>
       <dockPanes>
         <dockPane id="DataAssistant_Dockpane1" caption="Configure Data Mapping" className="Dockpane1ViewModel" dock="group" dockWith="esri_core_contentsDockPane">

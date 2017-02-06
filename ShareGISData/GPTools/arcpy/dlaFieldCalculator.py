@@ -42,7 +42,7 @@ def main(argv = None):
 
 def calculate(xmlFileName,workspace,name,ignore):
 
-    dla.workspace = workspace    
+    dla.workspace = workspace
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)
     xmlDoc = dla.getXmlDoc(xmlFileName)
@@ -58,7 +58,7 @@ def calculate(xmlFileName,workspace,name,ignore):
         dla.addError("Unable to obtain a schema lock for " + table + ", exiting")
         arcpy.SetParameter(SUCCESS, False)
         return -1
-    
+
     desc = arcpy.Describe(table)
     fields = dla.getXmlElements(xmlFileName,"Field")
     sourceFields = dla.getXmlElements(xmlFileName,"SourceField")
@@ -76,6 +76,7 @@ def calculate(xmlFileName,workspace,name,ignore):
             if  nm == targetName:
                 ftype = target.getAttributeNode("Type").nodeValue
                 flength = target.getAttributeNode("Length").nodeValue
+                break
         # uppercase compare, later need to check for orig/upper name for calc
         #ups = [nm.upper() for nm in attrs]
         dla.addDlaField(table,targetName,field,attrs,ftype,flength)
@@ -96,15 +97,23 @@ def calculate(xmlFileName,workspace,name,ignore):
     for field in allFields:
         nm = field.getAttributeNode("Name").nodeValue.replace('.','_')
         if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:
-            try:
-                names.index(nm)
-            except:
+            idx = getFieldIndexList(names, nm)
+            if idx is None:
                 names.append(nm)
                 typ = field.getAttributeNode("Type").nodeValue
-                leng = field.getAttributeNode("Length").nodeValue      
+                leng = field.getAttributeNode("Length").nodeValue
                 ftypes.append(typ)
                 lengths.append(leng)
 
+            #FIXME : Steve, was not sure why you were capturing an error here, and then doing something
+            #try:
+                #names.index(nm)
+            #except:
+                #names.append(nm)
+                #typ = field.getAttributeNode("Type").nodeValue
+                #leng = field.getAttributeNode("Length").nodeValue
+                #ftypes.append(typ)
+                #lengths.append(leng)
     retVal = setFieldValues(table,fields,names,ftypes,lengths)
     if retVal == False:
         success = False
@@ -115,7 +124,10 @@ def calculate(xmlFileName,workspace,name,ignore):
     if ignore == True:
         success = True
     return success
-
+def getFieldIndexList(values,value):
+    for idx, val in enumerate(values):
+        if val.upper() == value.upper():
+            return idx
 def calcValue(row,names,calcString):
     # calculate a value based on source fields and/or other expressions
     outVal = ""
@@ -123,12 +135,12 @@ def calcValue(row,names,calcString):
     for strVal in calcList:
         if strVal in names:
             try:
-                fidx = names.index(strVal)
+                fidx = getFieldIndexList(names,strVal)
                 if str(row[fidx]) != row[fidx]:
                     outVal += str(row[fidx])
                 else:
                     outVal += '"' + str(row[fidx]) + '"'
-                    
+
             except:
                 outVal += strVal
         else:
@@ -157,7 +169,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
         dla.addMessage(table + ", " + str(numFeat) + " features")
         i = 0
         arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
-        
+
         for row in updateCursor:
             success = True
             if dla._errCount > dla.maxErrorCount:
@@ -170,17 +182,17 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                 return True
             i = i + 1
             setProgressor(i,numFeat)
-            
+
             for field in fields:
                 method = "None"
                 sourceName = dla.getNodeValue(field,"SourceName").replace('.','_')
                 targetName = dla.getNodeValue(field,"TargetName").replace('.','_')
-                    
+
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
-                try: 
-                    fnum = names.index(targetName)
+                try:
+                    fnum = getFieldIndexList(names,targetName)
                 except:
                     fnum = None # defensive check to skip fields that do not exist even though they are listed in Xml
                 if fnum != None:
@@ -198,7 +210,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     elif method == "DomainMap":
                         val = getDomainMap(row,names,sourceValue,field)
                     elif method == "ChangeCase":
-                        case = dla.getNodeValue(field,method)                    
+                        case = dla.getNodeValue(field,method)
                         expression = getChangeCase(sourceValue,case)
                         val = getExpression(row,names,expression)
                     elif method == "Concatenate":
@@ -242,7 +254,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     if method != "None":
                         newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
                         row[fnum] = newVal
-                    
+
                         #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
@@ -278,7 +290,7 @@ def getSplit(sourceValue,splitter,part):
         strVal = sourceValue.split(str(splitter))[int(part)]
     except:
         pass
-    
+
     return strVal
 
 def getSubstring(sourceValue,start,chars):
@@ -286,11 +298,11 @@ def getSubstring(sourceValue,start,chars):
     try:
         start = int(start)
         chars = int(chars)
-        strVal = str(sourceValue)[start:chars]        
+        strVal = str(sourceValue)[start:chars]
     except:
         pass
     return strVal
-        
+
 def getChangeCase(sourceValue,case):
     expression = None
     lcase = case.lower()
@@ -304,7 +316,7 @@ def getChangeCase(sourceValue,case):
         case = ".capitalize()"
     expression = '"' + sourceValue + '"' + case
     return expression
-    
+
 
 def getConcatenate(row,names,field):
     concatFields = field.getElementsByTagName("cField")
@@ -315,7 +327,7 @@ def getConcatenate(row,names,field):
     for cfield in concatFields:
         node = cfield.getElementsByTagName("Name")
         nm = dla.getTextValue(node[0])
-        nameidx = names.index(nm)
+        nameidx = getFieldIndexList(names,nm)
         if row[nameidx] != None:
             concat.append(str(row[nameidx]))
     concatStr = concatRepair(concat,sep)
@@ -329,8 +341,8 @@ def concatRepair(concat,sep):
     items = []
     for item in concat:
         if item not in stripvals:
-            items.append(item)  
-                    
+            items.append(item)
+
     concatStr = sep.join(items)
     return concatStr
 
@@ -464,28 +476,28 @@ def getTargetValue(row,field,names,sourceName,targetName):
         try:
             if sourceName != targetName and sourceName.upper() == targetName.upper():
                 # special case for same name but different case - should already have the target name from extract functions
-                targetValue = row[names.index(sourceName)]
+                targetValue = row[getFieldIndexList(names,sourceName)]
             else:
-                targetValue = row[names.index(targetName)]
+                targetValue = row[getFieldIndexList(names,targetName)]
         except:
             targetValue = None # handle the case where the source field does not exist or is blank
 
-    return targetValue    
+    return targetValue
 
 def getSourceValue(row,names,sourceName,targetName):
     try:
-        sourceValue = row[names.index(sourceName)]    
+        sourceValue = row[getFieldIndexList(names,sourceName)]
     except:
         if sourceName != targetName and sourceName.upper() == targetName.upper():
-            sourceValue = row[names.index(targetName)]    
-        else:        
+            sourceValue = row[getFieldIndexList(names,targetName)]
+        else:
             sourceValue = None
     return sourceValue
 
 def getValue(names,ftypes,lengths,targetName,targetValue,val):
-    retVal = val # init to the value calculated so far. This function will alter as needed for field type 
+    retVal = val # init to the value calculated so far. This function will alter as needed for field type
     try:
-        idx = names.index(targetName)
+        idx = getFieldIndexList(names,targetName)
         if retVal == 'None':
             retVal = None
         if retVal != targetValue:

@@ -28,10 +28,7 @@ import re
 debug = False 
 # Parameters
 source = arcpy.GetParameter(0) # source dataset to analyze
-sourceStr = arcpy.GetParameterAsText(0) # source dataset to analyze
 target = arcpy.GetParameter(1) # target dataset to analyze
-targetStr = arcpy.GetParameterAsText(1) # target dataset to analyze
-
 xmlFileName = arcpy.GetParameterAsText(2) # output file name argument
 matchLibrary = 'true' # arcpy.GetParameterAsText(3) always use automatch now. When starting the match library is blank anyway
 #  so this will have no effect until the user starts working with it.
@@ -51,13 +48,8 @@ matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
     global source,target,xmlFileName   
-
-    source = dla.checkIsLayerFile(source,sourceStr)
-    target = dla.checkIsLayerFile(target,targetStr)
-
     dla.addMessage("Source: " + str(source))
     dla.addMessage("Target: " + str(target))
-
     dla.addMessage("File: " + xmlFileName)
     if not os.path.exists(matchxslt):
         msg = matchxslt + " does not exist, exiting"

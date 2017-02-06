@@ -1298,11 +1298,6 @@ namespace DataAssistant
         public List<ComboData> getDomainValues(string dataset, string fieldName)
         {
             List<ComboData> domainValues = new List<ComboData>(); // *** does not work for layers currently... grab dataset from before the "." in field name... 
-            if (dataset.ToLower().StartsWith("http:"))
-            {
-                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Could not retrieve domain from feature service");
-                return domainValues;
-            }
             string table = dataset.Substring(dataset.LastIndexOf("\\")+1);
             string db = dataset.Substring(0,dataset.LastIndexOf("\\" + table));
             if(fieldName.Equals(_noneField))

@@ -91,7 +91,7 @@
                     </StackPanel>
 
                     <StackPanel x:Name="ReplaceStack" Grid.Row="2" IsEnabled="False" Visibility="Hidden">
-                        <CheckBox x:Name="ReplaceByCheckBox" Margin="5,10,5,5" Content="Replace By Field Value" Checked="ReplaceByCheckBox_Checked" Unchecked="ReplaceByCheckBox_Unchecked" Foreground="{DynamicResource Esri_Gray155}" ToolTip="Use these settings to restrict changes to part of the target dataset only - such as County in a State or City in a Region" IsChecked="False"/>
+                        <CheckBox x:Name="ReplaceByCheckBox" Margin="5,10,5,5" Content="Replace By Field Value" Checked="ReplaceByCheckBox_Checked" Unchecked="ReplaceByCheckBox_Unchecked" ToolTip="Use these settings to restrict changes to part of the target dataset only - such as County in a State or City in a Region" IsChecked="False"/>
                     </StackPanel>
                     <StackPanel x:Name="ReplaceStackSettings" Grid.Row="3" Margin="10,5,5,5" IsEnabled="True" Visibility="Hidden">
                         <ComboBox x:Name="ReplaceField" MinWidth="100" ToolTip="The Field name in the target dataset to update by" ItemsSource="{Binding XPath=//TargetField/@Name}" Margin="5,5,5,5"  VerticalAlignment="Top" Width="200" HorizontalAlignment="Left"
@@ -166,7 +166,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="0" x:Name="Methods" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Visibility="Visible" IsEnabled="False">
-                        <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Show Results" Foreground="{DynamicResource Esri_Gray155}" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False"/>
+                        <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Show Results" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False"/>
                         <Label x:Name="lbl1" Content="Method" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
                         <ComboBox x:Name="comboMethod"  Margin="5,5,5,5" SelectedIndex="0" SelectionChanged="comboMethod_SelectionChanged" >
                             <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
@@ -248,7 +248,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
-                                                <CheckBox x:Name="Method5Check" VerticalAlignment="Center"  HorizontalAlignment="Center" IsChecked="{Binding Path=Checked}" Checked="Method5Check_Checked" Unchecked="Method5Check_Checked" Foreground="{DynamicResource Esri_Gray155}"/>
+                                                <CheckBox x:Name="Method5Check" VerticalAlignment="Center"  HorizontalAlignment="Center" IsChecked="{Binding Path=Checked}" Checked="Method5Check_Checked" Unchecked="Method5Check_Checked" />
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -300,14 +300,14 @@
                     <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method11" Visibility="Hidden">
                         <Label Content="Domain Mapping" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}"/>
                         <Button x:Name="LoadDomains" Content="Load Domains..." ToolTip="Import Domains from both datasets" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,5" Click="LoadDomains_Click"/>
-                        <Button x:Name="DomainMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="DomainMapAdd_Click" ToolTip="Add a row to the grid"/>
-                        <Button x:Name="DomainMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="125,-35,25,5" Click="DomainMapRemove_Click" ToolTip="Remove a selected row from the grid"/>
+                        <Button x:Name="DomainMapAdd" Content="+" Width="20" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="35,15,5,5" Click="DomainMapAdd_Click"/>
+                        <Button x:Name="DomainMapRemove" Content="-" Width="20" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="125,-35,25,5" Click="DomainMapRemove_Click"/>
                         <DataGrid x:Name="Method11Grid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  Margin="5,5,5,5" 
                           AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
                           MinWidth="250" Width="400" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                           SelectionChanged="Method11Grid_SelectionChanged" >
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn x:Name="Method11Sources" MinWidth="120" Width="195" Header="Source Domain Values" CanUserResize="True" CanUserSort="True" >
+                                <DataGridTemplateColumn x:Name="Method11Sources" MinWidth="120" Width="195" Header="Source Values" CanUserResize="True" CanUserSort="True" >
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
@@ -318,12 +318,13 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn x:Name="Method11Targets" MinWidth="120" Header="Target Domain Values" Width="195" CanUserResize="True" CanUserSort="True">
+                                <DataGridTemplateColumn x:Name="Method11Targets" MinWidth="120" Header="Target Values" Width="195" CanUserResize="True" CanUserSort="True">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid>
                                                 <ComboBox x:Name="Method11Target"  Margin="5,5,5,5" ItemsSource="{Binding Path=Target}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=TargetTooltip}" SelectedIndex="{Binding Path=TargetSelectedItem}"  SelectionChanged="Method11Target_SelectionChanged">
                                                 </ComboBox>
+                                                <!--<TextBox x:Name="Method11Target" Text="{Binding Path=Target}" TextChanged="Method11Target_TextChanged" ToolTip="{Binding Path=TargetTooltip}"/>-->
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

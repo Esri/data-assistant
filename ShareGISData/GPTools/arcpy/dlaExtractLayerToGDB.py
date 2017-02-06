@@ -126,10 +126,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
         isTable = False
 
     arcpy.env.workspace = workspace
-    if source.lower().endswith('.lyrx') and not dla.hasJoin(source):
-        layer = arcpy.mp.LayerFile(source)
-        view = layer.listLayers()[0]
-    elif isTable:
+    if isTable:
         view = dla.makeTableView(dla.workspace,source,viewName,whereClause,xmlFields)
     elif not isTable:
         view = dla.makeFeatureView(dla.workspace,source,viewName,whereClause,xmlFields)
@@ -189,7 +186,7 @@ def getFieldMap(view,ds):
 
 def createDataset(dsType,workspace,targetName,xmlDoc,source,targetRef):
 
-    if source.lower().endswith('.lyrx') and dla.hasJoin(source):
+    if source.lower().endswith('.lyrx'):
         if dsType == 'Table':
             arcpy.CreateTable_management(workspace,targetName)
         else:

@@ -269,16 +269,11 @@ def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
 
 def xmakeFeatureViewForLayerx(workspace,sourceLayer,viewName,whereClause,xmlFields):
     # Process: Make Feature Layers - drop prefixes as needed
-    #if arcpy.Exists(sourceLayer):
-    #if arcpy.Exists(workspace + os.sep + viewName):
-    #    arcpy.Delete_management(workspace + os.sep + viewName) # delete view if it exists
 
     desc = arcpy.Describe(sourceLayer)
     fields = arcpy.ListFields(sourceLayer)
     fLayerStr = getViewString(fields,xmlFields)
     arcpy.MakeFeatureLayer_management(sourceLayer, viewName, whereClause, workspace,fLayerStr)
-    #else:
-    #addError(sourceLayer + " does not exist, exiting")
 
     if not arcpy.Exists(viewName):
         exit(-1)
@@ -437,6 +432,8 @@ def getFullName(searchName,names,fullNames):
 
 def baseName(name):
     # trim any database prefixes from table names
+    if name.lower().endswith('.lyrx'):
+        name = name[:len(name)-len('.lyrx')]
     if name.count(".") > 0:
         return name.split(".")[name.count(".")].upper()
     else:
@@ -789,8 +786,24 @@ def getMapLayer(layerName):
 def getLayerPath(layer):
     # get the source data path for a layer
     pth = ''
+
+    if isinstance(layer,arcpy._mp.LayerFile): # map layer as parameter
+        pth = layer.filePath
+        addMessage("Used .lyrx filePath as source")
+        addMessage(layer.filePath)
+
     if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
         pth = layer.dataSource
+        addMessage("Used data source property")
+        addMessage(str(layer))
+    elif isinstance(layer, str) and layer.lower().endswith('.lyrx'):
+        layer = arcpy.mp.LayerFile(layer)
+        try:
+            pth = layer.filePath
+            addMessage("Used .lyrx filePath as source")
+        except:
+            addMessage("Failed to use .lyrx filePath as source")            
+        
     else:
         try:
             desc = arcpy.Describe(layer) # dataset path/source as parameter
@@ -1097,7 +1110,7 @@ def checkDatabaseTypes(sourceWS,targetWS):
 
 
 def processGlobalIds(xmlDoc):
-
+    # logic check to determine if preserving globalids is possible
     process = False
 
     source = getNodeValue(xmlDoc,'Source')
@@ -1174,3 +1187,27 @@ def isStaged(xmlDoc):
         staged = False
 
     return staged
+
+def hasJoin(source):
+    # counts table names in fields to determine if joined
+    desc = arcpy.Describe(source)
+    fc = desc.featureClass
+    hasJoin = False
+    tables = []
+    for field in fc.fields:
+        if field.name.find('.') > 0:
+            val = field.name.split('.')[0]
+            if val not in tables:
+                tables.append(val)
+    if len(tables) > 1:
+        hasJoin = True
+
+    return hasJoin
+
+def checkIsLayerFile(val,valStr):
+    # for layer file parameters the value passed in is a layer but the string version of the layer is a path to the lyrx file...
+    if valStr.lower().endswith('.lyrx'):
+        return valStr
+    else:
+        return val
+

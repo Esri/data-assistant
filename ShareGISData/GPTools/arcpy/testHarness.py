@@ -3,15 +3,25 @@
 projFolder = r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject"
 
 def main():
-    test01()
+    testCreate()
 
 def test0():
     dlaStage.stage(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\ForSteve\CurbStopValves.xml")
 
 
 def test01():
-    #dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\SourceTargetEvac.xml")
-    dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\ForSteve\CurbStopValves.xml")
+    dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\SourceTarget.xml")
+    #dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\ForSteve\CurbStopValves.xml")
+    #dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\testjoin.xml")
+
+def testCreate():
+    lname = 'test'
+    lyr = arcpy.MakeFeatureLayer_management(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\EvacSource200.lyrx",lname)
+    dla._project = arcpy.mp.ArcGISProject(os.path.join(projFolder,"MyProject.aprx"))
+    dlaCreateSourceTarget.createDlaFile(lname,
+                                        r"http://services2.arcgis.com/EmOtS7q6cfSmspIo/arcgis/rest/services/MapTesting/FeatureServer/4",
+                                        r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\SourceTarget.xml")
+
 
 def test1():
     dla._project = arcpy.mp.ArcGISProject(os.path.join(projFolder,"MyProject.aprx"))

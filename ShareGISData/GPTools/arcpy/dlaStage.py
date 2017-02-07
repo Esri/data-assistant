@@ -21,7 +21,7 @@ import arcpy, os, dlaExtractLayerToGDB,dlaFieldCalculator,dla,datetime
 
 arcpy.AddMessage("Data Assistant - Stage")
 
-xmlFileNames = 'C:\\_MyFiles\\GitHub\\utility-data-models\\Data Migration\\WaterAssetPackage\\ControlValves.xml'#arcpy.GetParameterAsText(0) # xml file name as a parameter
+xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter
 _derived = 1 # the last param is the derived output layer
 source = None
 target = None

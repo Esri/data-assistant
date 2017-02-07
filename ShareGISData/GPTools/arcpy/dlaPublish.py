@@ -51,6 +51,7 @@ def publish(xmlFileNames):
     xmlFiles = xmlFileNames.split(";")
     layers = []
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
+        xmlFile = dla.getXmlDocName(xmlFile)
         dla.addMessage("Configuration file: " + xmlFile)
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
         if xmlDoc == None:
@@ -87,7 +88,7 @@ def publish(xmlFileNames):
             datasetType = 'Table'
         else:
             datasetType = 'FeatureClass'
-        
+
         if not dla.isStaged(xmlDoc):
             res = dlaExtractLayerToGDB.extract(xmlFile,None,dla.workspace,source,target,datasetType)
             if res != True:
@@ -143,7 +144,7 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
             if dla.deleteRows(target,expr) == True:
                 success = dla.appendRows(dlaTable,target,expr)
             else:
-                success = False       
+                success = False
         else:
             success = dla.appendRows(dlaTable,target,'')
     return success
@@ -160,17 +161,17 @@ def getWhereClause(xmlDoc):
         if type == 'String':
             value = "'" + value + "'"
         expr = fieldName + " " + operator + " " + value
-        
+
     elif operator == 'Where':
         expr = value
-    else: 
+    else:
         expr = '' # empty string by default
-        
+
     return expr
 
 def getTargetType(xmlDoc,fname):
     # get the target field type
-    for tfield in xmlDoc.getElementsByTagName('TargetField'):       
+    for tfield in xmlDoc.getElementsByTagName('TargetField'):
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")
@@ -184,7 +185,7 @@ def handleGeometryChanges(sourceDataset,target):
     if desc.ShapeType == "Polygon" and target.lower().startswith("http://") == True:
         dataset = simplifyPolygons(sourceDataset)
     else:
-        dataset = sourceDataset    
+        dataset = sourceDataset
 
     return dataset
 
@@ -197,7 +198,7 @@ def simplifyPolygons(sourceDataset):
         arcpy.Delete_management(simplify)
     if arcpy.Exists(simplify + '_Pnt'):
         arcpy.Delete_management(simplify + '_Pnt')
-        
+
     arcpy.SimplifyPolygon_cartography(sourceDataset, simplify, "POINT_REMOVE", "1 Meters")
     return simplify
 

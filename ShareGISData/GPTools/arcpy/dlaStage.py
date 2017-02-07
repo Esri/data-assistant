@@ -38,6 +38,7 @@ def stage(xmlFileNames):
     outlayers = []
 
     for xmlFileName in xmlFileNames.split(';'):
+        xmlFileName = dla.getXmlDocName(xmlFileName)
         xmlDoc = dla.getXmlDoc(xmlFileName)
         if rowLimit == "" or rowLimit == None:
             rowLimit = None
@@ -71,16 +72,18 @@ def stage(xmlFileNames):
                     arcpy.MakeFeatureLayer_management(targetDS,layertmp)
                 fieldInfo = dla.getLayerVisibility(layertmp,xmlFileName)
                 if dla.isTable(targetDS):
-                   arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                    arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
                 else:
-                   arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                    arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
                 # should make only the target fields visible
                 outlayers.append(layer)
-                ### *** need to insert tag in xml file...
+                ''' *** need to insert tag in xml file...'''
                 dla.insertStagingElement(xmlDoc)
-                xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'))
+
+                xmlDoc.writexml(open(xmlFileName, 'wt', encoding='utf-8'))
+
                 dla.addMessage('Staging element written to config file')
-                xmlDoc.unlink()              
+                xmlDoc.unlink()
         else:
             dla.addError("Failed to Extract data")
             print("Failed to Extract data")

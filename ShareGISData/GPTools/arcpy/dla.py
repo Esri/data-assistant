@@ -1211,3 +1211,8 @@ def checkIsLayerFile(val,valStr):
     else:
         return val
 
+def getFieldIndexList(values,value):
+    # get the index number of a field in a list - case insensitive
+    for idx, val in enumerate(values):
+        if val.upper() == value.upper():
+            return idx

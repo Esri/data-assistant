@@ -47,6 +47,8 @@ maxrows = 10000000
 
 _ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','ShapeLength','ShapeArea','STLENGTH()','STAREA()','raster','GLOBALID']
 _ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','globalIDFieldName']
+_CIMWKSP = 'CIMWKSP'
+_lyrx = '.lyrx'
 
 # helper functions
 def timer(input):
@@ -204,24 +206,6 @@ def cleanup(inWorkspace):
     cleanupGarbage()
     arcpy.ClearWorkspaceCache_management(inWorkspace)
 
-def getWorkspacePath(path):
-    # get the path of the workspace
-    workspace = arcpy.Describe(path) # preset
-    dirName = os.path.dirname(path)
-    if dirName and arcpy.Exists(dirName):
-        dataset = arcpy.Describe(dirName)
-    try:
-        if dataset and dataset.datasetType == "FeatureDataset":
-            # strip off last value to get workspace
-            dirs = dirName.split(os.sep)
-            dirs.pop()
-            datasetStr = os.sep.join(dirs)
-            workspace = arcpy.Describe(datasetStr) # use the next level up from feature dataset
-    except:
-        workspace = dataset # use the first dataset, datasetType fails on workspace values
-
-    return workspace
-
 def getCleanName(nameVal):
     # strip leading database prefix values
     cleanName = nameVal
@@ -267,18 +251,6 @@ def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
         exit(-1)
     return(viewName)
 
-def xmakeFeatureViewForLayerx(workspace,sourceLayer,viewName,whereClause,xmlFields):
-    # Process: Make Feature Layers - drop prefixes as needed
-
-    desc = arcpy.Describe(sourceLayer)
-    fields = arcpy.ListFields(sourceLayer)
-    fLayerStr = getViewString(fields,xmlFields)
-    arcpy.MakeFeatureLayer_management(sourceLayer, viewName, whereClause, workspace,fLayerStr)
-
-    if not arcpy.Exists(viewName):
-        exit(-1)
-    return(viewName)
-
 def getViewString(fields,xmlFields):
     # get the string for creating a view
     viewStr = ""
@@ -316,47 +288,49 @@ def deleteRows(table,expr):
     if debug:
         addMessageLocal(table)
     retcode = False
-    tname = getDatasetName(table)
-    vname = tname + "_ViewDelete"
+    targTable = getDatasetName(table)
+    vname = targTable + "_ViewDelete"
+
     if arcpy.Exists(vname):
         arcpy.Delete_management(vname) # delete view if it exists
 
     arcpy.MakeTableView_management(table, vname ,  expr)
     arcpy.DeleteRows_management(vname)
-    addMessageLocal("Existing " + tname + " rows deleted ")
+    addMessageLocal("Existing " + targTable + " rows deleted ")
     try:
         arcpy.Delete_management(vname) # delete view if it exists
         retcode = True
     except:
         addMessageLocal("Could not delete view, continuing...")
-    #else:
-    #    addMessageLocal( "Dataset " + tname + " does not exist, skipping ")
-    #    retcode = False
+   
     return retcode
 
 def appendRows(sourceTable,targetTable,expr):
-    # append rows in feature class with a where clause
-    workspace = sourceTable[:sourceTable.rfind("\\")]
+    # append rows in dataset with a where clause
     retcode = False
-    targTable = targetTable[targetTable.rfind("\\")+1:]
-    sTable = sourceTable[sourceTable.rfind("\\")+1:]
-    viewName = sTable + "_ViewAppend"
-    desc = arcpy.Describe(targetTable)
-    if expr != None and expr != '':
-        viewName = makeView(desc.dataElementType,workspace,sourceTable,viewName,expr,[])
-    else:
-        viewName = sourceTable
 
-    numSourceFeat = arcpy.GetCount_management(viewName).getOutput(0)
-    addMessage("Appending " + sTable + " TO " + targTable)
+    sTable = getDatasetName(sourceTable)
+    view = sTable + "_ViewAppend"
+    if isTable(targetTable):
+        deType = 'Table'
+    else:
+        deType = 'FeatureClass'
+
+    view = makeView(deType,workspace,sourceTable,view,expr,[])
+
+    numSourceFeat = arcpy.GetCount_management(view).getOutput(0)
+    addMessage("Appending " + sTable + " TO " + getDatasetName(targetTable))
+
+    if targetTable.lower().endswith(_lyrx):
+        targetTable = getLayerFromString(targetTable)
     try:
-        result = arcpy.Append_management(inputs=viewName,target=targetTable,schema_type='NO_TEST')
+        result = arcpy.Append_management(inputs=view,target=targetTable,schema_type='NO_TEST')
     except:
         msgs = arcpy.GetMessages()
         addError(msgs)            
         return False
 
-    addMessageLocal(targTable + " rows Appended ")
+    addMessageLocal('Rows appended')
 
     numTargetFeat = arcpy.GetCount_management(targetTable).getOutput(0)
     addMessage(numSourceFeat + " features in source dataset")
@@ -432,8 +406,8 @@ def getFullName(searchName,names,fullNames):
 
 def baseName(name):
     # trim any database prefixes from table names
-    if name.lower().endswith('.lyrx'):
-        name = name[:len(name)-len('.lyrx')]
+    if name.lower().endswith(_lyrx):
+        name = name[:len(name)-len(_lyrx)]
     if name.count(".") > 0:
         return name.split(".")[name.count(".")].upper()
     else:
@@ -625,9 +599,9 @@ def convertDataset(dataElementType,sourceTable,workspace,targetName,whereClause)
 def makeView(deType,workspace,sourceTable,viewName,whereClause, xmlFields):
     # make a view
     view = None
-    if deType == "DETable":
+    if deType.lower().endswith('table'):
         view = makeTableView(workspace,sourceTable,viewName, whereClause,xmlFields)
-    if deType == "DEFeatureClass":
+    if deType.lower().endswith('featureclass'):
         view = makeFeatureView(workspace,sourceTable,viewName, whereClause, xmlFields)
 
     return view
@@ -745,6 +719,8 @@ def getDatasetName(path):
     if path.find("/") > -1:
         parts = path.split("/")
         fullname = parts[len(parts)-3]
+    elif path.lower().endswith(_lyrx):
+        fullname = getLayerSourceString(path)
     else:
         fullname = path[path.rfind(os.sep)+1:]
     trimname = baseName(fullname)    
@@ -796,7 +772,8 @@ def getLayerPath(layer):
         pth = layer.dataSource
         addMessage("Used data source property")
         addMessage(str(layer))
-    elif isinstance(layer, str) and layer.lower().endswith('.lyrx'):
+
+    elif isinstance(layer, str) and layer.lower().endswith(_lyrx):
         layer = arcpy.mp.LayerFile(layer)
         try:
             pth = layer.filePath
@@ -834,7 +811,7 @@ def getJoinedLayer(layer,pth):
 
     if conn != None and not arcpy.Exists(path):
 
-        lname = layer.name + '.lyrx'
+        lname = layer.name + _lyrx
         result = arcpy.MakeFeatureLayer_management(layer,lname)
         layer = result.getOutput(0)
 
@@ -847,6 +824,29 @@ def getJoinedLayer(layer,pth):
         path = desc.catalogPath
  
     return path
+
+def getSDELayer(layer,pth):
+    # if there is an SDE layer with CIMWORKSPACE save a layer and return the path
+    path = pth
+    if isinstance(layer, str): # map layer as parameter
+        layer = getMapLayer(layer)
+
+    if pth.startswith(_CIMWKSP):
+
+        lname = layer.name + _lyrx
+        result = arcpy.MakeFeatureLayer_management(layer,lname)
+        layer = result.getOutput(0)
+
+        arcpy.env.overwriteOutput = True
+        projFolder = os.path.dirname(getProject().filePath)
+        lyrFile = os.path.join(projFolder,lname)
+        arcpy.SaveToLayerFile_management(layer,lyrFile)
+
+        desc = arcpy.Describe(lyrFile)
+        path = desc.catalogPath
+ 
+    return path
+
 
 def repairLayerSourceUrl(layerPath,lyr):
     # take a layer path or layer name and return the data source or repaired source
@@ -862,11 +862,12 @@ def repairLayerSourceUrl(layerPath,lyr):
             path = layerPath.replace("\\",'/')
             layerPath = path
 
-    elif layerPath.startswith('CIMWKSP'):
+    elif layerPath.startswith(_CIMWKSP):
         # create database connection and use that path
-        connfile = getConnectionFile(lyr.connectionProperties)
-        path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
-        path = path.replace("\\\\","\\")
+        #connfile = getConnectionFile(lyr.connectionProperties)
+        #path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
+        #path = path.replace("\\\\","\\")
+        path = getSDELayer(lyr,layerPath)
 
     if layerPath.startswith('http'): # sometimes get http path to start with, need to handle non-integer layerid in both cases
         # fix for non-integer layer ids
@@ -1084,25 +1085,51 @@ def checkGlobalIdIndex(desc,gidName):
             pass
     return valid
 
-def checkDatabaseTypes(sourceWS,targetWS):
+def checkDatabaseTypes(source,target):
     # check database types - SQL source db and SQL gdb as target
     supported = False
     try:
+        wsType = "None"
         smsg = 'Workspace type does not support preserving GlobalIDs'
+        try:
+            wsType = arcpy.Describe(source).dataSource
+        except:
+            wsType = arcpy.Describe(source[:source.rfind(os.sep)]).workspaceType # might be in a feature dataset
 
-        wsType = arcpy.Describe(sourceWS).workspaceType
         if wsType != 'RemoteDatabase':
             addMessage(wsType + ' Source ' + smsg)
             supported = False
         else:
             supported = True
 
-        wsType = arcpy.Describe(targetWS).workspaceType
+        wsType = "None"
+        try:
+            wsType = arcpy.Describe(target).workspaceType
+        except:
+            wsType = arcpy.Describe(target[:target.rfind(os.sep)]).workspaceType # might be in a feature dataset
+
         if wsType != 'RemoteDatabase':
             addMessage(wsType + ' Target ' + smsg)
             supported = False
-        else:
+        elif supported == True:
             supported = True
+    except:
+        supported = False
+
+    return supported
+
+def checkDatabaseType(path):
+    # check database types - SQL source db and SQL gdb as target
+    supported = False
+    try:
+        if path.lower().startswith('http://'):
+            supported = True
+        elif path.lower().endswith(_lyrx):
+            source = getLayerFromString(path)
+            if source.dataSource.startswith(_CIMWKSP):
+                supported = True
+        elif path.lower().contains('.gdb'):
+            supported = False
     except:
         supported = False
 
@@ -1127,9 +1154,13 @@ def processGlobalIds(xmlDoc):
             if arcpy.ListFields(source,sGlobalId,'GlobalID')[0].type == arcpy.ListFields(target,tGlobalId,'GlobalID')[0].type:
                 addMessage('Source and Target datasets both have GlobalID fields')
 
-                supportedWS = checkDatabaseTypes(descs.path,desct.path)
+                supportedWS = checkDatabaseType(source)
                 if not supportedWS:
-                    addMessage("Workspace types prevent preserving GlobalIDs")
+                    addMessage("Source Workspace type prevents preserving GlobalIDs")
+                    return process
+                supportedWS = checkDatabaseType(target)
+                if not supportedWS:
+                    addMessage("Target Workspace type prevents preserving GlobalIDs")
                     return process
 
                 sref = getSpatialReferenceString(xmlDoc,'Source')
@@ -1138,7 +1169,7 @@ def processGlobalIds(xmlDoc):
                     ids = checkGlobalIdIndex(descs,sGlobalId)
                     idt = checkGlobalIdIndex(desct,tGlobalId)
 
-                    errmsg = 'Dataset does not have a valid index on GlobalID field for preserving GlobalIDs'
+                    errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
                     if not ids:
                         addMessage('Source ' + errmsg)
                     if not idt:
@@ -1206,7 +1237,7 @@ def hasJoin(source):
 
 def checkIsLayerFile(val,valStr):
     # for layer file parameters the value passed in is a layer but the string version of the layer is a path to the lyrx file...
-    if valStr.lower().endswith('.lyrx'):
+    if valStr.lower().endswith(_lyrx):
         return valStr
     else:
         return val
@@ -1216,3 +1247,17 @@ def getFieldIndexList(values,value):
     for idx, val in enumerate(values):
         if val.upper() == value.upper():
             return idx
+
+def getLayerSourceString(lyrPath):
+    if isinstance(lyrPath,str) and lyrPath.lower().endswith(_lyrx):
+        layer = arcpy.mp.LayerFile(lyrPath)
+        fc = layer.listLayers()[0]
+        return fc.dataSource
+
+def getLayerFromString(lyrPath):
+    if isinstance(lyrPath,str) and lyrPath.lower().endswith(_lyrx):
+        layer = arcpy.mp.LayerFile(lyrPath)
+        fc = layer.listLayers()[0]
+        return fc
+    else:
+        return lyrPath

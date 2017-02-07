@@ -127,8 +127,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
 
     arcpy.env.workspace = workspace
     if source.lower().endswith('.lyrx') and not dla.hasJoin(source):
-        layer = arcpy.mp.LayerFile(source)
-        view = layer.listLayers()[0]
+        view = dla.getLayerFromString(source)
     elif isTable:
         view = dla.makeTableView(dla.workspace,source,viewName,whereClause,xmlFields)
     elif not isTable:
@@ -146,7 +145,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
 
         if dla.processGlobalIds(xmlDoc): # both datasets have globalids and the spatial references match
             arcpy.env.preserveGlobalIds = True # try to preserve
-            addMessage("Proceeding to copy rows and attempt to preserve GlobalIDs")
+            dla.addMessage("Proceeding to copy rows and attempt to preserve GlobalIDs")
             if isTable:
                 arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
             else:

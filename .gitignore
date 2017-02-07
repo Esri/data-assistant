@@ -1,9 +1,10 @@
 *.pyc
 ShareGISData/obj/*
-ShareGISData/obj/Debug/*
+!ShareGISData/obj/Release
+ShareGISData/obj/Release/*
 ShareGISData/bin/*
-!ShareGISData/bin/Debug
-ShareGISData/bin/Debug/*
-!ShareGISData/bin/Debug/*.esriAddInX
-ShareGISData/bin/Debug/GPTools/*
+!ShareGISData/bin/Release
+ShareGISData/bin/Release/*
+!ShareGISData/bin/Release/*.esriAddInX
+ShareGISData/bin/Release/GPTools/*
 ShareGISData/GPTools/arcpy/dla.gdb/*

@@ -21,84 +21,6 @@
 import os, sys, traceback, time, arcpy,  dla
 import collections
 
-class CaseInsensitiveDict(collections.MutableMapping):
-    """
-    A case-insensitive ``dict``-like object.
-
-    Implements all methods and operations of
-    ``collections.MutableMapping`` as well as dict's ``copy``. Also
-    provides ``lower_items``.
-
-    All keys are expected to be strings. The structure remembers the
-    case of the last key to be set, and ``iter(instance)``,
-    ``keys()``, ``items()``, ``iterkeys()``, and ``iteritems()``
-    will contain case-sensitive keys. However, querying and contains
-    testing is case insensitive::
-
-        cid = CaseInsensitiveDict()
-        cid['Accept'] = 'application/json'
-        cid['aCCEPT'] == 'application/json'  # True
-        list(cid) == ['Accept']  # True
-
-    For example, ``headers['content-encoding']`` will return the
-    value of a ``'Content-Encoding'`` response header, regardless
-    of how the header name was originally stored.
-
-    If the constructor, ``.update``, or equality comparison
-    operations are given keys that have equal ``.lower()``s, the
-    behavior is undefined.
-
-    """
-    def __init__(self, data=None, **kwargs):
-        self._store = dict()
-        if data is None:
-            data = {}
-        self.update(data, **kwargs)
-
-    def __setitem__(self, key, value):
-        # Use the lowercased key for lookups, but store the actual
-        # key alongside the value.
-        self._store[self.__keystring(key).lower()] = (key, value)
-    def __keystring(self, key):
-        return str(key)
-    def __getitem__(self, key):
-
-        return self._store[self.__keystring(key).lower()][1]
-
-    def __delitem__(self, key):
-        del self._store[self.__keystring(key).lower()]
-
-    def __iter__(self):
-        return (casedkey for casedkey, mappedvalue in self._store.values())
-
-    def __len__(self):
-        return len(self._store)
-
-    def lower_items(self):
-        """Like iteritems(), but with all lowercase keys."""
-        return (
-            (lowerkey, keyval[1])
-            for (lowerkey, keyval)
-            in self._store.items()
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, collections.Mapping):
-            other = CaseInsensitiveDict(other)
-        else:
-            return NotImplemented
-        # Compare insensitively
-        return dict(self.lower_items()) == dict(other.lower_items())
-
-    # Copy is required
-    def copy(self):
-        return CaseInsensitiveDict(self._store.values())
-
-    def __repr__(self):
-        return str(dict(self.items()))
-
-
-
 xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
 try:
     dla.workspace = arcpy.GetParameterAsText(1) # scratch Geodatabase
@@ -146,6 +68,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     target_values = CaseInsensitiveDict()
 
     #Fix read into dict, using NM as key
+    # at this point just getting the list of all target field names/types/lengths
     for target in targetFields:
         nm = target.getAttributeNode("Name").nodeValue
         target_values[nm] = dict(ftype = target.getAttributeNode("Type").nodeValue,
@@ -162,27 +85,27 @@ def calculate(xmlFileName,workspace,name,ignore):
         if nm in target_values:
             ftype = target_values[nm]['ftype']
             flength = target_values[nm]['flength']
-
+        # make sure the field exists in the field calculator dataset, this will include all source and target fields.
         dla.addDlaField(table,targetName,field,attrs,ftype,flength)
-
-    allFields = sourceFields + targetFields
+    
+    allFields = sourceFields + targetFields # this should be the same as the dataset fields at this point
     desc = arcpy.Describe(table)
     layerNames = []
     names = []
     ftypes = []
     lengths = []
-    ignore = dla.getIgnoreFieldNames(desc)
+    ignore = dla.getIgnoreFieldNames(desc) # gdb system fields that will be handled automatically and cannot be calculated
     ignore = [nm.upper() for nm in ignore]
 
-    for field in desc.fields:
+    for field in desc.fields: # get the uppercase names for everything that exists in the dataset
         if field.name.upper() not in ignore:
             layerNames.append(field.name.upper())
 
-    for field in allFields:
-        nm = field.getAttributeNode("Name").nodeValue.replace('.','_')
-        if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:
-            idx = dla.getFieldIndexList(names, nm)
-            if idx is None:
+    for field in allFields: # loop through everything that might exist
+        nm = field.getAttributeNode("Name").nodeValue.replace('.','_') #  handle joins and remaining . in field names
+        if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:  # ignore the None and ignore fields and names not in the dataset
+            idx = dla.getFieldIndexList(names, nm) 
+            if idx is None: # if the name is not already in the list
                 names.append(nm)
                 typ = field.getAttributeNode("Type").nodeValue
                 leng = field.getAttributeNode("Length").nodeValue
@@ -614,6 +537,83 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
         dla._errCount += 1
 
     return retVal
+
+class CaseInsensitiveDict(collections.MutableMapping):
+    """
+    A case-insensitive ``dict``-like object.
+
+    Implements all methods and operations of
+    ``collections.MutableMapping`` as well as dict's ``copy``. Also
+    provides ``lower_items``.
+
+    All keys are expected to be strings. The structure remembers the
+    case of the last key to be set, and ``iter(instance)``,
+    ``keys()``, ``items()``, ``iterkeys()``, and ``iteritems()``
+    will contain case-sensitive keys. However, querying and contains
+    testing is case insensitive::
+
+        cid = CaseInsensitiveDict()
+        cid['Accept'] = 'application/json'
+        cid['aCCEPT'] == 'application/json'  # True
+        list(cid) == ['Accept']  # True
+
+    For example, ``headers['content-encoding']`` will return the
+    value of a ``'Content-Encoding'`` response header, regardless
+    of how the header name was originally stored.
+
+    If the constructor, ``.update``, or equality comparison
+    operations are given keys that have equal ``.lower()``s, the
+    behavior is undefined.
+
+    """
+    def __init__(self, data=None, **kwargs):
+        self._store = dict()
+        if data is None:
+            data = {}
+        self.update(data, **kwargs)
+
+    def __setitem__(self, key, value):
+        # Use the lowercased key for lookups, but store the actual
+        # key alongside the value.
+        self._store[self.__keystring(key).lower()] = (key, value)
+    def __keystring(self, key):
+        return str(key)
+    def __getitem__(self, key):
+
+        return self._store[self.__keystring(key).lower()][1]
+
+    def __delitem__(self, key):
+        del self._store[self.__keystring(key).lower()]
+
+    def __iter__(self):
+        return (casedkey for casedkey, mappedvalue in self._store.values())
+
+    def __len__(self):
+        return len(self._store)
+
+    def lower_items(self):
+        """Like iteritems(), but with all lowercase keys."""
+        return (
+            (lowerkey, keyval[1])
+            for (lowerkey, keyval)
+            in self._store.items()
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, collections.Mapping):
+            other = CaseInsensitiveDict(other)
+        else:
+            return NotImplemented
+        # Compare insensitively
+        return dict(self.lower_items()) == dict(other.lower_items())
+
+    # Copy is required
+    def copy(self):
+        return CaseInsensitiveDict(self._store.values())
+
+    def __repr__(self):
+        return str(dict(self.items()))
+
 
 if __name__ == "__main__":
     main()

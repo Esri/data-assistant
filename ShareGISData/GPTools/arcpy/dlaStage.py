@@ -38,6 +38,7 @@ def stage(xmlFileNames):
     outlayers = []
 
     for xmlFileName in xmlFileNames.split(';'):
+        xmlFileName = dla.getXmlDocName(xmlFileName)
         xmlDoc = dla.getXmlDoc(xmlFileName)
         if rowLimit == "" or rowLimit == None:
             rowLimit = None
@@ -51,7 +52,6 @@ def stage(xmlFileNames):
         else:
             datasetType = 'FeatureClass'
 
-        #dte = datetime.datetime.now().strftime("%Y%m%d%H%M")
         targetName = dla.getStagingName(source,target)
         targetDS = os.path.join(dla.workspace,targetName)
 
@@ -71,16 +71,19 @@ def stage(xmlFileNames):
                     arcpy.MakeFeatureLayer_management(targetDS,layertmp)
                 fieldInfo = dla.getLayerVisibility(layertmp,xmlFileName)
                 if dla.isTable(targetDS):
-                   arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                    arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
                 else:
-                   arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                    arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
                 # should make only the target fields visible
                 outlayers.append(layer)
                 ### *** need to insert tag in xml file...
                 dla.insertStagingElement(xmlDoc)
-                xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'))
-                dla.addMessage('Staging element written to config file')
-                xmlDoc.unlink()              
+                try:
+                    xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'))
+                    dla.addMessage('Staging element written to config file')
+                except:
+                    dla.addMessage("Unable to write data to xml file")
+                xmlDoc.unlink()
         else:
             dla.addError("Failed to Extract data")
             print("Failed to Extract data")
@@ -90,11 +93,3 @@ def stage(xmlFileNames):
 
 if __name__ == "__main__":
     main()
-
-
-def setSourceTarget(root,xmlDoc,name,dataset):
-    # set source and target elements
-    sourcetarget = xmlDoc.createElement(name)
-    nodeText = xmlDoc.createTextNode(dataset)
-    sourcetarget.appendChild(nodeText)
-    root.appendChild(sourcetarget)

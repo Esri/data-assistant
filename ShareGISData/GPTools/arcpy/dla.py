@@ -97,7 +97,7 @@ def addError(val):
     arcpy.AddError(str(val))
 
 def writeFinalMessage(msg):
-    global _errCount    
+    global _errCount
     if msg != None:
         addMessage(str(msg))
     addMessage("Process completed with " + str(_errCount) + " errors")
@@ -136,7 +136,7 @@ def getIgnoreFieldNames(desc):
     for name in _ignoreFieldNames:
         val = getFieldByName(desc,name)
         if val != None:
-            val = val[val.rfind('.')+1:] 
+            val = val[val.rfind('.')+1:]
             ignore.append(val)
     return ignore
 
@@ -327,7 +327,7 @@ def appendRows(sourceTable,targetTable,expr):
         result = arcpy.Append_management(inputs=view,target=targetTable,schema_type='NO_TEST')
     except:
         msgs = arcpy.GetMessages()
-        addError(msgs)            
+        addError(msgs)
         return False
 
     addMessageLocal('Rows appended')
@@ -889,41 +889,6 @@ def getTempTable(name):
     tname = workspace + os.sep + name
     return tname
 
-#def doInlineAppend(source,target):
-    # perform the append from a source table to a target table
- #   success = False
-  #  if arcpy.Exists(target):
-   #     numSourceFeat = arcpy.GetCount_management(source).getOutput(0)
-        #addMessage("Truncating  "  + target)
-        #arcpy.TruncateTable_management(target)
-    #    addMessage("Appending " + source + " TO " + target)
-     #   try:
-      #      result = arcpy.Append_management(inputs=source,target=target,schema_type=None)
-      #  except:
-      #      msgs = arcpy.GetMessages()
-      #      addError(msgs)            
-      #      return False
-      #  numTargetFeat = arcpy.GetCount_management(target).getOutput(0)
-      #  addMessage(numSourceFeat + " features in source dataset")
-      #  addMessage(numTargetFeat + " features in target dataset")
-      #  msgs = arcpy.GetMessages()
-      #  arcpy.AddMessage(msgs)
-      #  success = True
-
-      #  if int(numTargetFeat) != int(numSourceFeat):
-      #      arcpy.AddMessage("WARNING: Different number of rows in Target table, " + numTargetFeat )
-      #  if int(numTargetFeat) == 0:
-      #      addError("ERROR: 0 Features in target dataset")
-      #      success = False
-      #                 
-      #  if debug:
-      #      addMessage("completed")
-    #else:
-   #     addMessage("Target: " + target + " does not exist")
-   #     success = False
-
-    #cleanupGarbage()
-    #return success
 
 def setWorkspace():
     global workspace
@@ -933,10 +898,6 @@ def setWorkspace():
         arcpy.CreateFileGDB_management(_dirName,wsName)
     workspace = ws
     arcpy.env.workspace = workspace
-    #if arcpy.env.scratchWorkspace == None: -- too many issues with locking using project/scratch gdb for intermediate data
-     #workspace = arcpy.env.scratchGDB # just put it in temp for now - not project gdb
-    #else:
-    #    workspace = arcpy.env.scratchWorkspace
 
 def deleteWorkspace():
     global workspace
@@ -1261,3 +1222,12 @@ def getLayerFromString(lyrPath):
         return fc
     else:
         return lyrPath
+
+def getXmlDocName(xmlFile):
+    # normalize and fix paths
+    try:
+        xmlFile = xmlFile.strip("'")
+        xmlFile = os.path.normpath(xmlFile)
+    except:
+        addError("Unable to process file name: " + xmlFile)
+    return xmlFile

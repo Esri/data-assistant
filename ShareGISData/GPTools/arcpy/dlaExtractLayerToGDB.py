@@ -57,11 +57,11 @@ def main(argv = None):
     success = extract(xmlFileName,rowLimit,dla.workspace,source,target,datasetType)
     arcpy.SetParameter(SUCCESS, success)
 
-def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):          
+def extract(xmlFileName,rowLimit,workspace,source,target,datasetType): 
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
-    if workspace == "" or workspace == "#" or workspace == None:  
-        dla.workspace = arcpy.env.scratchGDB
+    if workspace == "" or workspace == "#" or workspace == None:
+        dla.workspace = dla.setWorkspace()
     else:
         dla.workspace = workspace
     fields = dla.getFields(xmlFileName)
@@ -74,7 +74,7 @@ def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):
         if len(fields) > 0:
             arcpy.SetProgressor("step", "Importing Layer...",0,1,1)
 
-            if source == '' or source == '#':                
+            if source == '' or source == '#':
                 source = dla.getNodeValue(xmlDoc,"Datasets/Source")
             else:
                 source = source
@@ -133,7 +133,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     elif not isTable:
         view = dla.makeFeatureView(dla.workspace,source,viewName,whereClause,xmlFields)
 
-    dla.addMessage("View Created")            
+    dla.addMessage("View Created")
     srcCount = arcpy.GetCount_management(view).getOutput(0)
     dla.addMessage(str(srcCount) + " source rows")
     if str(srcCount) == '0':
@@ -263,45 +263,6 @@ def getObjectIdWhereClause(table,rowLimit):
     del ids
     del searchCursor
     return where
-
-def theProjectWay():
-    """
-    This function is currently not used. It is an alternative to the create feature class/append approach
-    currently being used. It is slower because the entire dataset is projected first, and it is less
-    straightforward because it adds the transform method that append seems to know how to handle already.
-    It is better though because it will actually raise trappable errors while Append fails silently...
-    The solution in the other function is to count the resulting records and report issues.
-    """
-    if targetRef != '':
-        if arcpy.Exists(targetName):
-            arcpy.Delete_management(targetName)
-        inttable = workspace+os.sep+targetName+"_prj"
-        arcpy.env.workspace = workspace
-        xform = None
-        desc = arcpy.Describe(source)
-        xforms = arcpy.ListTransformations(desc.spatialReference, targetRef, desc.extent)            
-        #if sourceRef.exportToString().find("NAD_1983") > -1 and targetRef.exportToString().find("WGS_1984") > -1:
-        xform = xforms[0]
-        #for xform in xforms:
-        dla.addMessage("Transform: " + xform)
-        try:
-            res = arcpy.Project_management(source,inttable,out_coor_system=targetRef,transform_method=xform)
-        except:
-            dla.showTraceback()
-            err = "Unable to project the data to the target spatial reference, please check settings and try projecting manually in ArcGIS"
-            dla.addError(err)
-            return False
-        dla.addMessage("Features projected")            
-        view = dla.makeFeatureViewForLayer(dla.workspace,inttable,viewName,whereClause,xmlFields)
-        dla.addMessage("View Created")            
-        #except:
-        #    arcpy.AddError("Unabled to create feature View " + viewName)
-        count = arcpy.GetCount_management(view).getOutput(0)
-        dla.addMessage(str(count) + " source rows")
-        #sourceRef = getSpatialReference(xmlDoc,"Source")
-        #res = arcpy.CreateFeatureclass_management(workspace,targetName,template=source,spatial_reference=targetRef)
-        res = arcpy.CopyFeatures_management(view,targetName)
-        dla.addMessage("Features copied")     
 
 if __name__ == "__main__":
     main()

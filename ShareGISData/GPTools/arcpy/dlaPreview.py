@@ -42,6 +42,7 @@ def preview(xmlFileName):
     dla.setWorkspace()
     dla._errCount = 0
 
+    xmlFileName = dla.getXmlDocName(xmlFileName)
     xmlDoc = dla.getXmlDoc(xmlFileName)
     #arcpy.AddMessage("rowLimit = " + str(rowLimit) )
     if rowLimit == "" or rowLimit == None:

@@ -104,7 +104,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     for field in allFields: # loop through everything that might exist
         nm = field.getAttributeNode("Name").nodeValue.replace('.','_') #  handle joins and remaining . in field names
         if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:  # ignore the None and ignore fields and names not in the dataset
-            idx = dla.getFieldIndexList(names, nm) 
+            idx = dla.getFieldIndexList(names, nm)
             if idx is None: # if the name is not already in the list
                 names.append(nm)
                 typ = field.getAttributeNode("Type").nodeValue

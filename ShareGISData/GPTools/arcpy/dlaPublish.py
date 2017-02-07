@@ -51,6 +51,7 @@ def publish(xmlFileNames):
     xmlFiles = xmlFileNames.split(";")
     layers = []
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
+        xmlFile = dla.getXmlDocName(xmlFile)
         dla.addMessage("Configuration file: " + xmlFile)
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
         if xmlDoc == None:
@@ -184,7 +185,7 @@ def handleGeometryChanges(sourceDataset,target):
     if desc.ShapeType == "Polygon" and target.lower().startswith("http://") == True:
         dataset = simplifyPolygons(sourceDataset)
     else:
-        dataset = sourceDataset    
+        dataset = sourceDataset
 
     return dataset
 

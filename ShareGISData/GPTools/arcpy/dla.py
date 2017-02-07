@@ -95,7 +95,7 @@ def addError(val):
     arcpy.AddError(str(val))
 
 def writeFinalMessage(msg):
-    global _errCount    
+    global _errCount
     if msg != None:
         addMessage(str(msg))
     addMessage("Process completed with " + str(_errCount) + " errors")
@@ -134,7 +134,7 @@ def getIgnoreFieldNames(desc):
     for name in _ignoreFieldNames:
         val = getFieldByName(desc,name)
         if val != None:
-            val = val[val.rfind('.')+1:] 
+            val = val[val.rfind('.')+1:]
             ignore.append(val)
     return ignore
 
@@ -353,7 +353,7 @@ def appendRows(sourceTable,targetTable,expr):
         result = arcpy.Append_management(inputs=viewName,target=targetTable,schema_type='NO_TEST')
     except:
         msgs = arcpy.GetMessages()
-        addError(msgs)            
+        addError(msgs)
         return False
 
     addMessageLocal(targTable + " rows Appended ")
@@ -747,7 +747,7 @@ def getDatasetName(path):
         fullname = parts[len(parts)-3]
     else:
         fullname = path[path.rfind(os.sep)+1:]
-    trimname = baseName(fullname)    
+    trimname = baseName(fullname)
     name = repairName(trimname)
 
     return name
@@ -780,7 +780,7 @@ def getMapLayer(layerName):
     except:
         addMessage("Unable to get layer from maps")
         return None
-       
+
     return layer
 
 def getLayerPath(layer):
@@ -802,8 +802,8 @@ def getLayerPath(layer):
             pth = layer.filePath
             addMessage("Used .lyrx filePath as source")
         except:
-            addMessage("Failed to use .lyrx filePath as source")            
-        
+            addMessage("Failed to use .lyrx filePath as source")
+
     else:
         try:
             desc = arcpy.Describe(layer) # dataset path/source as parameter
@@ -815,9 +815,9 @@ def getLayerPath(layer):
                 layer = lyr
 
     # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
-    pth = repairLayerSourceUrl(pth,layer) 
+    pth = repairLayerSourceUrl(pth,layer)
     # handle special case for joined layers
-    pth = getJoinedLayer(layer,pth) 
+    pth = getJoinedLayer(layer,pth)
 
     return pth
 
@@ -845,7 +845,7 @@ def getJoinedLayer(layer,pth):
 
         desc = arcpy.Describe(lyrFile)
         path = desc.catalogPath
- 
+
     return path
 
 def repairLayerSourceUrl(layerPath,lyr):
@@ -856,7 +856,7 @@ def repairLayerSourceUrl(layerPath,lyr):
     path = None
 
     if layerPath.startswith('GIS Servers\\'):
-        # turn into url 
+        # turn into url
         layerPath = layerPath.replace("GIS Servers\\","http://")
         if layerPath.find('\\') > -1:
             path = layerPath.replace("\\",'/')
@@ -878,10 +878,10 @@ def repairLayerSourceUrl(layerPath,lyr):
         parts[len(parts) - 1] = lastPart
         path = "/".join(parts)
 
-    elif path == None: 
+    elif path == None:
         # nothing done here
         path = layerPath
-    
+
     return path
 
 def getTempTable(name):
@@ -900,7 +900,7 @@ def getTempTable(name):
       #      result = arcpy.Append_management(inputs=source,target=target,schema_type=None)
       #  except:
       #      msgs = arcpy.GetMessages()
-      #      addError(msgs)            
+      #      addError(msgs)
       #      return False
       #  numTargetFeat = arcpy.GetCount_management(target).getOutput(0)
       #  addMessage(numSourceFeat + " features in source dataset")
@@ -914,7 +914,7 @@ def getTempTable(name):
       #  if int(numTargetFeat) == 0:
       #      addError("ERROR: 0 Features in target dataset")
       #      success = False
-      #                 
+      #
       #  if debug:
       #      addMessage("completed")
     #else:
@@ -972,6 +972,16 @@ def refreshLayerVisibility():
                 addMessage("Could not set layer visibility")
 
 
+def getXmlDocName(xmlFile):
+    # normalize and fix paths
+
+    try:
+        xmlFile = xmlFile.strip("'")
+        xmlFile = os.path.normpath(xmlFile)
+
+    except:
+        addError("Unable to process file name: " + xmlFile)
+    return xmlFile
 def getXmlDoc(xmlFile):
     # open the xmldoc and return contents
     xmlDoc = None
@@ -985,7 +995,7 @@ def getXmlDoc(xmlFile):
 
     return xmlDoc
 
-    
+
 def getSpatialReference(desc): # needs gp Describe object
     try:
         spref = str(desc.spatialReference.factoryCode)
@@ -1145,13 +1155,13 @@ def processGlobalIds(xmlDoc):
                         addMessage('Target ' + errmsg)
 
                     if ids and idt:
-                        process = True      
+                        process = True
                 else:
                     addMessage('Spatial References do not match, unable to preserve GlobalIDs')
         except:
             pass
 
-    return process  
+    return process
 
 def getStagingName(source,target):
     stgName = getDatasetName(source) + "_" + getDatasetName(target)
@@ -1175,7 +1185,7 @@ def insertStagingElement(xmlDoc):
         # set source and target elements
         nodeText = xmlDoc.createTextNode('true')
         staged.appendChild(nodeText)
-        root.appendChild(staged)  
+        root.appendChild(staged)
 
     return xmlDoc
 

@@ -38,6 +38,7 @@ def stage(xmlFileNames):
     outlayers = []
 
     for xmlFileName in xmlFileNames.split(';'):
+        xmlFileName = dla.getXmlDocName(xmlFileName)
         xmlDoc = dla.getXmlDoc(xmlFileName)
         if rowLimit == "" or rowLimit == None:
             rowLimit = None
@@ -78,10 +79,9 @@ def stage(xmlFileNames):
                 outlayers.append(layer)
                 ''' *** need to insert tag in xml file...'''
                 dla.insertStagingElement(xmlDoc)
-                try:
-                    xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'))
-                except:
-                    dla.addMessage("Unable to write data to xml file")
+
+                xmlDoc.writexml(open(xmlFileName, 'wt', encoding='utf-8'))
+
                 dla.addMessage('Staging element written to config file')
                 xmlDoc.unlink()
         else:

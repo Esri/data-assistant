@@ -21,7 +21,7 @@ import arcpy, os, dlaExtractLayerToGDB,dlaFieldCalculator,dla,datetime
 
 arcpy.AddMessage("Data Assistant - Stage")
 
-xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter
+xmlFileNames = 'C:\\_MyFiles\\GitHub\\utility-data-models\\Data Migration\\WaterAssetPackage\\ControlValves.xml'#arcpy.GetParameterAsText(0) # xml file name as a parameter
 _derived = 1 # the last param is the derived output layer
 source = None
 target = None
@@ -71,16 +71,19 @@ def stage(xmlFileNames):
                     arcpy.MakeFeatureLayer_management(targetDS,layertmp)
                 fieldInfo = dla.getLayerVisibility(layertmp,xmlFileName)
                 if dla.isTable(targetDS):
-                   arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                    arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
                 else:
-                   arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                    arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
                 # should make only the target fields visible
                 outlayers.append(layer)
-                ### *** need to insert tag in xml file...
+                ''' *** need to insert tag in xml file...'''
                 dla.insertStagingElement(xmlDoc)
-                xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'))
+                try:
+                    xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'))
+                except:
+                    dla.addMessage("Unable to write data to xml file")
                 dla.addMessage('Staging element written to config file')
-                xmlDoc.unlink()              
+                xmlDoc.unlink()
         else:
             dla.addError("Failed to Extract data")
             print("Failed to Extract data")

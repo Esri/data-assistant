@@ -22,6 +22,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
+using ArcGIS.Desktop.Mapping;
 using System.Xml;
 using System.Xml.Xsl;
 using System.Xml.XPath;
@@ -83,7 +84,9 @@ namespace DataAssistant
 
         private List<ComboData> _domainTargetValues = new List<ComboData>();
         private List<ComboData> _domainSourceValues = new List<ComboData>();
-
+        private List<ComboData> _domainValues = new List<ComboData>();
+        private string _source = "Source";
+        private string _target = "Target";
         public Dockpane1View()
         {
             InitializeComponent();
@@ -639,9 +642,12 @@ namespace DataAssistant
             if (grid == null)
                 return;
 
-            _domainSourceValues = getDomainValues(SourceLayer.Text, getSourceFieldName());
-            _domainTargetValues = getDomainValues(TargetLayer.Text, getTargetFieldName());
-
+            if (tValueNodes.Count > 0)
+            {
+                // only need to set this now if something present in config file
+                setDomainValues(SourceLayer.Text, getSourceFieldName(),_source);
+                setDomainValues(TargetLayer.Text, getTargetFieldName(),_target);
+            }
             grid.Items.Clear();
             for (int i = 0; i < tValueNodes.Count; i++)
             {
@@ -1275,55 +1281,72 @@ namespace DataAssistant
 
             if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                _domainTargetValues = getDomainValues(this.TargetLayer.Text, getTargetFieldName());
-                _domainSourceValues = getDomainValues(this.SourceLayer.Text, getSourceFieldName());
+                setDomainValues(this.TargetLayer.Text, getTargetFieldName(),_target);
+                setDomainValues(this.SourceLayer.Text, getSourceFieldName(),_source);
+            }
+        }
+        public void resetDomainValuesUI(List<ComboData> domainValues,string sourceTarget) 
+        {
+            if (sourceTarget == _source)
+                _domainSourceValues = domainValues;
+            else if (sourceTarget == _target)
+                _domainTargetValues = domainValues;
 
+            if (_domainTargetValues != null && _domainTargetValues.Count > 0)
+            {
                 Method11Grid.Items.Clear();
                 for (int i = 0; i < _domainTargetValues.Count; i++)
                 {
                     ComboData domainValue = _domainTargetValues[i];
                     Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = -1, SourceTooltip = "", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
                 }
-                if (Method11Grid.Items.Count > 0)
-                {
-                    DomainMapRemove.IsEnabled = true;
-                }
-                else
-                    DomainMapRemove.IsEnabled = false;
+            }
+            if (Method11Grid.Items.Count > 0)
+            {
+                DomainMapRemove.IsEnabled = true;
+            }
+            else
+                DomainMapRemove.IsEnabled = false;
 
-                Method11Grid.InvalidateArrange();
-            }
+            Method11Grid.InvalidateArrange();
         }
-        
-        public List<ComboData> getDomainValues(string dataset, string fieldName)
+        public List<ComboData> getDomainValuesforTable(TableDefinition def,string fieldName)
         {
-            List<ComboData> domainValues = new List<ComboData>(); // *** does not work for layers currently... grab dataset from before the "." in field name... 
-            if (dataset.ToLower().StartsWith("http:"))
-            {
-                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Could not retrieve domain from feature service");
-                return domainValues;
-            }
-            string table = dataset.Substring(dataset.LastIndexOf("\\")+1);
-            string db = dataset.Substring(0,dataset.LastIndexOf("\\" + table));
-            if(fieldName.Equals(_noneField))
-            {
-                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("No field to map");
-                return domainValues;
-            }
+            List<ComboData> domainValues = new List<ComboData>(); 
+
             try
             {
-                using (ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(db)) // *** deprecated at 1.4... needs improvement
-                using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                IReadOnlyList<ArcGIS.Core.Data.Field> fields = def.GetFields();
+                ArcGIS.Core.Data.Field thefield = fields.First(field => field.Name.ToLower() == fieldName.ToLower());
+                IReadOnlyList<ArcGIS.Core.Data.Subtype> subtypes = def.GetSubtypes();
+                if (subtypes.Count == 0)
                 {
-                    ArcGIS.Core.Data.TableDefinition def = tab.GetDefinition();
-                    IReadOnlyList<ArcGIS.Core.Data.Field> fields = def.GetFields();
-                    ArcGIS.Core.Data.Field thefield = fields.First(field => field.Name.ToLower() == fieldName.ToLower());
-                    IReadOnlyList<ArcGIS.Core.Data.Subtype> subtypes = def.GetSubtypes();
-                    if (subtypes.Count == 0)
+                    Domain domain = thefield.GetDomain();
+                    if (domain is CodedValueDomain)
                     {
-                        Domain domain = thefield.GetDomain();
-                        if (domain is CodedValueDomain)
+                        var codedValueDomain = domain as CodedValueDomain;
+                        SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
+                        for (int i = 0; i < codedValuePairs.Count; i++)
                         {
+                            ComboData item = new ComboData();
+                            item.Id = codedValuePairs.ElementAt(i).Key.ToString();
+                            item.Value = codedValuePairs.ElementAt(i).Value.ToString();
+                            item.Tooltip = getDomainTooltip(item.Id, item.Value);
+                            domainValues.Add(item);
+                        }
+                    }
+                }
+                else if (subtypes.Count > 0)
+                {
+                    List<string> domainNames = new List<string>();
+                    for (int s = 0; s < subtypes.Count; s++)
+                    {
+                        ArcGIS.Core.Data.Subtype stype = subtypes[s];
+                        Domain domain = thefield.GetDomain(stype);
+                        string dname = domain.GetName();
+                        if (domain is CodedValueDomain && !domainNames.Contains(dname))
+                        {
+                            domainNames.Add(dname);
                             var codedValueDomain = domain as CodedValueDomain;
                             SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
                             for (int i = 0; i < codedValuePairs.Count; i++)
@@ -1331,51 +1354,122 @@ namespace DataAssistant
                                 ComboData item = new ComboData();
                                 item.Id = codedValuePairs.ElementAt(i).Key.ToString();
                                 item.Value = codedValuePairs.ElementAt(i).Value.ToString();
-                                item.Tooltip = getDomainTooltip(item.Id, item.Value);
-                                domainValues.Add(item);
-                            }
-                        }
-                    }
-                    else if(subtypes.Count > 0)
-                    {
-                        List<string> domainNames = new List<string>();
-                        for (int s = 0; s < subtypes.Count; s++)
-                        {
-                            ArcGIS.Core.Data.Subtype stype = subtypes[s];
-                            Domain domain = thefield.GetDomain(stype);
-                            string dname = domain.GetName();
-                            if (domain is CodedValueDomain && ! domainNames.Contains(dname))
-                            {
-                                domainNames.Add(dname);
-                                var codedValueDomain = domain as CodedValueDomain;
-                                SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
-                                for (int i = 0; i < codedValuePairs.Count; i++)
+                                item.Tooltip = getDomainTooltip(item.Id, item.Value) + " - " + dname;
+                                bool found = false;
+                                for (int cv = 0; cv < domainValues.Count; cv++)
                                 {
-                                    ComboData item = new ComboData();
-                                    item.Id = codedValuePairs.ElementAt(i).Key.ToString();
-                                    item.Value = codedValuePairs.ElementAt(i).Value.ToString();
-                                    item.Tooltip = getDomainTooltip(item.Id, item.Value) + " - " + dname;
-                                    bool found = false;
-                                    for (int cv = 0; cv < domainValues.Count; cv++)
-                                    {
-                                        ComboData dv = domainValues[cv];
-                                        if(item.Id.Equals(dv.Id) && item.Value.Equals(dv.Value) && item.Tooltip.Equals(dv.Tooltip))
-                                            found = true;
-                                    }
-                                    if(!found)
-                                        domainValues.Add(item);
+                                    ComboData dv = domainValues[cv];
+                                    if (item.Id.Equals(dv.Id) && item.Value.Equals(dv.Value) && item.Tooltip.Equals(dv.Tooltip))
+                                        found = true;
                                 }
+                                if (!found)
+                                    domainValues.Add(item);
                             }
                         }
                     }
                 }
             }
-            catch {
+
+            catch
+            {
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Unable to retrieve domain values for " + fieldName);
                 return domainValues;
             }
-
             return domainValues;
+
+        }
+
+        public async void setDomainValuesSQL(string dataset, string fieldName, string sourceTarget)
+        {
+            List<ComboData> domain = new List<ComboData>();
+            await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+            {
+                ArcGIS.Core.Data.TableDefinition def = null;
+                string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
+                string db = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
+                ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(db)));
+                using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                {
+                    def = tab.GetDefinition();
+                    domain = getDomainValuesforTable(def, fieldName);
+                }
+                return;
+            });
+            resetDomainValuesUI(domain,sourceTarget);
+            return;
+        }
+        public async void setDomainValuesFile(string dataset, string fieldName, string sourceTarget)
+        {
+            List<ComboData> domain = new List<ComboData>();
+            await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+            {
+                ArcGIS.Core.Data.TableDefinition def = null;
+                string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
+                string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
+                ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(db)));
+                using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                {
+                    def = tab.GetDefinition();
+                    domain = getDomainValuesforTable(def, fieldName);
+                }
+                return domain;
+            });
+            resetDomainValuesUI(domain, sourceTarget);
+            return;
+        }
+        public async void setDomainValuesLayer(string dataset, string fieldName,string sourceTarget)
+        {
+            List<ComboData> domain = new List<ComboData>();
+            await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+            {
+                try
+                {
+                    var lyr = LayerFactory.CreateFeatureLayer(new Uri(dataset), MapView.Active.Map);
+                    FeatureLayer flayer = lyr as FeatureLayer;
+                    ArcGIS.Core.Data.TableDefinition def = null;
+                    ArcGIS.Core.CIM.CIMDataConnection cim = flayer.GetDataConnection();
+                    FeatureClass fclass = flayer.GetFeatureClass();
+                    def = fclass.GetDefinition();
+                    domain = getDomainValuesforTable(def, fieldName);
+                }
+                catch
+                {
+                    domain = null;
+                }
+                return;
+            });
+            resetDomainValuesUI(domain, sourceTarget);
+            return;
+        }
+
+        public void setDomainValues(string dataset, string fieldName,string sourceTarget)
+        {
+
+            if (fieldName.Equals(_noneField))
+            {
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("No field to map");
+            }
+
+            //if (dataset.ToLower().StartsWith("http://"))
+
+            if (dataset.ToLower().Contains(".sde"))
+            {
+                setDomainValuesSQL(dataset, fieldName,sourceTarget);
+            }
+            else if (dataset.ToLower().Contains(".gdb"))
+            {
+                setDomainValuesFile(dataset, fieldName,sourceTarget);
+            }
+            else if (dataset.ToLower().Contains(".lyrx"))
+            {
+                if (MapView.Active.Map == null)
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
+                else
+                {
+                    setDomainValuesLayer(dataset, fieldName,sourceTarget);
+                }
+            }      
+            return;   
         }
         private string getDomainTooltip(string code, string value)
         {

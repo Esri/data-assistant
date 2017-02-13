@@ -763,7 +763,7 @@ def getLayerPath(layer):
     # get the source data path for a layer
     pth = ''
 
-    if isinstance(layer,arcpy._mp.LayerFile): # map layer as parameter
+    if isinstance(layer,arcpy._mp.LayerFile): # map layerFile as parameter
         pth = layer.filePath
         addMessage("Used .lyrx filePath as source")
         addMessage(layer.filePath)
@@ -864,10 +864,10 @@ def repairLayerSourceUrl(layerPath,lyr):
 
     elif layerPath.startswith(_CIMWKSP):
         # create database connection and use that path
-        #connfile = getConnectionFile(lyr.connectionProperties)
-        #path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
-        #path = path.replace("\\\\","\\")
-        path = getSDELayer(lyr,layerPath)
+        connfile = getConnectionFile(lyr.connectionProperties)
+        path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
+        path = path.replace("\\\\","\\")
+        #path = getSDELayer(lyr,layerPath)
 
     if layerPath.startswith('http'): # sometimes get http path to start with, need to handle non-integer layerid in both cases
         # fix for non-integer layer ids
@@ -974,7 +974,8 @@ def setupProxy():
 
 def getConnectionFile(connectionProperties):
 
-    dir = os.path.dirname(os.path.realpath(__file__))
+    #dir = os.path.dirname(os.path.realpath(__file__)) *** change to project folder...
+    dir = os.path.dirname(getProject().filePath)
     cp = connectionProperties['connection_info']
     srvr = getcp(cp,'server')
     inst = getcp(cp,'db_connection_properties')

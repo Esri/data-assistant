@@ -615,76 +615,23 @@ namespace DataAssistant
                 return;
             int fieldnum = FieldGrid.SelectedIndex + 1;
             System.Xml.XmlNodeList nodes = getFieldNodes(fieldnum);
-            System.Xml.XmlNodeList sValueNodes, sLabelNodes, tValueNodes, tLabelNodes;
+            System.Xml.XmlNodeList tValueNodes;
             
-            //<Method>ValueMap</Method>
-            //<ValueMap>
-            //  <sValue>1</sValue>
-            //  <sLabel>A things</sLabel>
-            //  <tValue>12</tValue>
-            //  <tLabel>12 things</tLabel>
-            //  <sValue>2</sValue>
-            //  <sLabel>2 things</sLabel>
-            //  <tValue>22</tValue>
-            //  <tLabel>22 things</tLabel>
-            //  <Otherwise>
-            //  </Otherwise>
-            //</ValueMap>
             tValueNodes = nodes[0].SelectNodes("DomainMap/tValue");
-            tLabelNodes = nodes[0].SelectNodes("DomainMap/tLabel");
-
-            sValueNodes = nodes[0].SelectNodes("DomainMap/sValue");
-            sLabelNodes = nodes[0].SelectNodes("DomainMap/sLabel");
-
             string name = "Method" + combonum + "Grid";
             Object ctrl = this.FindName(name);
             DataGrid grid = ctrl as DataGrid;
             if (grid == null)
                 return;
+            grid.Items.Clear();
+            grid.InvalidateArrange();
 
             if (tValueNodes.Count > 0)
             {
-                // only need to set this now if something present in config file
-                setDomainValues(SourceLayer.Text, getSourceFieldName(),_source);
-                setDomainValues(TargetLayer.Text, getTargetFieldName(),_target);
+                // only need to set this now if something present in config file, false for resetUI will call method to load from config.
+                setDomainValues(SourceLayer.Text, getSourceFieldName(), _source, false);
+                setDomainValues(TargetLayer.Text, getTargetFieldName(), _target, false);
             }
-            grid.Items.Clear();
-            for (int i = 0; i < tValueNodes.Count; i++)
-            {
-                
-                System.Xml.XmlNode sourcenode = sValueNodes.Item(i);
-                string sVal = "";
-                if (sourcenode != null)
-                    sVal = sourcenode.InnerText;
-                int selected = -1;
-                string sTooltip = "";
-                for(int s=0;s<_domainSourceValues.Count;s++)
-                {
-                    if (_domainSourceValues[s].Id.ToString().Equals(sVal))
-                        selected = s;
-                }
-                sourcenode = sLabelNodes.Item(i);
-                if (sourcenode != null)
-                    sTooltip = sourcenode.InnerText;
-
-                System.Xml.XmlNode targetnode = tValueNodes.Item(i);
-
-                string tVal = "";
-                if(targetnode != null)
-                    tVal = targetnode.InnerText;
-                targetnode = tLabelNodes.Item(i);
-                string tTooltip = "";
-                if (targetnode != null)
-                    tTooltip = targetnode.InnerText;
-
-                grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip=sTooltip, TargetTooltip=tTooltip, Target = _domainTargetValues, TargetSelectedItem=i });
-            }
-            if (grid.Items.Count > 0)
-            {
-                DomainMapRemove.IsEnabled = true;
-            }
-            else
-                DomainMapRemove.IsEnabled = false;
 
         }
 
@@ -1281,9 +1228,89 @@ namespace DataAssistant
 
             if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                setDomainValues(this.TargetLayer.Text, getTargetFieldName(),_target);
-                setDomainValues(this.SourceLayer.Text, getSourceFieldName(),_source);
+                setDomainValues(this.TargetLayer.Text, getTargetFieldName(),_target,true);
+                setDomainValues(this.SourceLayer.Text, getSourceFieldName(),_source,true);
             }
+        }
+        public void resetDomainValuesUIFromConfig(List<ComboData> domainValues, string sourceTarget)
+        {
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            System.Xml.XmlNodeList nodes = getFieldNodes(fieldnum);
+            System.Xml.XmlNodeList sValueNodes, sLabelNodes, tValueNodes, tLabelNodes;
+
+            if (sourceTarget == _source)
+                _domainSourceValues = domainValues;
+            else if (sourceTarget == _target)
+                _domainTargetValues = domainValues;
+
+            if (sourceTarget == _source) // just run this for target...
+                return;
+
+            //<Method>ValueMap</Method>
+            //<ValueMap>
+            //  <sValue>1</sValue>
+            //  <sLabel>A things</sLabel>
+            //  <tValue>12</tValue>
+            //  <tLabel>12 things</tLabel>
+            //  <sValue>2</sValue>
+            //  <sLabel>2 things</sLabel>
+            //  <tValue>22</tValue>
+            //  <tLabel>22 things</tLabel>
+            //  <Otherwise>
+            //  </Otherwise>
+            //</ValueMap>
+            tValueNodes = nodes[0].SelectNodes("DomainMap/tValue");
+            tLabelNodes = nodes[0].SelectNodes("DomainMap/tLabel");
+
+            sValueNodes = nodes[0].SelectNodes("DomainMap/sValue");
+            sLabelNodes = nodes[0].SelectNodes("DomainMap/sLabel");
+
+            string name = "Method11Grid";
+            Object ctrl = this.FindName(name);
+            DataGrid grid = ctrl as DataGrid;
+            if (grid == null)
+                return;
+
+            grid.Items.Clear();
+            for (int i = 0; i < tValueNodes.Count; i++)
+            {
+
+                System.Xml.XmlNode sourcenode = sValueNodes.Item(i); // look at the source value node
+                string sVal = "";
+                int selected = -1;
+                string sTooltip = "";
+                if (sourcenode != null)
+                    sVal = sourcenode.InnerText;
+                for(int s=0;s<_domainSourceValues.Count;s++)
+                {
+                    if(Equals(_domainSourceValues[s].Id,sVal))
+                        selected = s;
+                }
+                sourcenode = sLabelNodes.Item(i);
+                if (sourcenode != null)
+                    sTooltip = sourcenode.InnerText;
+
+                System.Xml.XmlNode targetnode = tValueNodes.Item(i);
+
+                string tVal = "";
+                if (targetnode != null)
+                    tVal = targetnode.InnerText;
+                targetnode = tLabelNodes.Item(i);
+                string tTooltip = "";
+                if (targetnode != null)
+                    tTooltip = targetnode.InnerText;
+
+                grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = sTooltip, TargetTooltip = tTooltip, Target = _domainTargetValues, TargetSelectedItem = i });
+            }
+            grid.Items.Refresh();
+            grid.InvalidateArrange();
+       
+            if (grid.Items.Count > 0)
+            {
+                DomainMapRemove.IsEnabled = true;
+            }
+            else
+                DomainMapRemove.IsEnabled = false;
         }
         public void resetDomainValuesUI(List<ComboData> domainValues,string sourceTarget) 
         {
@@ -1298,7 +1325,14 @@ namespace DataAssistant
                 for (int i = 0; i < _domainTargetValues.Count; i++)
                 {
                     ComboData domainValue = _domainTargetValues[i];
-                    Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = -1, SourceTooltip = "", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
+                    int selected = -1;
+                    for (int s = 0; s < _domainSourceValues.Count; s++)
+                    {
+                        if (Equals(_domainSourceValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
+                            selected = s;
+                    }
+                    // used to always set source selected to -1
+                    Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = "", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
                 }
             }
             if (Method11Grid.Items.Count > 0)
@@ -1379,7 +1413,7 @@ namespace DataAssistant
 
         }
 
-        public async void setDomainValuesSQL(string dataset, string fieldName, string sourceTarget)
+        public async void setDomainValuesSQL(string dataset, string fieldName, string sourceTarget, bool resetUI)
         {
             List<ComboData> domain = new List<ComboData>();
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
@@ -1395,10 +1429,13 @@ namespace DataAssistant
                 }
                 return;
             });
-            resetDomainValuesUI(domain,sourceTarget);
+            if (resetUI == true)
+                resetDomainValuesUI(domain, sourceTarget);
+            else
+                resetDomainValuesUIFromConfig(domain, sourceTarget);
             return;
         }
-        public async void setDomainValuesFile(string dataset, string fieldName, string sourceTarget)
+        public async void setDomainValuesFile(string dataset, string fieldName, string sourceTarget, bool resetUI)
         {
             List<ComboData> domain = new List<ComboData>();
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
@@ -1414,10 +1451,13 @@ namespace DataAssistant
                 }
                 return domain;
             });
-            resetDomainValuesUI(domain, sourceTarget);
+            if (resetUI == true)
+                resetDomainValuesUI(domain, sourceTarget);
+            else
+                resetDomainValuesUIFromConfig(domain, sourceTarget);
             return;
         }
-        public async void setDomainValuesLayer(string dataset, string fieldName,string sourceTarget)
+        public async void setDomainValuesLayer(string dataset, string fieldName,string sourceTarget,bool resetUI)
         {
             List<ComboData> domain = new List<ComboData>();
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
@@ -1438,11 +1478,14 @@ namespace DataAssistant
                 }
                 return;
             });
-            resetDomainValuesUI(domain, sourceTarget);
+            if(resetUI == true)
+                resetDomainValuesUI(domain, sourceTarget);
+            else
+                resetDomainValuesUIFromConfig(domain, sourceTarget);
             return;
         }
 
-        public void setDomainValues(string dataset, string fieldName,string sourceTarget)
+        public void setDomainValues(string dataset, string fieldName,string sourceTarget,bool resetUI)
         {
 
             if (fieldName.Equals(_noneField))
@@ -1454,11 +1497,11 @@ namespace DataAssistant
 
             if (dataset.ToLower().Contains(".sde"))
             {
-                setDomainValuesSQL(dataset, fieldName,sourceTarget);
+                setDomainValuesSQL(dataset, fieldName,sourceTarget,resetUI);
             }
             else if (dataset.ToLower().Contains(".gdb"))
             {
-                setDomainValuesFile(dataset, fieldName,sourceTarget);
+                setDomainValuesFile(dataset, fieldName, sourceTarget, resetUI);
             }
             else if (dataset.ToLower().Contains(".lyrx"))
             {
@@ -1466,7 +1509,7 @@ namespace DataAssistant
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
                 else
                 {
-                    setDomainValuesLayer(dataset, fieldName,sourceTarget);
+                    setDomainValuesLayer(dataset, fieldName, sourceTarget, resetUI);
                 }
             }      
             return;   

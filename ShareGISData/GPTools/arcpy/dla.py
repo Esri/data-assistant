@@ -49,6 +49,9 @@ _ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN
 _ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','globalIDFieldName']
 _CIMWKSP = 'CIMWKSP'
 _lyrx = '.lyrx'
+_http = 'http://'
+_sde = '.sde\\'
+_gdb = '.gdb\\'
 
 # helper functions
 def timer(input):
@@ -734,7 +737,7 @@ def getProject():
         try:
             _project = arcpy.mp.ArcGISProject("CURRENT")
         except:
-            addError("Unable to obtain a reference to the current project, exiting")
+            addError("Unable to obtain a reference to the current project, continuing")
             _project = None
     return _project
 
@@ -857,7 +860,7 @@ def repairLayerSourceUrl(layerPath,lyr):
 
     if layerPath.startswith('GIS Servers\\'):
         # turn into url 
-        layerPath = layerPath.replace("GIS Servers\\","http://")
+        layerPath = layerPath.replace("GIS Servers\\",_http)
         if layerPath.find('\\') > -1:
             path = layerPath.replace("\\",'/')
             layerPath = path
@@ -869,7 +872,7 @@ def repairLayerSourceUrl(layerPath,lyr):
         path = path.replace("\\\\","\\")
         #path = getSDELayer(lyr,layerPath)
 
-    if layerPath.startswith('http'): # sometimes get http path to start with, need to handle non-integer layerid in both cases
+    if layerPath.startswith(_http): # sometimes get http path to start with, need to handle non-integer layerid in both cases
         # fix for non-integer layer ids
         parts = layerPath.split("/")
         lastPart = parts[len(parts)-1]
@@ -962,11 +965,11 @@ def getSpatialReference(desc): # needs gp Describe object
 def setupProxy():
     proxies = {}
     if _proxyhttp != None:
-        proxies['http'] = 'http://' + _proxyhttp
+        proxies['http'] = _http + _proxyhttp
         os.environ['http'] = _proxyhttp
     if _proxyhttps != None:
         proxies['https'] = _proxyhttps
-        os.environ['https'] = 'http://' + _proxyhttps
+        os.environ['https'] = _http + _proxyhttps
     if proxies != {}:
         proxy = urllib.ProxyHandler(proxies)
         opener = urllib.build_opener(proxy)
@@ -1084,13 +1087,15 @@ def checkDatabaseType(path):
     # check database types - SQL source db and SQL gdb as target
     supported = False
     try:
-        if path.lower().startswith('http://'):
+        if path.lower().startswith(_http):
+            supported = True
+        elif path.lower().count(_sde) == 1:
             supported = True
         elif path.lower().endswith(_lyrx):
             source = getLayerFromString(path)
             if source.dataSource.startswith(_CIMWKSP):
                 supported = True
-        elif path.lower().contains('.gdb'):
+        elif path.lower().count(_gdb) == 1:
             supported = False
     except:
         supported = False

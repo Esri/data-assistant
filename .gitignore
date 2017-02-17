@@ -8,3 +8,4 @@ ShareGISData/bin/Release/*
 !ShareGISData/bin/Release/*.esriAddInX
 ShareGISData/bin/Release/GPTools/*
 ShareGISData/GPTools/arcpy/dla.gdb/*
+!ShareGISData/bin/ReleaseTesting

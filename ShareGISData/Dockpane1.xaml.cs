@@ -1274,33 +1274,38 @@ namespace DataAssistant
             grid.Items.Clear();
             for (int i = 0; i < tValueNodes.Count; i++)
             {
+                System.Xml.XmlNode targetnode = tValueNodes.Item(i);
 
                 System.Xml.XmlNode sourcenode = sValueNodes.Item(i); // look at the source value node
                 string sVal = "";
-                int selected = -1;
+                string tVal = "";
+                int selectedS = -1;
+                int selectedT = -1;
+
                 string sTooltip = "";
                 if (sourcenode != null)
                     sVal = sourcenode.InnerText;
-                for(int s=0;s<_domainSourceValues.Count;s++)
+                for (int s = 0; s < _domainSourceValues.Count; s++)
                 {
-                    if(Equals(_domainSourceValues[s].Id,sVal))
-                        selected = s;
+                    if (Equals(_domainSourceValues[s].Id, sVal))
+                        selectedS = s;
                 }
                 sourcenode = sLabelNodes.Item(i);
                 if (sourcenode != null)
                     sTooltip = sourcenode.InnerText;
 
-                System.Xml.XmlNode targetnode = tValueNodes.Item(i);
-
-                string tVal = "";
                 if (targetnode != null)
                     tVal = targetnode.InnerText;
                 targetnode = tLabelNodes.Item(i);
                 string tTooltip = "";
                 if (targetnode != null)
                     tTooltip = targetnode.InnerText;
-
-                grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = sTooltip, TargetTooltip = tTooltip, Target = _domainTargetValues, TargetSelectedItem = i });
+                for (int t = 0; t < _domainTargetValues.Count; t++)
+                {
+                    if (Equals(_domainTargetValues[t].Id, tVal))
+                        selectedT = t;
+                }
+                grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selectedS, SourceTooltip = sTooltip, TargetTooltip = tTooltip, Target = _domainTargetValues, TargetSelectedItem = selectedT });
             }
             grid.Items.Refresh();
             grid.InvalidateArrange();
@@ -1325,14 +1330,17 @@ namespace DataAssistant
                 for (int i = 0; i < _domainTargetValues.Count; i++)
                 {
                     ComboData domainValue = _domainTargetValues[i];
-                    int selected = -1;
-                    for (int s = 0; s < _domainSourceValues.Count; s++)
+                    if (domainValue.Id != _noneField) // don't want to create a row for None by default
                     {
-                        if (Equals(_domainSourceValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
-                            selected = s;
+                        int selected = 0; // use the default None here...
+                        for (int s = 0; s < _domainSourceValues.Count; s++)
+                        {
+                            if (Equals(_domainSourceValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
+                                selected = s;
+                        }
+                        // used to always set source selected to 0 - None
+                        Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = "None", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
                     }
-                    // used to always set source selected to -1
-                    Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = "", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
                 }
             }
             if (Method11Grid.Items.Count > 0)
@@ -1347,6 +1355,12 @@ namespace DataAssistant
         public List<ComboData> getDomainValuesforTable(TableDefinition def,string fieldName)
         {
             List<ComboData> domainValues = new List<ComboData>(); 
+            // always add a blank at the start
+            ComboData item = new ComboData();
+            item.Id = _noneField;
+            item.Value = _noneField;
+            item.Tooltip = _noneField;
+            domainValues.Add(item);
 
             try
             {
@@ -1362,7 +1376,7 @@ namespace DataAssistant
                         SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
                         for (int i = 0; i < codedValuePairs.Count; i++)
                         {
-                            ComboData item = new ComboData();
+                            item = new ComboData();
                             item.Id = codedValuePairs.ElementAt(i).Key.ToString();
                             item.Value = codedValuePairs.ElementAt(i).Value.ToString();
                             item.Tooltip = getDomainTooltip(item.Id, item.Value);
@@ -1385,7 +1399,7 @@ namespace DataAssistant
                             SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
                             for (int i = 0; i < codedValuePairs.Count; i++)
                             {
-                                ComboData item = new ComboData();
+                                item = new ComboData();
                                 item.Id = codedValuePairs.ElementAt(i).Key.ToString();
                                 item.Value = codedValuePairs.ElementAt(i).Value.ToString();
                                 item.Tooltip = getDomainTooltip(item.Id, item.Value) + " - " + dname;

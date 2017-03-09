@@ -417,7 +417,14 @@ namespace DataAssistant
                                 snode.InnerText = row.Source[row.SourceSelectedItem].Tooltip;
                                 noder.AppendChild(snode);
                             }
-
+                            else
+                            {
+                                snode.InnerText = _noneField;
+                                noder.AppendChild(snode);
+                                snode = _xml.CreateElement("sLabel");
+                                snode.InnerText = _noneField;
+                                noder.AppendChild(snode);
+                            }
                             System.Xml.XmlNode tnode = _xml.CreateElement("tValue");
                             tnode.InnerText = row.Target[row.TargetSelectedItem].Id;
                             noder.AppendChild(tnode);

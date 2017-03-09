@@ -254,11 +254,9 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                             expression = expression.replace(name,"|" + name + "|")
                         val = getExpression(row,names,expression)
                     # set field value
-                    if method != "None":
-                        newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
-                        row[fnum] = newVal
-
-                        #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                    newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
+                    row[fnum] = newVal
+                    #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
                 #printRow(row,names)
@@ -506,7 +504,7 @@ def getValue(names,ftypes,lengths,targetName,targetValue,val):
         if retVal != targetValue:
             if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
                 # if the type is numeric then try to cast to float
-                if str(val) == 'None':
+                if str(val) == 'None' or str(val) == '(None)':
                     retVal = None
                 else:
                     try:

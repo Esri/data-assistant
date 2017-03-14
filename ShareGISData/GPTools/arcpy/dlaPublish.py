@@ -56,8 +56,13 @@ def publish(xmlFileNames):
         xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
         if xmlDoc == None:
             return
-        source = dla.getNodeValue(xmlDoc,"Source")
-        target = dla.getNodeValue(xmlDoc,"Target")
+        prj = dla.setProject(xmlFile,dla.getNodeValue(xmlDoc,"Project"))
+        if prj == None:
+            dla.addError("Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
+            return False
+
+        source = dla.getDatasetPath(xmlDoc,"Source")
+        target = dla.getDatasetPath(xmlDoc,"Target")
         targetName = dla.getDatasetName(target)
         dla.addMessage(source)
         dla.addMessage(target)

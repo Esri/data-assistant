@@ -44,9 +44,9 @@ def main(argv = None):
     if dla.workspace == "" or dla.workspace == "#" or dla.workspace == None:  
         dla.workspace = arcpy.env.scratchGDB
     if source == "" or source == None:
-        source = dla.getNodeValue(xmlDoc,"Source")
+        source = dla.getDatasetPath(xmlDoc,"Source")
     if target == "" or target == None:
-        target = dla.getNodeValue(xmlDoc,"Target")
+        target = dla.getDatasetPath(xmlDoc,"Target")
     if success == False:
         dla.addError("Errors occurred during process")
     if dla.isTable(source) or dla.isTable(target):
@@ -75,11 +75,11 @@ def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):
             arcpy.SetProgressor("step", "Importing Layer...",0,1,1)
 
             if source == '' or source == '#':
-                source = dla.getNodeValue(xmlDoc,"Datasets/Source")
+                source = dla.getDatasetPath(xmlDoc,"Source")
             else:
                 source = source
             if target == '' or target == '#':
-                target = dla.getNodeValue(xmlDoc,"Datasets/Target")
+                target = dla.getDatasetPath(xmlDoc,"Target")
 
             targetName = dla.getDatasetName(target)
             sourceName = dla.getDatasetName(source)
@@ -161,6 +161,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
                 if not createDataset('FeatureClass',workspace,targetName,xmlDoc,source,targetRef):
                     arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
                     return False
+            removeDefaultValues(xmlDoc,ds)
             fieldMap = getFieldMap(view,ds)
             arcpy.Append_management(view,ds,schema_type="NO_TEST",field_mapping=fieldMap)
 
@@ -263,6 +264,32 @@ def getObjectIdWhereClause(table,rowLimit):
     del ids
     del searchCursor
     return where
+
+def removeDefaultValues(xmlDoc,dataset):
+    # exported source fields may contain DefaultValues, which can replace None/null values in field calculations
+    sourceFields = xmlDoc.getElementsByTagName("SourceField")
+    stypes = arcpy.da.ListSubtypes(dataset)
+
+    for sfield in sourceFields:
+        fname = sfield.getAttributeNode('Name').nodeValue
+        if fname != dla._noneFieldName:
+            if fname.count('.') > 0:
+                fname = fname.replace('.','_')
+            if len(stypes) == 1:
+                arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
+            else:
+                for s in range (0,len(stypes)-1):
+                    #stype = stypes[s]
+                    # my current understanding is that the intermediate/exported dataset will not have subtypes, just default/0 subtype if present in source dataset.
+                    arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
+                    #vals = []
+                    #stypevals = stype['FieldValues']
+                    #try:
+                    #    stypevals = stypevals[fname]
+                    #    for i in range (0,len(stypevals)):
+                    #        vals.append(str(i) + ": " + str(stypevals[i]))
+                    #except:
+                    #    pass
 
 if __name__ == "__main__":
     main()

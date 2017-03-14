@@ -40,12 +40,16 @@ def stage(xmlFileNames):
     for xmlFileName in xmlFileNames.split(';'):
         xmlFileName = dla.getXmlDocName(xmlFileName)
         xmlDoc = dla.getXmlDoc(xmlFileName)
+        prj = dla.setProject(xmlFileName,dla.getNodeValue(xmlDoc,"Project"))
+        if prj == None:
+            dla.addError("Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
+
         if rowLimit == "" or rowLimit == None:
             rowLimit = None
         if source == "" or source == None:
-            source = dla.getNodeValue(xmlDoc,"Source")
+            source = dla.getDatasetPath(xmlDoc,"Source")
         if target == "" or target == None:
-            target = dla.getNodeValue(xmlDoc,"Target")
+            target = dla.getDatasetPath(xmlDoc,"Target")
 
         if dla.isTable(source) or dla.isTable(target):
             datasetType = 'Table'

@@ -95,7 +95,6 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
         return False
     if not dlaService.checkServiceCapabilities(targetPath,False):
         return False
-
     desc = arcpy.Describe(sourcePath)
     descT = arcpy.Describe(targetPath)
 
@@ -108,9 +107,9 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = dla.getProject()
-    setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
-    setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
-    setSourceTarget(dataset,xmlDoc,"Target",targetPath)
+    setSourceTarget(dataset,xmlDoc,"Project",dla.dropProjectPath(prj.filePath))
+    setSourceTarget(dataset,xmlDoc,"Source",dla.dropProjectPath(sourcePath))
+    setSourceTarget(dataset,xmlDoc,"Target",dla.dropProjectPath(targetPath))
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")

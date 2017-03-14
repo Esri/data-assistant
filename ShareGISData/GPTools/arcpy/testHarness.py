@@ -1,26 +1,26 @@
 ﻿import os,arcpy, dla, dlaCreateSourceTarget,dlaPreview,dlaPublish,dlaStage
 
-projFolder = r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject"
+projFolder = r"C:\Users\Steve\Documents\ArcGIS\Projects\DomainTest"
 
 def main():
-    testCreate()
+    test01()
 
 def test0():
     dlaStage.stage(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\ForSteve\CurbStopValves.xml")
 
 
 def test01():
-    dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\SourceTarget.xml")
+    #dla.setProject(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\SourceTarget.xml","DomainTest.aprx")
+    dlaStage.stage(r"C:\Users\Steve\Documents\ArcGIS\Projects\DomainTest\SourceTarget.xml")
     #dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\ForSteve\CurbStopValves.xml")
     #dlaPublish.publish(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\testjoin.xml")
 
 def testCreate():
-    lname = 'test'
-    lyr = arcpy.MakeFeatureLayer_management(r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\EvacSource200.lyrx",lname)
-    dla._project = arcpy.mp.ArcGISProject(os.path.join(projFolder,"MyProject.aprx"))
-    dlaCreateSourceTarget.createDlaFile(lname,
-                                        r"http://services2.arcgis.com/EmOtS7q6cfSmspIo/arcgis/rest/services/MapTesting/FeatureServer/4",
-                                        r"C:\Users\Steve\Documents\ArcGIS\Projects\MyProject\SourceTarget.xml")
+    dla._project = arcpy.mp.ArcGISProject(os.path.join(projFolder,"DomainTest.aprx"))
+    dla._projectFolder = projFolder
+    dlaCreateSourceTarget.createDlaFile(os.path.join(projFolder,r'DomainTest.gdb\WaterValve'),
+                                        os.path.join(projFolder,r'DomainTest.gdb\WaterDevice'),
+                                        os.path.join(projFolder,'SourceTarget.xml'))
 
 
 def test1():

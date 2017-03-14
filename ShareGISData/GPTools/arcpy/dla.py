@@ -40,6 +40,7 @@ _errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 _project = None
+_projectFolder = None
 
 _noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
@@ -731,15 +732,60 @@ def getDatasetName(path):
 
     return name
 
-def getProject():
+def setProject(xmlfile,projectFilePath):
+    # set the current project to enable relative file paths for processing
     global _project
+    global _projectFolder
+    try:
+        if _projectFolder == None:
+            getProject()
+        if not os.path.exists(projectFilePath) and _projectFolder != None: # try to use the current project folder
+            projectFilePath = os.path.join(_projectFolder,projectFilePath)
+        if not os.path.exists(projectFilePath) and os.path.exists(xmlfile): # try to use the xml file folder path
+            projectFilePath = os.path.join(os.path.dirname(xmlfile),projectFilePath)
+        if os.path.exists(projectFilePath):
+            _project = arcpy.mp.ArcGISProject(projectFilePath)
+            _projectFolder = os.path.dirname(projectFilePath)
+        else:
+            addError(str(projectFilePath) + ' does not exist, continuing')
+            
+    except:
+        addError("Unable to set the current project, continuing")
+        _project = None
+        _projectFolder = None
+
+    return _project
+
+def getProject():
+    global _project, _projectFolder
     if _project == None:
         try:
             _project = arcpy.mp.ArcGISProject("CURRENT")
+            _projectFolder = os.path.dirname(_project.filePath)
         except:
             addError("Unable to obtain a reference to the current project, continuing")
             _project = None
+    else:
+        _projectFolder = os.path.dirname(_project.filePath)
     return _project
+
+def getDatasetPath(xmlDoc,name):
+    # check if file exists, then try to add project folder if missing
+    pth = getNodeValue(xmlDoc,name)
+    if not arcpy.Exists(pth):
+        pth = os.path.join(_projectFolder,pth)
+        if not arcpy.Exists(pth):
+            addError("Unable to locate dataset path: " + pth)
+
+    return pth
+
+def dropProjectPath(pth):
+    # drop the project path from datasets to support relative paths and moving files between machines.
+    if _projectFolder != None:
+        pth = pth.replace(_projectFolder,'')
+        if pth.startswith('\\'):
+            pth = pth[1:]
+    return pth
 
 def getMapLayer(layerName):
     name = layerName[layerName.rfind('\\')+1:]
@@ -1107,10 +1153,10 @@ def processGlobalIds(xmlDoc):
     # logic check to determine if preserving globalids is possible
     process = False
 
-    source = getNodeValue(xmlDoc,'Source')
+    source = getDatasetPath(xmlDoc,'Source')
     descs = arcpy.Describe(source)
 
-    target = getNodeValue(xmlDoc,'Target')
+    target = getDatasetPath(xmlDoc,'Target')
     desct = arcpy.Describe(target)
 
     sGlobalId = getFieldByName(descs,'globalIDFieldName')

@@ -276,7 +276,10 @@ def removeDefaultValues(xmlDoc,dataset):
             if fname.count('.') > 0:
                 fname = fname.replace('.','_')
             if len(stypes) == 1:
-                arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
+                try:
+                    arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
+                except:
+                    dla.addMessage("Unable to set DefaultValue for " + fname) # skip GlobalIDs and other fields that cannot be updated.
             else:
                 for s in range (0,len(stypes)-1):
                     #stype = stypes[s]

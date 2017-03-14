@@ -82,9 +82,10 @@ def calculate(xmlFileName,workspace,name,ignore):
 
         ftype = "String"
         flength = "50"
-        if nm in target_values:
-            ftype = target_values[nm]['ftype']
-            flength = target_values[nm]['flength']
+        if targetName in target_values:
+            ftype = target_values[targetName]['ftype']
+            flength = target_values[targetName]['flength']
+
         # make sure the field exists in the field calculator dataset, this will include all source and target fields.
         dla.addDlaField(table,targetName,field,attrs,ftype,flength)
     
@@ -256,7 +257,8 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     # set field value
                     newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
                     row[fnum] = newVal
-                    #dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                    if dla.debug == True:
+                        dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
                 updateCursor.updateRow(row)
                 #printRow(row,names)
@@ -264,8 +266,12 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                 dla._errCount += 1
                 success = False
                 err = "Exception caught: unable to update row"
-                printRow(row,names)
-                dla.showTraceback()
+                if dla._errCount<200 :
+                    printRow(row,names)
+                    dla.showTraceback()
+                else:
+                    if dla._errCount < 2000:
+                        dla.addMessage('More than 200 errors encountered... debug output suppressed')
                 dla.addError(err)
     except:
         dla._errCount += 1

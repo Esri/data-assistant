@@ -31,7 +31,7 @@ import urllib.parse as parse
 import urllib.request as request
 from xml.dom.minidom import Document
 
-debug = False
+debug = False # print field calculator messages.
 startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program

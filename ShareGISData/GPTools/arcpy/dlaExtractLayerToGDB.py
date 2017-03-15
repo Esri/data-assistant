@@ -115,7 +115,8 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             
     if whereClause != '' and whereClause != ' ':
         dla.addMessage("Where " + str(whereClause))
-    sourceName = dla.getSourceName(xmlDoc)
+  
+    sourceName = dla.getDatasetName(source)
     viewName = sourceName + "_View"
     dla.addMessage(viewName)
     
@@ -270,6 +271,7 @@ def removeDefaultValues(xmlDoc,dataset):
     sourceFields = xmlDoc.getElementsByTagName("SourceField")
     stypes = arcpy.da.ListSubtypes(dataset)
 
+    dla.addMessage("Removing Default Value property from intermediate database fields")
     for sfield in sourceFields:
         fname = sfield.getAttributeNode('Name').nodeValue
         if fname != dla._noneFieldName:

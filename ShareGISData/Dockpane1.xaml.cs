@@ -67,6 +67,53 @@ namespace DataAssistant
                 copyXml(_filename,_revertname);
             }
         }
+        private string getProjectFolder()
+        {
+            string pth = "";
+            ArcGIS.Desktop.Core.Project prj = ArcGIS.Desktop.Core.Project.Current;
+            pth = prj.HomeFolderPath;
+            return pth;
+        }
+        private void setFolder(string fname)
+        {
+            string prjFolder = getProjectFolder();
+            string xmlFolder = System.IO.Path.GetDirectoryName(fname);
+            if (!Equals(prjFolder, xmlFolder))
+                _projectFolder = xmlFolder;
+            else
+                _projectFolder = prjFolder;
+
+
+            //string pth = "";
+            //System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Project");
+            //if (node != null)
+            //{
+            //    string file = node.InnerText;
+            //    if (!System.IO.File.Exists(file))
+            //    {
+            //      _projectFolder = getProjectFolder(); // should be the current project folder
+            //      file = System.IO.Path.Combine(_projectFolder, file);
+            //      if (!System.IO.File.Exists(file)) // if the project file does not exist in this folder then look in the xml filename folder
+            //      {
+            //        file = System.IO.Path.Combine(_projectFolder, file);
+            //       if (!System.IO.File.Exists(file))
+            //       {
+            //           MessageBox.Show("Unable to find the project in either the current project folder or with the Xml file selected");
+            //           _projectFolder = "";
+            //       }
+            //   }
+            // }
+            // }
+        }
+        private string getDatasetPath(string pth)
+        {
+            string dsPath = pth;
+            if (pth.StartsWith("http://") || pth.Contains(":\\") || pth.StartsWith(_projectFolder))
+            { }
+            else
+                dsPath = System.IO.Path.Combine(_projectFolder, pth);
+            return dsPath;
+        }
         private static string _filename;// = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
         System.Xml.XmlNodeList _datarows;
 
@@ -81,6 +128,7 @@ namespace DataAssistant
         private int _selectedRowNum = -1;
         int _methodnum = -1;
         string _revertname = System.IO.Path.Combine(AddinAssemblyLocation(), "RevertFile.xml");
+        string _projectFolder = "";
 
         private List<ComboData> _domainTargetValues = new List<ComboData>();
         private List<ComboData> _domainSourceValues = new List<ComboData>();
@@ -96,9 +144,9 @@ namespace DataAssistant
             // load the selected file
             if (System.IO.File.Exists(fname))
             {
+                setFolder(fname);
                 setXmlFileName(fname);
-                //_xml.Load(_filename);
-                if(loadXml(_filename))
+                if (loadXml(_filename))
                 {
                     this._skipSelectionChanged = true;
                     setXmlDataProvider(this.FieldGrid, fieldXPath);
@@ -151,7 +199,7 @@ namespace DataAssistant
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
             setReplaceValues(nodes);
             setPreviewValues(false);
-            
+
         }
         private void setRevertButton()
         {
@@ -1228,8 +1276,8 @@ namespace DataAssistant
 
             if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                setDomainValues(this.TargetLayer.Text, getTargetFieldName(),_target,true);
-                setDomainValues(this.SourceLayer.Text, getSourceFieldName(),_source,true);
+                setDomainValues(getDatasetPath(this.TargetLayer.Text), getTargetFieldName(),_target,true);
+                setDomainValues(getDatasetPath(this.SourceLayer.Text), getSourceFieldName(),_source,true);
             }
         }
         public void resetDomainValuesUIFromConfig(List<ComboData> domainValues, string sourceTarget)
@@ -1433,14 +1481,18 @@ namespace DataAssistant
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
             {
                 ArcGIS.Core.Data.TableDefinition def = null;
-                string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
-                string db = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
-                ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(db)));
-                using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                try
                 {
-                    def = tab.GetDefinition();
-                    domain = getDomainValuesforTable(def, fieldName);
+                    string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
+                    string db = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
+                    ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(db)));
+                    using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                    {
+                        def = tab.GetDefinition();
+                        domain = getDomainValuesforTable(def, fieldName);
+                    }
                 }
+                catch { MessageBox.Show("Unable to retrieve the domain values for " + fieldName); }
                 return;
             });
             if (resetUI == true)
@@ -1455,15 +1507,19 @@ namespace DataAssistant
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
             {
                 ArcGIS.Core.Data.TableDefinition def = null;
-                string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
-                string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
-                ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(db)));
-                using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                try
                 {
-                    def = tab.GetDefinition();
-                    domain = getDomainValuesforTable(def, fieldName);
+                    string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
+                    string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
+                    ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(db)));
+                    using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
+                    {
+                        def = tab.GetDefinition();
+                        domain = getDomainValuesforTable(def, fieldName);
+                    }
                 }
-                return domain;
+                catch { MessageBox.Show("Unable to retrieve the domain values for " + fieldName); }
+                return;
             });
             if (resetUI == true)
                 resetDomainValuesUI(domain, sourceTarget);
@@ -1486,10 +1542,7 @@ namespace DataAssistant
                     def = fclass.GetDefinition();
                     domain = getDomainValuesforTable(def, fieldName);
                 }
-                catch
-                {
-                    domain = null;
-                }
+                catch {MessageBox.Show("Unable to retrieve the domain values for " + fieldName);}
                 return;
             });
             if(resetUI == true)
@@ -1610,7 +1663,6 @@ namespace DataAssistant
         {
 
         }
-
     }
 }
 // scrap for auto-matching domain values

@@ -46,7 +46,7 @@ _noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 
-_ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','ShapeLength','ShapeArea','STLENGTH()','STAREA()','raster','GLOBALID']
+_ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','SHAPELENGTH','SHAPEAREA','STLENGTH()','STAREA()','RASTER','GLOBALID']
 _ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','globalIDFieldName']
 _CIMWKSP = 'CIMWKSP'
 _lyrx = '.lyrx'
@@ -75,7 +75,7 @@ def addMessage(val):
     # write a message to the screen
     try:
         if sys.stdin.isatty():
-            arcpy.AddMessage(str(val))
+            #arcpy.AddMessage(str(val))
             print (str(val))
         else:
             arcpy.AddMessage(str(val))

@@ -50,6 +50,7 @@ def publish(xmlFileNames):
     arcpy.SetProgressorLabel("Data Assistant")
     xmlFiles = xmlFileNames.split(";")
     layers = []
+
     for xmlFile in xmlFiles: # multi value parameter, loop for each file
         xmlFile = dla.getXmlDocName(xmlFile)
         dla.addMessage("Configuration file: " + xmlFile)

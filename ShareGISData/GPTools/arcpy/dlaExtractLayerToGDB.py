@@ -154,15 +154,16 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
         else:
             arcpy.env.preserveGlobalIds = False # try to preserve
             if isTable:
-                if not createDataset('Table',workspace,targetName,xmlDoc,source,None):
+                if not createDataset('Table',workspace,targetName,None,xmlDoc,source,None):
                     arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
                     return False
 
             elif not isTable:
-                if not createDataset('FeatureClass',workspace,targetName,xmlDoc,source,targetRef):
+                geomType = arcpy.Describe(source).shapeType
+                if not createDataset('FeatureClass',workspace,targetName,geomType,xmlDoc,source,targetRef):
                     arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
                     return False
-            removeDefaultValues(xmlDoc,ds)
+            removeDefaultValues(ds)
             fieldMap = getFieldMap(view,ds)
             arcpy.Append_management(view,ds,schema_type="NO_TEST",field_mapping=fieldMap)
 
@@ -171,30 +172,58 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
         dla.addMessage(str(count) + " source rows exported to " + targetName)
         if str(count) == '0':
             result = False
-            dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent")
-            dla.addMessage("To verify please use the Append tool to load some data to the target dataset")
+            dla.addError("Failed to load to " + targetName + ", it is likely that your data falls outside of the target Spatial Reference Extent or there is another basic issue")
+            dla.addError("To verify please use the Append and/or Copy Features tool to load some data to an intermediate dataset:")
+            dla.addError(ds)
+            dla.showTraceback()
     return result
 
 def getFieldMap(view,ds):
 
-    fieldMap = arcpy.FieldMappings()
-    fieldMap.addTable(ds)
-    inFields = [field.name for field in arcpy.ListFields(view) if not field.required]
-    for inField in inFields:
-        for i in range(fieldMap.fieldCount):
-            fmap = fieldMap.getFieldMap(i)
-            if fmap.getInputFieldName(0) == inField.replace('.','_'):
-                fmap.addInputField(view,inField)
-                fieldMap.replaceFieldMap(i,fmap)
-    return fieldMap
+    fieldMaps = arcpy.FieldMappings()
+    fieldMaps.addTable(ds)
+    inFields = [field.name for field in arcpy.ListFields(view) if field.name.upper() not in dla._ignoreFields] # not field.required removed after .Enabled issue 
+    removenames = []
+    for i in range(fieldMaps.fieldCount):
+        field = fieldMaps.fields[i]
+        fmap = fieldMaps.getFieldMap(i)
+        fName = field.name
+        for s in range(0,fmap.inputFieldCount):
+            try:
+                fmap.removeInputField(0)
+            except:
+                pass
+        try:
+            f = inFields.index(fName.replace('_','.',1)) # just replace the first char
+            inField = inFields[f]
+            fmap.addInputField(view,inField)
+            fieldMaps.replaceFieldMap(i,fmap)
+        except:
+            removenames.append(fName)
 
-def createDataset(dsType,workspace,targetName,xmlDoc,source,targetRef):
+    for name in removenames:
+        i = fieldMaps.findFieldMapIndex(name)
+        fieldMaps.removeFieldMap(i)
+        dla.addMessage(name + ' removed from fieldMappings')
+        
+    return fieldMaps
+
+#def printFieldMap(fieldMap):
+
+#    for i in range(fieldMap.fieldCount):
+#        fmap = fieldMap.getFieldMap(i)
+#        dla.addMesage(str(fmap.getInputFieldName(0)) + ': ' + str(fmap.outputField.name))
+
+#    return
+
+
+def createDataset(dsType,workspace,targetName,geomType,xmlDoc,source,targetRef):
 
     if source.lower().endswith('.lyrx') and dla.hasJoin(source):
         if dsType == 'Table':
             arcpy.CreateTable_management(workspace,targetName)
         else:
-            arcpy.CreateFeatureclass_management(workspace,targetName,spatial_reference=targetRef)
+            arcpy.CreateFeatureclass_management(workspace,targetName,geometry_type=geomType,spatial_reference=targetRef)
 
         sourceFields = xmlDoc.getElementsByTagName("SourceField")
         for sfield in sourceFields:
@@ -266,35 +295,21 @@ def getObjectIdWhereClause(table,rowLimit):
     del searchCursor
     return where
 
-def removeDefaultValues(xmlDoc,dataset):
+def removeDefaultValues(dataset):
     # exported source fields may contain DefaultValues, which can replace None/null values in field calculations
-    sourceFields = xmlDoc.getElementsByTagName("SourceField")
-    stypes = arcpy.da.ListSubtypes(dataset)
+    sourceFields = arcpy.ListFields(dataset) # xmlDoc.getElementsByTagName("SourceField")
+    #stypes = arcpy.da.ListSubtypes(dataset) # my current understanding is that the intermediate/exported dataset will not have subtypes, just default/0 subtype if present in source dataset.
 
     dla.addMessage("Removing Default Value property from intermediate database fields")
     for sfield in sourceFields:
-        fname = sfield.getAttributeNode('Name').nodeValue
-        if fname != dla._noneFieldName:
+        fname = sfield.name
+        if fname != dla._noneFieldName and sfield.defaultValue != None:
             if fname.count('.') > 0:
                 fname = fname.replace('.','_')
-            if len(stypes) == 1:
-                try:
-                    arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
-                except:
-                    dla.addMessage("Unable to set DefaultValue for " + fname) # skip GlobalIDs and other fields that cannot be updated.
-            else:
-                for s in range (0,len(stypes)-1):
-                    #stype = stypes[s]
-                    # my current understanding is that the intermediate/exported dataset will not have subtypes, just default/0 subtype if present in source dataset.
-                    arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
-                    #vals = []
-                    #stypevals = stype['FieldValues']
-                    #try:
-                    #    stypevals = stypevals[fname]
-                    #    for i in range (0,len(stypevals)):
-                    #        vals.append(str(i) + ": " + str(stypevals[i]))
-                    #except:
-                    #    pass
+            try:
+                arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
+            except:
+                dla.addMessage("Unable to set DefaultValue for " + fname) # skip GlobalIDs/other fields that cannot be updated. Should not have a default set in these cases 
 
 if __name__ == "__main__":
     main()

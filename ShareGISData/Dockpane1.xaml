@@ -82,7 +82,7 @@
                         <Button x:Name="SelectButton" Content="..." Grid.Row="0" Grid.Column="1" Width="20" Background="{DynamicResource Esri_White}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-27,5,5" Click="SelectButton_Click" ToolTip="Open a configuration file (.xml)"/>
                         <Button x:Name="RevertButton" Content="Revert..." Style="{DynamicResource Esri_SimpleButton}" Visibility="Hidden" ToolTip="Discard changes and re-open the original file" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,5,5" Width="70" Click="RevertButton_Click"/>
                     </StackPanel>
-                    <StackPanel x:Name="SourceStack" Grid.Row="1" IsEnabled="False" Visibility="Hidden">
+                    <StackPanel x:Name="SourceStack" Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="False" Visibility="Hidden">
                         <Label x:Name="SourceLabel" Margin="0,5,5,0" Content="Source Layer"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Top"/>
                         <TextBox x:Name="SourceLayer" HorizontalAlignment="Stretch" Margin="5,5,30,5" TextWrapping="NoWrap" IsEnabled="False"  
                             Text="" VerticalAlignment="Top"  TextChanged="SourceLayer_TextChanged" />
@@ -106,11 +106,11 @@
                          ToolTip="The field value to use for replacement, or optionally a Where Expression like 'WHERE OBJECTID &gt; 100'"/>
                     </StackPanel>
 
-                    <StackPanel x:Name="TargetStack" Grid.Row="4" IsEnabled="False" Visibility="Hidden">
+                    <StackPanel x:Name="TargetStack" Grid.Row="4" Grid.ColumnSpan="2" IsEnabled="False" Visibility="Hidden">
                         <Label x:Name="TargetLabel" Margin="0,5,5,0" Content="Target Layer"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Top"/>
-                        <TextBox x:Name="TargetLayer" HorizontalAlignment="Stretch" Margin="5,5,30,5" TextWrapping="NoWrap" 
+                        <TextBox x:Name="TargetLayer" Grid.Column="0" HorizontalAlignment="Stretch" Margin="5,5,30,5" TextWrapping="NoWrap" 
                             Text="" VerticalAlignment="Top" TextChanged="TargetLayer_TextChanged"  IsEnabled="False" />
-                        <Button x:Name="TargetButton" Content="..." Background="{DynamicResource Esri_White}" Width="20"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-27,5,5" Click="TargetButton_Click" ToolTip="Replace the Target"/>
+                        <Button x:Name="TargetButton" Content="..." Grid.Column="1" Background="{DynamicResource Esri_White}" Width="20"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,-27,5,5" Click="TargetButton_Click" ToolTip="Replace the Target"/>
                     </StackPanel>
                 </Grid>
             </ScrollViewer>

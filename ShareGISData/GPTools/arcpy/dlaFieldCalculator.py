@@ -255,7 +255,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                             expression = expression.replace(name,"|" + name + "|")
                         val = getExpression(row,names,expression)
                     # set field value
-                    newVal = getValue(names,ftypes,lengths,targetName,targetValue,val)
+                    newVal = getValue(ftypes[fnum],lengths[fnum],targetName,targetValue,val)
                     row[fnum] = newVal
                     if dla.debug == True:
                         dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
@@ -501,34 +501,33 @@ def getSourceValue(row,names,sourceName,targetName):
             sourceValue = None
     return sourceValue
 
-def getValue(names,ftypes,lengths,targetName,targetValue,val):
+def getValue(ftype,flength,targetName,targetValue,val):
     retVal = val # init to the value calculated so far. This function will alter as needed for field type
     try:
-        idx = dla.getFieldIndexList(names,targetName)
         if retVal == 'None':
             retVal = None
         if retVal != targetValue:
-            if ftypes[idx] == 'Integer' or ftypes[idx] == 'Double':
+            if ftype == 'Integer' or ftype == 'Double':
                 # if the type is numeric then try to cast to float
-                if str(val) == 'None' or str(val) == '(None)':
+                if str(val) == 'None' or str(val) == dla._noneFieldName:
                     retVal = None
                 else:
                     try:
                         valTest = float(val)
                         retVal = val
                     except:
-                        err = "Exception caught: unable to cast " + targetName + " to " + ftypes[idx] + "  : '" + str(val) + "'"
+                        err = "Exception caught: unable to cast " + targetName + " to " + ftype + "  : '" + str(val) + "'"
                         dla.addError(err)
                         dla._errCount += 1
-            elif ftypes[idx] == 'String':
+            elif ftype == 'String':
                 # if a string then cast to string or encode utf-8
                 if type(val) == 'str':
                     retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
                 else:
                     retVal = str(val)
                 # check length to make sure it is not too long.
-                if len(retVal) > int(lengths[idx]):
-                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(lengths[idx]) + ") : '" + str(retVal) + "'"
+                if len(retVal) > int(flength):
+                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(flength) + ") : '" + str(retVal) + "'"
                     dla.addError(err)
                     dla._errCount += 1
 

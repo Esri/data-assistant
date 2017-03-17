@@ -26,33 +26,63 @@ import sys,os,xml.dom.minidom,time,datetime
 import json
 from xml.dom.minidom import Document
 
-class dlaProject:
+class dlaFile:
     # a simple class to hold project properties 
     def __init__(self,xmlFile):
         self.xmlFile
+        self.dirName
         self.xmlDoc = xmlDoc
-        self.projectName
+        self.dlaSourceTarget # dlaDatasets
+        self.dlaFields
+        self.dlaSourceFields
+        self.dlaTargetFields
+        self.data
+        # not directly from xml file but useful items.
+        self.rootFolder
+        self.relativePath
+        self.dlaworkspace
+        self.dlaTable
+        self.sourceViewName
+        self.signinToken
+        self.useReplaceSettings
+        self.token
+
+class dlaSourceTarget:
+    # a simple class to hold Datasets section of the xml document
+    def __init__(self,xmlDoc):
         self.rootFolder
         self.relativePath
         self.fullPath
-        self.signinToken
-        self.sourceFields
-        self.projectFields
+        self.source # a dlaDataset
+        self.target # a dlaDataset
+        self.sourceSpatialReference
+        self.targetSpatialReference
+        self.replaceBy
         self.staged
-
 
 class dlaDataset:
     # a simple class to hold dataset properties 
     def __init__(self,xmlDoc):
-        self.xmlDoc = xmlDoc
         self.rootFolder
         self.relativePath
         self.fullPath
+        self.connectionProperties
         self.datasetName
         self.datasetType
         self.dlaType # dataset, layer file, service
-        self.serviceCapabilities # boolean or list?
-        self.signinToken
+        self.featureClass
+        self.table
+        self.dlaService
         self.shapeType
         self.spatialReference
+        self.spatialReferenceString
         self.fields
+        self.fieldNames
+        self.dlaFields
+        self.oidWhereClause
+
+class dlaService:
+    # a simple class to hold feature service properties 
+    def __init__(self,xmlDoc):
+        self.url
+        self.serviceCapabilities # boolean or list?

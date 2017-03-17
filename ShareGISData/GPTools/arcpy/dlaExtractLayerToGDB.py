@@ -74,13 +74,6 @@ def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):
         if len(fields) > 0:
             arcpy.SetProgressor("step", "Importing Layer...",0,1,1)
 
-            if source == '' or source == '#':
-                source = dla.getDatasetPath(xmlDoc,"Source")
-            else:
-                source = source
-            if target == '' or target == '#':
-                target = dla.getDatasetPath(xmlDoc,"Target")
-
             targetName = dla.getDatasetName(target)
             sourceName = dla.getDatasetName(source)
             arcpy.SetProgressorLabel("Loading " + sourceName + " to " + targetName +"...")
@@ -194,10 +187,15 @@ def getFieldMap(view,ds):
             except:
                 pass
         try:
-            f = inFields.index(fName.replace('_','.',1)) # just replace the first char
-            inField = inFields[f]
-            fmap.addInputField(view,inField)
-            fieldMaps.replaceFieldMap(i,fmap)
+            f = -1
+            try:
+                f = inFields.index(fName) # simple case where names are equal
+            except:
+                f = inFields.index(fName.replace('_','.',1)) # just replace the first char - more complex case like xfmr.phase_designation
+            if f > -1:
+                inField = inFields[f]
+                fmap.addInputField(view,inField)
+                fieldMaps.replaceFieldMap(i,fmap)
         except:
             removenames.append(fName)
 
@@ -272,8 +270,8 @@ def getSpatialReference(xmlDoc,lyrtype):
 def getObjectIdWhereClause(table,rowLimit):
     # build a where clause, assume that oids are sequential or at least in row order...
     oidname = arcpy.Describe(table).oidFieldName
-    searchCursor = arcpy.da.SearchCursor(table,["OID@"])
-    #i = 0
+    #dla.addMessage(table + ' - ' + oidname)
+    searchCursor = arcpy.da.SearchCursor(table,[oidname])
     ids = []
     # use the oidname in the where clause
     where = oidname + " <= " + str(rowLimit)

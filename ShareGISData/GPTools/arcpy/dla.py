@@ -772,11 +772,20 @@ def getProject():
 def getDatasetPath(xmlDoc,name):
     # check if file exists, then try to add project folder if missing
     pth = getNodeValue(xmlDoc,name)
-    lval = len(pth.split(os.sep))
-    if not arcpy.Exists(pth) or lval == 1:
-        pth = os.path.join(_projectFolder,pth)
+    if pth.lower().startswith(_http):
+        return pth
+    elif pth.endswith(_lyrx):
+        # need to check os.path
+        if not os.path.exists(pth):
+            pth = os.path.join(_projectFolder,pth)
+            if not os.path.exists(pth):
+                addError("Unable to locate layer path: " + pth)
+    else:
+        # need to check arcpy
         if not arcpy.Exists(pth):
-            addError("Unable to locate dataset path: " + pth)
+            pth = os.path.join(_projectFolder,pth)
+            if not arcpy.Exists(pth):
+                addError("Unable to locate dataset path: " + pth)
     return pth
 
 def dropProjectPath(pth):
@@ -1263,8 +1272,7 @@ def getFieldIndexList(values,value):
 
 def getLayerSourceString(lyrPath):
     if isinstance(lyrPath,str) and lyrPath.lower().endswith(_lyrx):
-        lval = len(lyrPath.split(os.sep))
-        if lval == 1:
+        if not os.path.exists(lyrPath):
             addMessage(str(_projectFolder))
             lyrPath = os.path.join(_projectFolder,lyrPath)
         layer = arcpy.mp.LayerFile(lyrPath)

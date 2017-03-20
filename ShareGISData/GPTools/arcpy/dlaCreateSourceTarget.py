@@ -107,9 +107,9 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = dla.getProject()
-    setSourceTarget(dataset,xmlDoc,"Project",dla.dropProjectPath(prj.filePath))
-    setSourceTarget(dataset,xmlDoc,"Source",dla.dropProjectPath(sourcePath))
-    setSourceTarget(dataset,xmlDoc,"Target",dla.dropProjectPath(targetPath))
+    setSourceTarget(dataset,xmlDoc,"Project",dla.dropXmlFolder(xmlFileName,prj.filePath))
+    setSourceTarget(dataset,xmlDoc,"Source",dla.dropXmlFolder(xmlFileName,sourcePath))
+    setSourceTarget(dataset,xmlDoc,"Target",dla.dropXmlFolder(xmlFileName,targetPath))
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")

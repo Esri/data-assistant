@@ -74,23 +74,32 @@ namespace DataAssistant
             pth = prj.HomeFolderPath;
             return pth;
         }
-        private void setFolder(string fname)
+        private string getFolder(string fname)
         {
+            string folder = "";
             string prjFolder = getProjectFolder();
             string xmlFolder = System.IO.Path.GetDirectoryName(fname);
             if (!Equals(prjFolder, xmlFolder))
-                _projectFolder = xmlFolder;
+                folder = xmlFolder;
             else
-                _projectFolder = prjFolder;
+                folder = xmlFolder;
+
+            return folder;
 
         }
+        private string setFolder(string fname)
+        {
+            _xmlFolder = getFolder(fname);
+            return _xmlFolder;           
+        }
+
         private string getDatasetPath(string pth)
         {
             string dsPath = pth;
-            if (pth.StartsWith("http://") || pth.Contains(":\\") || pth.StartsWith(_projectFolder))
+            if (pth.StartsWith("http://") || pth.Contains(":\\") || pth.StartsWith(_xmlFolder))
             { }
             else
-                dsPath = System.IO.Path.Combine(_projectFolder, pth);
+                dsPath = System.IO.Path.Combine(_xmlFolder, pth);
             return dsPath;
         }
         private static string _filename;// = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
@@ -107,7 +116,7 @@ namespace DataAssistant
         private int _selectedRowNum = -1;
         int _methodnum = -1;
         string _revertname = System.IO.Path.Combine(AddinAssemblyLocation(), "RevertFile.xml");
-        string _projectFolder = "";
+        string _xmlFolder = "";
 
         private List<ComboData> _domainTargetValues = new List<ComboData>();
         private List<ComboData> _domainSourceValues = new List<ComboData>();
@@ -938,7 +947,10 @@ namespace DataAssistant
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     //this.FileName.Text = dlg.FileName;
-                    loadFile(dlg.FileName);
+                    if (checkXmlFileName(dlg.FileName))
+                    {
+                        loadFile(dlg.FileName);
+                    }
                 }
             }
 
@@ -949,8 +961,11 @@ namespace DataAssistant
             TextBox txt = sender as TextBox;
             if (getXmlFileName() != txt.Text)
             {
-                setXmlFileName(txt.Text);
-                loadFile(txt.Text);
+                if (checkXmlFileName(txt.Text))
+                {
+                    setXmlFileName(txt.Text);
+                    loadFile(txt.Text);
+                }
             }
         }
 

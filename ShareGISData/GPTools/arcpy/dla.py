@@ -40,7 +40,7 @@ _errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 _project = None
-_projectFolder = None
+_xmlFolder = None
 
 _noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
@@ -735,38 +735,33 @@ def getDatasetName(path):
 def setProject(xmlfile,projectFilePath):
     # set the current project to enable relative file paths for processing
     global _project
-    global _projectFolder
+    global _xmlFolder
     try:
-        if _projectFolder == None:
-            getProject()
-        if not os.path.exists(projectFilePath) and _projectFolder != None: # try to use the current project folder
-            projectFilePath = os.path.join(_projectFolder,projectFilePath)
-        if not os.path.exists(projectFilePath) and os.path.exists(xmlfile): # try to use the xml file folder path
-            projectFilePath = os.path.join(os.path.dirname(xmlfile),projectFilePath)
+        if _xmlFolder == None:
+            prj = getProject()
+        _xmlFolder = os.path.dirname(xmlfile)
+        if not os.path.exists(projectFilePath):
+            projectFilePath = os.path.join(_xmlFolder,projectFilePath)
         if os.path.exists(projectFilePath):
             _project = arcpy.mp.ArcGISProject(projectFilePath)
-            _projectFolder = os.path.dirname(projectFilePath)
         else:
-            addError(str(projectFilePath) + ' does not exist, continuing')
+            addMessage(str(projectFilePath) + ' does not exist, continuing')
             
     except:
         addError("Unable to set the current project, continuing")
         _project = None
-        _projectFolder = None
+        _xmlFolder = None
 
     return _project
 
 def getProject():
-    global _project, _projectFolder
+    global _project, _xmlFolder
     if _project == None:
         try:
             _project = arcpy.mp.ArcGISProject("CURRENT")
-            _projectFolder = os.path.dirname(_project.filePath)
         except:
             addError("Unable to obtain a reference to the current project, continuing")
             _project = None
-    else:
-        _projectFolder = os.path.dirname(_project.filePath)
     return _project
 
 def getDatasetPath(xmlDoc,name):
@@ -777,23 +772,31 @@ def getDatasetPath(xmlDoc,name):
     elif pth.endswith(_lyrx):
         # need to check os.path
         if not os.path.exists(pth):
-            pth = os.path.join(_projectFolder,pth)
+            pth = os.path.join(_xmlFolder,pth)
             if not os.path.exists(pth):
                 addError("Unable to locate layer path: " + pth)
     else:
         # need to check arcpy
         if not arcpy.Exists(pth):
-            pth = os.path.join(_projectFolder,pth)
+            pth = os.path.join(_xmlFolder,pth)
             if not arcpy.Exists(pth):
                 addError("Unable to locate dataset path: " + pth)
     return pth
 
 def dropProjectPath(pth):
     # drop the project path from datasets to support relative paths and moving files between machines.
-    if _projectFolder != None:
-        pth = pth.replace(_projectFolder,'')
+    if _xmlFolder != None:
+        pth = pth.replace(_xmlFolder,'')
         if pth.startswith('\\'):
             pth = pth[1:]
+    return pth
+
+def dropXmlFolder(xmlfile,pth):
+    # drop the xml file path from datasets to support relative paths and moving files between machines.
+    dir = os.path.dirname(xmlfile)
+    pth = pth.replace(dir,'')
+    if pth.startswith('\\'):
+      pth = pth[1:]
     return pth
 
 def getMapLayer(layerName):
@@ -1088,6 +1091,8 @@ def getSpatialReferenceString(xmlDoc,lyrtype):
     # try factoryCode first
     try:
         sprefstr = getNodeValue(xmlDoc,lyrtype + "FactoryCode")
+        if sprefstr == '':
+            sprefstr = getNodeValue(xmlDoc,lyrtype + "SpatialReference")
     except:
         try:
             sprefstr = getNodeValue(xmlDoc,lyrtype + "SpatialReference")
@@ -1273,8 +1278,8 @@ def getFieldIndexList(values,value):
 def getLayerSourceString(lyrPath):
     if isinstance(lyrPath,str) and lyrPath.lower().endswith(_lyrx):
         if not os.path.exists(lyrPath):
-            addMessage(str(_projectFolder))
-            lyrPath = os.path.join(_projectFolder,lyrPath)
+            addMessage(str(_xmlFolder))
+            lyrPath = os.path.join(_xmlFolder,lyrPath)
         layer = arcpy.mp.LayerFile(lyrPath)
         fc = layer.listLayers()[0]
         return fc.dataSource
@@ -1295,3 +1300,30 @@ def getXmlDocName(xmlFile):
     except:
         addError("Unable to process file name: " + xmlFile)
     return xmlFile
+
+def getReplaceBy(xmlDoc):
+    # get the where clause using the xml document or return ''
+    repl = xmlDoc.getElementsByTagName("ReplaceBy")[0]
+    fieldName = getNodeValue(repl,"FieldName")
+    operator = getNodeValue(repl,"Operator")
+    value = getNodeValue(repl,"Value")
+    expr = ''
+    type = getTargetType(xmlDoc,fieldName)
+    if fieldName != '' and fieldName != '(None)' and operator != "Where":
+        if type == 'String':
+            value = "'" + value + "'"
+        expr = fieldName + " " + operator + " " + value
+        
+    elif operator == 'Where':
+        expr = value
+    else: 
+        expr = '' # empty string by default
+        
+    return expr
+
+def getTargetType(xmlDoc,fname):
+    # get the target field type
+    for tfield in xmlDoc.getElementsByTagName('TargetField'):       
+        nm = tfield.getAttribute("Name")
+        if nm == fname:
+            return tfield.getAttribute("Type")

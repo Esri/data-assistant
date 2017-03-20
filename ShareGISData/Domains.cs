@@ -265,7 +265,7 @@ namespace DataAssistant
 
         }
 
-        public async void setDomainValuesSQL(string dataset, string fieldName, string sourceTarget, bool resetUI)
+        public async void setDomainValuesSQL(string sde, string dataset, string fieldName, string sourceTarget, bool resetUI)
         {
             List<ComboData> domain = new List<ComboData>();
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
@@ -274,15 +274,14 @@ namespace DataAssistant
                 try
                 {
                     string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
-                    string db = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
-                    ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(db)));
+                    ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(sde)));
                     using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
                     {
                         def = tab.GetDefinition();
                         domain = getDomainValuesforTable(def, fieldName);
                     }
                 }
-                catch { MessageBox.Show("Unable to retrieve the domain values for " + fieldName); }
+                catch { raiseDomainErrorMessage(dataset, fieldName); }
                 return;
             });
             if (resetUI == true)
@@ -291,7 +290,7 @@ namespace DataAssistant
                 resetDomainValuesUIFromConfig(domain, sourceTarget);
             return;
         }
-        public async void setDomainValuesFile(string dataset, string fieldName, string sourceTarget, bool resetUI)
+        public async void setDomainValuesFile(string db, string dataset, string fieldName, string sourceTarget, bool resetUI)
         {
             List<ComboData> domain = new List<ComboData>();
             await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
@@ -300,7 +299,6 @@ namespace DataAssistant
                 try
                 {
                     string table = dataset.Substring(dataset.LastIndexOf("\\") + 1);
-                    string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
                     ArcGIS.Core.Data.Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(db)));
                     using (ArcGIS.Core.Data.Table tab = geodatabase.OpenDataset<ArcGIS.Core.Data.Table>(table))
                     {
@@ -308,7 +306,7 @@ namespace DataAssistant
                         domain = getDomainValuesforTable(def, fieldName);
                     }
                 }
-                catch { MessageBox.Show("Unable to retrieve the domain values for " + fieldName); }
+                catch { raiseDomainErrorMessage(dataset, fieldName); }
                 return;
             });
             if (resetUI == true)
@@ -332,7 +330,7 @@ namespace DataAssistant
                     def = fclass.GetDefinition();
                     domain = getDomainValuesforTable(def, fieldName);
                 }
-                catch { MessageBox.Show("Unable to retrieve the domain values for " + fieldName); }
+                catch { raiseDomainErrorMessage(dataset, fieldName); }
                 return;
             });
             if (resetUI == true)
@@ -354,22 +352,40 @@ namespace DataAssistant
 
             if (dataset.ToLower().Contains(".sde"))
             {
-                setDomainValuesSQL(dataset, fieldName, sourceTarget, resetUI);
+                string sde = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
+                if (!System.IO.File.Exists(sde))
+                {
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("SDE connection file " + sde + " does not exist");
+                }
+                setDomainValuesSQL(sde, dataset, fieldName, sourceTarget, resetUI);
             }
             else if (dataset.ToLower().Contains(".gdb"))
             {
-                setDomainValuesFile(dataset, fieldName, sourceTarget, resetUI);
+                string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
+                if(! System.IO.Directory.Exists(db))
+                {
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("File Geodatabase " + db + " does not exist");
+                }
+                else
+                    setDomainValuesFile(db, dataset, fieldName, sourceTarget, resetUI);
             }
             else if (dataset.ToLower().Contains(".lyrx"))
             {
                 if (MapView.Active.Map == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
+                else if(!System.IO.File.Exists(dataset))
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Layer file " + dataset + " does not exist");
                 else
                 {
                     setDomainValuesLayer(dataset, fieldName, sourceTarget, resetUI);
                 }
             }
             return;
+        }
+        private void raiseDomainErrorMessage(string dataset,string fieldName)
+        {
+            ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Unable to retrieve domain values for " + dataset + ", " + fieldName);
+
         }
         private string getDomainTooltip(string code, string value)
         {

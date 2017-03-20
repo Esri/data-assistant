@@ -101,6 +101,7 @@
       <DependentUpon>Dockpane2Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dockpane2SettingsViewModel.cs" />
+    <Compile Include="CheckXmlFile.cs" />
     <Compile Include="Domains.cs" />
     <Compile Include="gridTooltipCreator.cs" />
     <Compile Include="Module1.cs" />
@@ -111,6 +112,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dla.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GPTools\arcpy\dlaPreviewTesting.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dlaService.py">

@@ -91,10 +91,22 @@ namespace DataAssistant
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Unable to locate dataset '" + dataset + "'");
             return valid;
         }
+
         private bool checkDatasetExists(string dataset)
         {
             bool exists = false;
-            if (dataset.ToLower().Contains(".sde\\"))
+            if (dataset.ToLower().StartsWith("http://"))
+            {
+                Uri ds = new Uri(dataset);
+                try
+                {
+                    var query = ds.Query; // just a simple url test
+                    exists = true;
+                }
+                catch { exists = false; }
+
+            }
+            else if (dataset.ToLower().Contains(".sde\\"))
             {
                 string sde = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
                 if (System.IO.File.Exists(sde)) // just checking .sde file 

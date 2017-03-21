@@ -70,6 +70,62 @@ namespace DataAssistant
                 setDomainValues(getDatasetPath(this.SourceLayer.Text), getSourceFieldName(), _source, true);
             }
         }
+
+        public void setDomainValues(string dataset, string fieldName, string sourceTarget, bool resetUI)
+        {
+
+            if (fieldName.Equals(_noneField))
+            {
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("No field to map");
+            }
+
+            if (dataset.ToLower().StartsWith("http://"))
+            {
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("service url: " + dataset);
+                if (MapView.Active.Map == null)
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the service domain values");
+                //System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex(@"\d");
+                bool containsNum = System.Text.RegularExpressions.Regex.IsMatch(dataset.Substring(dataset.LastIndexOf("/") + 1), @"\d"); 
+                if (!containsNum)
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Layer file " + dataset + " does not end with an integer which is required for services");
+                else
+                    setDomainValuesLayer(dataset, fieldName, sourceTarget, resetUI);
+
+            }
+
+            if (dataset.ToLower().Contains(".sde"))
+            {
+                string sde = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
+                if (!System.IO.File.Exists(sde))
+                {
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("SDE connection file " + sde + " does not exist");
+                }
+                setDomainValuesSQL(sde, dataset, fieldName, sourceTarget, resetUI);
+            }
+            else if (dataset.ToLower().Contains(".gdb"))
+            {
+                string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
+                if (!System.IO.Directory.Exists(db))
+                {
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("File Geodatabase " + db + " does not exist");
+                }
+                else
+                    setDomainValuesFile(db, dataset, fieldName, sourceTarget, resetUI);
+            }
+            else if (dataset.ToLower().EndsWith(".lyrx"))
+            {
+                if (MapView.Active.Map == null)
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
+                else if (!System.IO.File.Exists(dataset))
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Layer file " + dataset + " does not exist");
+                else
+                {
+                    setDomainValuesLayer(dataset, fieldName, sourceTarget, resetUI);
+                }
+            }
+            return;
+        }
+
         public void resetDomainValuesUIFromConfig(List<ComboData> domainValues, string sourceTarget)
         {
             int fieldnum = FieldGrid.SelectedIndex + 1;
@@ -340,48 +396,6 @@ namespace DataAssistant
             return;
         }
 
-        public void setDomainValues(string dataset, string fieldName, string sourceTarget, bool resetUI)
-        {
-
-            if (fieldName.Equals(_noneField))
-            {
-                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("No field to map");
-            }
-
-            //if (dataset.ToLower().StartsWith("http://"))
-
-            if (dataset.ToLower().Contains(".sde"))
-            {
-                string sde = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
-                if (!System.IO.File.Exists(sde))
-                {
-                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("SDE connection file " + sde + " does not exist");
-                }
-                setDomainValuesSQL(sde, dataset, fieldName, sourceTarget, resetUI);
-            }
-            else if (dataset.ToLower().Contains(".gdb"))
-            {
-                string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
-                if(! System.IO.Directory.Exists(db))
-                {
-                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("File Geodatabase " + db + " does not exist");
-                }
-                else
-                    setDomainValuesFile(db, dataset, fieldName, sourceTarget, resetUI);
-            }
-            else if (dataset.ToLower().Contains(".lyrx"))
-            {
-                if (MapView.Active.Map == null)
-                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
-                else if(!System.IO.File.Exists(dataset))
-                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Layer file " + dataset + " does not exist");
-                else
-                {
-                    setDomainValuesLayer(dataset, fieldName, sourceTarget, resetUI);
-                }
-            }
-            return;
-        }
         private void raiseDomainErrorMessage(string dataset,string fieldName)
         {
             ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Unable to retrieve domain values for " + dataset + ", " + fieldName);

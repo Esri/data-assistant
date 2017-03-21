@@ -101,8 +101,8 @@
       <DependentUpon>Dockpane2Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dockpane2SettingsViewModel.cs" />
-    <Compile Include="CheckXmlFile.cs" />
-    <Compile Include="Domains.cs" />
+    <Compile Include="Dockpane1CheckXmlFile.cs" />
+    <Compile Include="Dockpane1Domains.cs" />
     <Compile Include="gridTooltipCreator.cs" />
     <Compile Include="Module1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

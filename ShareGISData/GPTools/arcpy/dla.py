@@ -306,7 +306,7 @@ def deleteRows(table,expr):
         retcode = True
     except:
         addMessageLocal("Could not delete view, continuing...")
-   
+
     return retcode
 
 def appendRows(sourceTable,targetTable,expr):
@@ -727,7 +727,7 @@ def getDatasetName(path):
         fullname = getLayerSourceString(path)
     else:
         fullname = path[path.rfind(os.sep)+1:]
-    trimname = baseName(fullname)    
+    trimname = baseName(fullname)
     name = repairName(trimname)
 
     return name
@@ -746,7 +746,7 @@ def setProject(xmlfile,projectFilePath):
             _project = arcpy.mp.ArcGISProject(projectFilePath)
         else:
             addMessage(str(projectFilePath) + ' does not exist, continuing')
-            
+
     except:
         addError("Unable to set the current project, continuing")
         _project = None
@@ -817,7 +817,7 @@ def getMapLayer(layerName):
     except:
         addMessage("Unable to get layer from maps")
         return None
-       
+
     return layer
 
 def getLayerPath(layer):
@@ -840,8 +840,8 @@ def getLayerPath(layer):
             pth = layer.filePath
             addMessage("Used .lyrx filePath as source")
         except:
-            addMessage("Failed to use .lyrx filePath as source")            
-        
+            addMessage("Failed to use .lyrx filePath as source")
+
     else:
         try:
             desc = arcpy.Describe(layer) # dataset path/source as parameter
@@ -853,9 +853,9 @@ def getLayerPath(layer):
                 layer = lyr
 
     # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
-    pth = repairLayerSourceUrl(pth,layer) 
+    pth = repairLayerSourceUrl(pth,layer)
     # handle special case for joined layers
-    pth = getJoinedLayer(layer,pth) 
+    pth = getJoinedLayer(layer,pth)
 
     return pth
 
@@ -883,7 +883,7 @@ def getJoinedLayer(layer,pth):
 
         desc = arcpy.Describe(lyrFile)
         path = desc.catalogPath
- 
+
     return path
 
 def getSDELayer(layer,pth):
@@ -905,7 +905,7 @@ def getSDELayer(layer,pth):
 
         desc = arcpy.Describe(lyrFile)
         path = desc.catalogPath
- 
+
     return path
 
 
@@ -917,7 +917,7 @@ def repairLayerSourceUrl(layerPath,lyr):
     path = None
 
     if layerPath.startswith('GIS Servers\\'):
-        # turn into url 
+        # turn into url
         layerPath = layerPath.replace("GIS Servers\\",_http)
         if layerPath.find('\\') > -1:
             path = layerPath.replace("\\",'/')
@@ -940,10 +940,10 @@ def repairLayerSourceUrl(layerPath,lyr):
         parts[len(parts) - 1] = lastPart
         path = "/".join(parts)
 
-    elif path == None: 
+    elif path == None:
         # nothing done here
         path = layerPath
-    
+
     return path
 
 def getTempTable(name):
@@ -1008,7 +1008,7 @@ def getXmlDoc(xmlFile):
 
     return xmlDoc
 
-    
+
 def getSpatialReference(desc): # needs gp Describe object
     try:
         spref = str(desc.spatialReference.factoryCode)
@@ -1142,7 +1142,15 @@ def checkDatabaseTypes(source,target):
         supported = False
 
     return supported
-
+def get_geodatabase_path(input_table):
+    '''Return the Geodatabase path from the input table or feature class.
+    :param input_table: path to the input table or feature class
+    '''
+    workspace = os.path.dirname(input_table)
+    if [any(ext) for ext in ('.gdb', '.mdb', '.sde') if ext in os.path.splitext(workspace)]:
+        return workspace
+    else:
+        return os.path.dirname(workspace)
 def checkDatabaseType(path):
     # check database types - SQL source db and SQL gdb as target
     supported = False
@@ -1155,6 +1163,11 @@ def checkDatabaseType(path):
             source = getLayerFromString(path)
             if source.dataSource.startswith(_CIMWKSP):
                 supported = True
+            elif arcpy.Exists(source.dataSource):
+                path = get_geodatabase_path(input_table=source.dataSource)
+                d = arcpy.Describe(path)
+                if d.workspaceType == "RemoteDatabase":
+                    supported = True
         elif path.lower().count(_gdb) == 1:
             supported = False
     except:
@@ -1162,7 +1175,23 @@ def checkDatabaseType(path):
 
     return supported
 
+def compareSpatialRef(xmlDoc):
+    spatRefMatch = False
+    sref = getSpatialReferenceString(xmlDoc,'Source')
+    tref = getSpatialReferenceString(xmlDoc,'Target')
+    if tref == sref:
+        spatRefMatch = True
+    else:
+        sref_obj = arcpy.SpatialReference(sref)
+        tref_obj = arcpy.SpatialReference(tref)
+        sref_obj.loadFromString(sref)
+        tref_obj.loadFromString(tref)
+        if sref_obj.factoryCode == tref_obj.factoryCode:
+            spatRefMatch = True
+        elif sref_obj.name == tref_obj.name and sref_obj.linearUnitCod == tref_obj.linearUnitCodea:
+            spatRefMatch = True
 
+    return spatRefMatch
 def processGlobalIds(xmlDoc):
     # logic check to determine if preserving globalids is possible
     process = False
@@ -1189,10 +1218,8 @@ def processGlobalIds(xmlDoc):
                 if not supportedWS:
                     addMessage("Target Workspace type prevents preserving GlobalIDs")
                     return process
-
-                sref = getSpatialReferenceString(xmlDoc,'Source')
-                tref = getSpatialReferenceString(xmlDoc,'Target')
-                if tref == sref:
+                spatRefMatch = compareSpatialRef(xmlDoc)
+                if spatRefMatch:
                     ids = checkGlobalIdIndex(descs,sGlobalId)
                     idt = checkGlobalIdIndex(desct,tGlobalId)
 
@@ -1203,13 +1230,13 @@ def processGlobalIds(xmlDoc):
                         addMessage('Target ' + errmsg)
 
                     if ids and idt:
-                        process = True      
+                        process = True
                 else:
                     addMessage('Spatial References do not match, unable to preserve GlobalIDs')
         except:
             pass
 
-    return process  
+    return process
 
 def getStagingName(source,target):
     stgName = getDatasetName(source) + "_" + getDatasetName(target)
@@ -1233,7 +1260,7 @@ def insertStagingElement(xmlDoc):
         # set source and target elements
         nodeText = xmlDoc.createTextNode('true')
         staged.appendChild(nodeText)
-        root.appendChild(staged)  
+        root.appendChild(staged)
 
     return xmlDoc
 
@@ -1313,17 +1340,17 @@ def getReplaceBy(xmlDoc):
         if type == 'String':
             value = "'" + value + "'"
         expr = fieldName + " " + operator + " " + value
-        
+
     elif operator == 'Where':
         expr = value
-    else: 
+    else:
         expr = '' # empty string by default
-        
+
     return expr
 
 def getTargetType(xmlDoc,fname):
     # get the target field type
-    for tfield in xmlDoc.getElementsByTagName('TargetField'):       
+    for tfield in xmlDoc.getElementsByTagName('TargetField'):
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")

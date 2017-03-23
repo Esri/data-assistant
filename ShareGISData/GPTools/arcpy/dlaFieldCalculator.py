@@ -88,7 +88,7 @@ def calculate(xmlFileName,workspace,name,ignore):
 
         # make sure the field exists in the field calculator dataset, this will include all source and target fields.
         dla.addDlaField(table,targetName,field,attrs,ftype,flength)
-    
+
     allFields = sourceFields + targetFields # this should be the same as the dataset fields at this point
     desc = arcpy.Describe(table)
     layerNames = []
@@ -210,7 +210,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     elif method == "SetValue":
                         val = dla.getNodeValue(field,"SetValue")
                     elif method == "ValueMap":
-                        val = getValueMap(row,names,sourceValue,field)
+                        val = getValueMap(targetName,sourceValue,field)
                     elif method == "DomainMap":
                         val = getDomainMap(row,names,sourceValue,field)
                     elif method == "ChangeCase":
@@ -353,7 +353,7 @@ def concatRepair(concat,sep):
     concatStr = sep.join(items)
     return concatStr
 
-def getValueMap(row,names,sourceValue,field):
+def getValueMap(targetName,sourceValue,field):
 
     # run value map function for a row
     valueMaps = field.getElementsByTagName("ValueMap")

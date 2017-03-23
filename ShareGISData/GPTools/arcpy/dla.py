@@ -1195,8 +1195,8 @@ def compareSpatialRef(xmlDoc):
     if tref == sref:
         spatRefMatch = True
     else:
-        sref_obj = arcpy.SpatialReference(sref)
-        tref_obj = arcpy.SpatialReference(tref)
+        sref_obj = arcpy.SpatialReference()
+        tref_obj = arcpy.SpatialReference()
         sref_obj.loadFromString(sref)
         tref_obj.loadFromString(tref)
         if sref_obj.factoryCode == tref_obj.factoryCode:

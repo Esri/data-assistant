@@ -246,6 +246,8 @@ namespace DataAssistant
         {
             if(_methodnum < 0 || PreviewCheckBox.IsChecked == false)
                 return;
+            PreviewGrid.Visibility = Visibility.Visible;
+
             switch (_methodnum) { // preview values for each stack panel
                 case 0: // None
                     Method0Preview_Click();
@@ -305,7 +307,7 @@ namespace DataAssistant
             }
             else if (onoff == true || PreviewCheckBox.IsChecked == true)
             {
-                PreviewGrid.Height = 100;
+                //PreviewGrid.Height = 100;
                 setPreviewRowsInit();
                 PreviewGrid.InvalidateArrange();
             }

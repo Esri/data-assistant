@@ -186,7 +186,9 @@ namespace DataAssistant
             setXmlDataProvider(ReplaceField, "//TargetField/@Name");
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
             setReplaceValues(nodes);
-            setPreviewValues(false);
+            //MethodPanelApply.IsEnabled = false;
+            //PreviewGrid.Visibility = Visibility.Hidden;
+            //setPreviewValues(false);
 
         }
         private void setRevertButton()
@@ -363,8 +365,10 @@ namespace DataAssistant
                 return;
             _selectedRowNum = FieldGrid.SelectedIndex;
             var cfg = getConfigSettingsForField();
+            _skipSelectionChanged = true;
             int methodnum = setFieldSelectionValues(cfg); // just use the int for now.
-            
+            _skipSelectionChanged = false;
+
             setPanelVisibility(methodnum);
         }
         private System.Xml.XmlNodeList getFieldNodes(int fieldnum)
@@ -437,6 +441,25 @@ namespace DataAssistant
             }
             return fname;
         }
+        private string getFieldIsEnabled()
+        {
+            string enabled = "true";
+            if (FieldGrid.SelectedIndex == -1)
+                return enabled;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes.Count == 1 && nodes != null)
+            {
+                try
+                {
+                    string en = nodes.Item(0).Attributes["IsEnabled"].Value;
+                    if (en != null)
+                        enabled = en.ToLower();
+                }
+                catch { enabled = "true"; }
+            }
+            return enabled;
+        }
         private int getConfigSettingsForField()
         {
             if (FieldGrid.SelectedIndex == -1)
@@ -465,13 +488,27 @@ namespace DataAssistant
 
             return num;
         }
+        private void setApplyEnabled()
+        {
+            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
+            {
+                if (getFieldIsEnabled() == "true")
+                    MethodPanelApply.IsEnabled = true;
+                else
+                    MethodPanelApply.IsEnabled = false;
+
+            }
+        }
         private int setFieldSelectionValues(int methodnum)
         {
             comboMethod.SelectedIndex = methodnum;
-            setMethodVisibility(methodnum);
-            _methodnum = methodnum;
+            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
+            {
+                setApplyEnabled();
+                PreviewGrid.Visibility = Visibility.Hidden;
+            }
 
-            switch(methodnum){ // fill in the values for each stack panel
+            switch (methodnum){ // fill in the values for each stack panel
                 case 0: // None
                     break;
                 case 1: // Copy
@@ -518,20 +555,6 @@ namespace DataAssistant
             }
 
             return methodnum;
-        }
-        private void setMethodVisibility(int methodnum)
-        {
-            if (MethodControls == null || ! MethodControls.IsInitialized)
-            {
-                return;
-            }
-            //if (methodnum < 3)
-            //{
-            //    MethodControls.Visibility = System.Windows.Visibility.Hidden;
-            //}
-            //else
-            MethodControls.Visibility = System.Windows.Visibility.Visible;
-            //PreviewText.Text = "";
         }
 
         private bool getPanelEnabled(int methodnum)
@@ -758,10 +781,21 @@ namespace DataAssistant
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this._skipSelectionChanged)
+            if (this._skipSelectionChanged || MethodPanelApply == null || !MethodPanelApply.IsInitialized)
+            {
                 return;
-            setFieldSelectionValues(comboMethod.SelectedIndex);
-            setPanelVisibility(comboMethod.SelectedIndex);
+            }
+            if (comboMethod.SelectedIndex != _methodnum && !this._skipSelectionChanged)
+            {
+                setFieldSelectionValues(comboMethod.SelectedIndex);
+                setPanelVisibility(comboMethod.SelectedIndex);
+                //setPreviewValues(false);
+                PreviewGrid.Visibility = Visibility.Hidden;
+                _methodnum = comboMethod.SelectedIndex;
+                if (MethodPanelApply != null)
+                    setApplyEnabled();
+                    //MethodPanelApply.IsEnabled = true;
+            }
         }
 
         private void setPanelVisibility(int index)

@@ -121,7 +121,7 @@
                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Width="Auto" MinHeight="400" MinWidth="200" 
                   x:Name="FieldsGrid" Margin="0,0,-3,0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="110"/>
+                        <RowDefinition Height="130"/>
                         <RowDefinition Height="40"/>
                         <RowDefinition Height="10*"/>
                         <RowDefinition Height="170"/>
@@ -164,7 +164,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <StackPanel Grid.Column="1" Margin="5,5,0,0" Grid.Row="0" x:Name="Methods" MinWidth="200" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Visibility="Visible" IsEnabled="False">
-                        <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Show Results" Foreground="{DynamicResource Esri_Gray155}" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False" HorizontalAlignment="Left"/>
+ <!--                       <CheckBox x:Name="PreviewCheckBox" Margin="5,10,5,5" Content="Show Results" Foreground="{DynamicResource Esri_Gray155}" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="False" HorizontalAlignment="Left"/>-->
                         <Label x:Name="lbl1" Content="Method" Margin="5,5,5,5"  FontSize="12" Foreground="{DynamicResource Esri_Gray155}" HorizontalAlignment="Left"/>
                         <ComboBox x:Name="comboMethod"  Margin="5,5,5,5" SelectedIndex="0" SelectionChanged="comboMethod_SelectionChanged" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120">
                             <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
@@ -181,6 +181,16 @@
                             <ComboBoxItem Content="DomainMap" ToolTip="Map Geodatabase Domain values."/>
                             <!--<ComboBoxItem Content="Expression" ToolTip="Enter any Python Expression."/>-->
                         </ComboBox>
+                        <Button x:Name="MethodPanelApply" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="140,-29,5,5" Click="MethodPanelApply_Click" ToolTip="Save Changes to your Configuration File" IsEnabled="False"/>
+                        <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Left"  VerticalAlignment="Top" Visibility="Hidden" 
+                      AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      Height="100" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged" Margin="230,-50,5,5">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="PreviewField" Header="Preview Values" Binding="{Binding Path=Value}" MinWidth="100" IsReadOnly="True" Width="100" CanUserResize="True"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <CheckBox x:Name="PreviewCheckBox" Margin="5,-50,5,5" Content="Show Results" Foreground="{DynamicResource Esri_Gray155}" Checked="PreviewCheckBox_Checked" Unchecked="PreviewCheckBox_Checked" IsChecked="True" HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="Hidden"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="5,5,5,5" Grid.Row="1" x:Name="Method0" Visibility="Hidden" VerticalAlignment="Top" HorizontalAlignment="Left">
                         <Label Margin="5,5,5,0" Content="Set Target Values to null."/>
@@ -329,7 +339,7 @@
                         </DataGrid>
                     </StackPanel>
 
-                    <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="3" Visibility="Visible" VerticalAlignment="Top" MinWidth="100" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                <!--    <StackPanel x:Name="MethodControls" Grid.Column="1" Margin="5,5,5,5" Grid.Row="3" Visibility="Visible" VerticalAlignment="Top" MinWidth="100" ScrollViewer.HorizontalScrollBarVisibility="Auto">
                         <Button x:Name="MethodPanelApply" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" Width="50"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5,5,5,5" Click="MethodPanelApply_Click"/>
                         <DataGrid x:Name="PreviewGrid" HorizontalAlignment="Left"  VerticalAlignment="Stretch"  
                       AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
@@ -338,7 +348,7 @@
                                 <DataGridTextColumn x:Name="PreviewField" Header="Values" Binding="{Binding Path=Value}" MinWidth="200" IsReadOnly="True" Width="400" CanUserResize="True"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                    </StackPanel>
+                    </StackPanel>-->
                 </Grid>
             </ScrollViewer>
         </TabItem>

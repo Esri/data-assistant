@@ -53,6 +53,10 @@ _lyrx = '.lyrx'
 _http = 'http://'
 _sde = '.sde\\'
 _gdb = '.gdb\\'
+import string
+import random
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 # helper functions
 def timer(input):
@@ -227,9 +231,13 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
         fields = arcpy.ListFields(sourceFC)
         fStr = getViewString(fields,xmlFields)
         try:
-            arcpy.MakeFeatureLayer_management(sourceFC, viewName , whereClause, workspace, fStr)
+            if str(whereClause).strip() == '':
+                whereClause = None
+            arcpy.MakeFeatureLayer_management(sourceFC, viewName, whereClause,None, fStr),
         except:
             showTraceback()
+            if whereClause is None:
+                whereClause = "(None)"
             addMessage("Error occured, where clause: " + whereClause)
         #addMessage("Feature Layer " + viewName + " created for " + str(whereClause))
     else:
@@ -272,6 +280,8 @@ def getViewString(fields,xmlFields):
         thisFieldStr = field.name + " " + thisFieldName + " VISIBLE NONE;"
         viewStr += thisFieldStr
 
+    if viewStr.endswith(';'):
+        viewStr = viewStr[:-1]
     return viewStr
 
 def getWhereClause(dataset):
@@ -314,7 +324,7 @@ def appendRows(sourceTable,targetTable,expr):
     retcode = False
 
     sTable = getDatasetName(sourceTable)
-    view = sTable + "_ViewAppend"
+    view = sTable + "_ViewAppend" + id_generator(size=3)
     if isTable(targetTable):
         deType = 'Table'
     else:
@@ -620,7 +630,7 @@ def exportDataset(sourceWorkspace,sourceName,targetName,dataset,xmlFields):
         desc = arcpy.Describe(sourceTable)
         deType = desc.dataElementType
         whereClause = getWhereClause(dataset)
-        viewName = sourceName + "_View"
+        viewName = sourceName + "_View" + id_generator(size=3)
         view = makeView(deType,workspace,sourceTable,viewName, whereClause,xmlFields)
         count = arcpy.GetCount_management(view).getOutput(0)
         addMessageLocal(str(count) + " source rows")
@@ -654,7 +664,7 @@ def importDataset(sourceWorkspace,sourceName,targetName,dataset,xmlFields):
             return False
         desc = arcpy.Describe(sourceTable)
         deType = desc.dataElementType
-        viewName = sourceName + "_View"
+        viewName = sourceName + "_View" + id_generator(size=3)
         view = makeView(deType,workspace,sourceTable,viewName, whereClause, xmlFields)
         count = arcpy.GetCount_management(view).getOutput(0)
         addMessageLocal(str(count) + " source rows")
@@ -1179,6 +1189,9 @@ def compareSpatialRef(xmlDoc):
     spatRefMatch = False
     sref = getSpatialReferenceString(xmlDoc,'Source')
     tref = getSpatialReferenceString(xmlDoc,'Target')
+
+    if tref is None or sref is None:
+        return spatRefMatch
     if tref == sref:
         spatRefMatch = True
     else:
@@ -1188,7 +1201,7 @@ def compareSpatialRef(xmlDoc):
         tref_obj.loadFromString(tref)
         if sref_obj.factoryCode == tref_obj.factoryCode:
             spatRefMatch = True
-        elif sref_obj.name == tref_obj.name and sref_obj.linearUnitCod == tref_obj.linearUnitCodea:
+        elif ';' in sref and ';' in tref and tref.split(';')[0] == sref.split(';')[0]:
             spatRefMatch = True
 
     return spatRefMatch

@@ -351,11 +351,11 @@ def checkServiceCapabilities(sourcePath,required):
             #print('Service',name)
             res = hasCapabilities(url,token,['Create','Delete'])
             if res != True and required == False:
-                dla.addMessage('WARNING: ' + name + ' does not have Create and Delete privileges')
+                dla.addWarning('WARNING: ' + name + ' does not have Create and Delete privileges')
                 dla.addMessage('Verify the service properties for: ' + url)
                 dla.addMessage('This tool might continue but other tools will not run until this is addressed')
             elif res != True and required == True:
-                addError('WARNING: ' + name + ' does not have Create and Delete privileges')
+                addWarning('WARNING: ' + name + ' does not have Create and Delete privileges')
                 dla.addMessage('Verify the service properties for: ' + url)
                 dla.addMessage('This tool will not run until this is addressed')
             return res

@@ -91,10 +91,16 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
         return False
 
     ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
+    errs = False
     if not dlaService.checkServiceCapabilities(sourcePath,False):
-        return False
+        dla.addMessage("Errors in Source Service Capabilities, exiting without writing the output file")
+        errs = True
     if not dlaService.checkServiceCapabilities(targetPath,False):
+        dla.addMessage("Errors in Target Service Capabilities, exiting without writing the output file")
+        errs = True
+    if errs:
         return False
+
     desc = arcpy.Describe(sourcePath)
     descT = arcpy.Describe(targetPath)
 
@@ -136,8 +142,6 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     # write the source field values
     setSourceFields(root,xmlDoc,sourceFields)
     setTargetFields(root,xmlDoc,fields)
-    # Should add a template section for value maps, maybe write domains...
-    # could try to preset field mapping and domain mapping...
 
     # add data to the document
     writeDataSample(xmlDoc,root,sourceNames,sourcePath,10)

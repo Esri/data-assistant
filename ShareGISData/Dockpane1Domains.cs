@@ -285,27 +285,30 @@ namespace DataAssistant
                     {
                         ArcGIS.Core.Data.Subtype stype = subtypes[s];
                         Domain domain = thefield.GetDomain(stype);
-                        string dname = domain.GetName();
-                        if (domain is CodedValueDomain && !domainNames.Contains(dname))
+                        if (domain != null)
                         {
-                            domainNames.Add(dname);
-                            var codedValueDomain = domain as CodedValueDomain;
-                            SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
-                            for (int i = 0; i < codedValuePairs.Count; i++)
+                            string dname = domain.GetName();
+                            if (domain is CodedValueDomain && !domainNames.Contains(dname))
                             {
-                                item = new ComboData();
-                                item.Id = codedValuePairs.ElementAt(i).Key.ToString();
-                                item.Value = codedValuePairs.ElementAt(i).Value.ToString();
-                                item.Tooltip = getDomainTooltip(item.Id, item.Value) + " - " + dname;
-                                bool found = false;
-                                for (int cv = 0; cv < domainValues.Count; cv++)
+                                domainNames.Add(dname);
+                                var codedValueDomain = domain as CodedValueDomain;
+                                SortedList<object, string> codedValuePairs = codedValueDomain.GetCodedValuePairs();
+                                for (int i = 0; i < codedValuePairs.Count; i++)
                                 {
-                                    ComboData dv = domainValues[cv];
-                                    if (item.Id.Equals(dv.Id) && item.Value.Equals(dv.Value) && item.Tooltip.Equals(dv.Tooltip))
-                                        found = true;
+                                    item = new ComboData();
+                                    item.Id = codedValuePairs.ElementAt(i).Key.ToString();
+                                    item.Value = codedValuePairs.ElementAt(i).Value.ToString();
+                                    item.Tooltip = getDomainTooltip(item.Id, item.Value) + " - " + dname;
+                                    bool found = false;
+                                    for (int cv = 0; cv < domainValues.Count; cv++)
+                                    {
+                                        ComboData dv = domainValues[cv];
+                                        if (item.Id.Equals(dv.Id) && item.Value.Equals(dv.Value) && item.Tooltip.Equals(dv.Tooltip))
+                                            found = true;
+                                    }
+                                    if (!found)
+                                        domainValues.Add(item);
                                 }
-                                if (!found)
-                                    domainValues.Add(item);
                             }
                         }
                     }

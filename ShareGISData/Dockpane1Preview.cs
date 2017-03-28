@@ -419,18 +419,28 @@ namespace DataAssistant
                                 try
                                 {
                                     textval = att.InnerText;
+                                    bool found = false;
                                     for (int r = 0; r < Method3Grid.Items.Count; r++)
                                     {
-                                        // value map replace function
                                         ValueMapRow row = Method3Grid.Items.GetItemAt(r) as ValueMapRow;
-                                        if (att.InnerText.ToString() == row.Source.ToString())
+                                        // value map replace function
+                                        decimal numSource, numTarget;
+                                        bool canConvert1 = decimal.TryParse(att.InnerText, out numSource);
+                                        bool canConvert2 = decimal.TryParse(row.Source.ToString(), out numTarget);
+                                        if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
                                         {
-                                            textval = textval.Replace(row.Source, row.Target);
+                                            textval = row.Target.ToString();//textval.Replace(row.Source, row.Target);
+                                            found = true;
                                         }
-                                        else if (Method3Otherwise.Text != "" && Method3Otherwise.Text != null)
+                                        else if (att.InnerText == row.Source.ToString())
                                         {
-                                            textval = Method3Otherwise.Text;
+                                            textval = row.Target.ToString();//textval.Replace(row.Source, row.Target);
+                                            found = true;
                                         }
+                                    }
+                                    if (Method3Otherwise.Text != "" && Method3Otherwise.Text != null && !found)
+                                    {
+                                        textval = Method3Otherwise.Text;
                                     }
                                     textval = targName + "=" + textval;
                                 }
@@ -477,11 +487,11 @@ namespace DataAssistant
                                         bool canConvert2 = decimal.TryParse(row.Source[row.SourceSelectedItem].Id, out numTarget);
                                         if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
                                         {
-                                            textval = textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                            textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
                                         }
                                         else if (att.InnerText == row.Source[row.SourceSelectedItem].Id)
                                         {
-                                            textval = textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                            textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
                                         }
                                     }
                                     textval = targName + "=" + textval;

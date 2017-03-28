@@ -368,7 +368,7 @@ namespace DataAssistant
             _skipSelectionChanged = true;
             int methodnum = setFieldSelectionValues(cfg); // just use the int for now.
             _skipSelectionChanged = false;
-
+            _methodnum = methodnum;
             setPanelVisibility(methodnum);
         }
         private System.Xml.XmlNodeList getFieldNodes(int fieldnum)

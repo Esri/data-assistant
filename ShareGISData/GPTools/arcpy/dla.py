@@ -1046,7 +1046,8 @@ def setupProxy():
 def getConnectionFile(connectionProperties):
 
     #dir = os.path.dirname(os.path.realpath(__file__)) *** change to project folder...
-    dir = os.path.dirname(getProject().filePath)
+    # dir = os.path.dirname(getProject().filePath)
+    dir = os.path.dirname(_xmlFolder) # change to xmlfolder since this will be better for portability when xml/data outside of the project
     cp = connectionProperties['connection_info']
     srvr = getcp(cp,'server')
     inst = getcp(cp,'db_connection_properties')
@@ -1055,22 +1056,32 @@ def getConnectionFile(connectionProperties):
     connfile = os.path.join(dir,fname)
     if os.path.exists(connfile):
         os.remove(connfile)
+    args = []
+    args.append(out_folder_path=dir)
+    args.append(out_name=fname)
+    if getcp(cp,'dbclient') != None:
+        args.append(database_platform=getcp(cp,'dbclient'))
+    args.append(instance=inst)
+    if getcp(cp,'authentication_mode') != None:
+        args.append(account_authentication=getcp(cp,'authentication_mode'))
+    if getcp(cp,'username') != None:
+        args.append(username=getcp(cp,'username'))
+    if getcp(cp,'password') != None:
+        args.append(username=getcp(cp,'password'))
+    args.append(database=db)
+    if getcp(cp,'schema') != None:
+        args.append(username=getcp(cp,'schema'))
+    if getcp(cp,'version') != None:
+        args.append(username=getcp(cp,'version'))
+    if getcp(cp,'date') != None:
+        args.append(username=getcp(cp,'date'))
 
-    arcpy.CreateDatabaseConnection_management (out_folder_path=dir,
-                                            out_name=fname,
-                                            database_platform=getcp(cp,'dbclient'),
-                                            instance=inst,
-                                            account_authentication=getcp(cp,'authentication_mode'),
-                                            username=getcp(cp,'username'),
-                                            password=getcp(cp,'password'),
-                                            database=db,
-                                            schema=getcp(cp,'schema'),
-                                            version=getcp(cp,'version'),
-                                            date=getcp(cp,'date'))
+    arcpy.CreateDatabaseConnection_management (','.join(args))
+                                            
     return connfile
 
 def getcp(cp,name):
-    retval = ""
+    retval = None
     try:
         retval = cp[name]
         if name.lower() == 'authentication_mode':
@@ -1186,6 +1197,7 @@ def checkDatabaseType(path):
     return supported
 
 def compareSpatialRef(xmlDoc):
+    # compare source and target spatial references
     spatRefMatch = False
     sref = getSpatialReferenceString(xmlDoc,'Source')
     tref = getSpatialReferenceString(xmlDoc,'Target')

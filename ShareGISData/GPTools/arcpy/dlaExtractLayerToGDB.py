@@ -114,6 +114,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     dla.addMessage(viewName)
     
     targetRef = getSpatialReference(xmlDoc,"Target")
+    sourceRef = getSpatialReference(xmlDoc,"Source")
     if datasetType == 'Table':
         isTable = True
     elif targetRef != '':
@@ -143,7 +144,14 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             if isTable:
                 arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
             else:
+                currentSystem = arcpy.env.outputCoordinateSystem # grab currrent env settings
+                currentTrans = arcpy.env.geographicTransformations
+                transformations = arcpy.ListTransformations(sourceRef, targetRef)
+                arcpy.env.outputCoordinateSystem = targetCoordSystem
+                arcpy.env.geographicTransformations = transformations
                 arcpy.FeatureClassToFeatureClass_conversion(in_features=view,out_path=workspace,out_name=targetName)
+                arcpy.env.outputCoordinateSystem = currentSystem
+                arcpy.env.geographicTransformations = currentTrans
         else:
             arcpy.env.preserveGlobalIds = False # try to preserve
             if isTable:

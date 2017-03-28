@@ -210,9 +210,9 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     elif method == "SetValue":
                         val = dla.getNodeValue(field,"SetValue")
                     elif method == "ValueMap":
-                        val = getValueMap(row,names,sourceValue,field)
+                        val = getValueMap(targetName,sourceValue,field)
                     elif method == "DomainMap":
-                        val = getDomainMap(row,names,sourceValue,field)
+                        val = getDomainMap(row,sourceValue,field)
                     elif method == "ChangeCase":
                         case = dla.getNodeValue(field,method)
                         expression = getChangeCase(sourceValue,case)
@@ -353,7 +353,7 @@ def concatRepair(concat,sep):
     concatStr = sep.join(items)
     return concatStr
 
-def getValueMap(row,names,sourceValue,field):
+def getValueMap(targetName,sourceValue,field):
 
     # run value map function for a row
     valueMaps = field.getElementsByTagName("ValueMap")
@@ -379,8 +379,6 @@ def getValueMap(row,names,sourceValue,field):
                 sourceTest = str(sValue)
                 if sourceTest == '' or sourceTest == 'None':
                     sourceTest = None
-            #if mapExpr and mapExpr != "":
-            #    sourceValue = calcValue(row,names,mapExpr)
             if sourceValue == sourceTest or sourceValue == sValue: # this will check numeric and non-numeric equivalency for current values in value maps
                 found = True
                 try:
@@ -405,11 +403,11 @@ def getValueMap(row,names,sourceValue,field):
             dla.addError(err)
     return newValue
 
-def getDomainMap(row,names,sourceValue,field):
+def getDomainMap(row,sourceValue,field):
 
     # run domain map function for a row
     valueMaps = field.getElementsByTagName("DomainMap")
-    newValue = None
+    newValue = sourceValue
     found = False
     otherwise = None
     for valueMap in valueMaps:

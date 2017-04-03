@@ -137,36 +137,50 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     else:
         arcpy.env.overwriteOutput = True
         ds = workspace + os.sep + targetName
-
-        if dla.processGlobalIds(xmlDoc): # both datasets have globalids and the spatial references match
+        currentPreserveGlobalIDs = arcpy.env.preserveGlobalIds
+        if dla.processGlobalIds(xmlDoc): # both datasets have globalids in the correct workspace types
             arcpy.env.preserveGlobalIds = True # try to preserve
             dla.addMessage("Proceeding to copy rows and attempt to preserve GlobalIDs")
-            if isTable:
-                arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
-            else:
-                currentSystem = arcpy.env.outputCoordinateSystem # grab currrent env settings
-                currentTrans = arcpy.env.geographicTransformations
-                transformations = arcpy.ListTransformations(sourceRef, targetRef)
-                arcpy.env.outputCoordinateSystem = targetCoordSystem
-                arcpy.env.geographicTransformations = transformations
-                arcpy.FeatureClassToFeatureClass_conversion(in_features=view,out_path=workspace,out_name=targetName)
-                arcpy.env.outputCoordinateSystem = currentSystem
-                arcpy.env.geographicTransformations = currentTrans
         else:
             arcpy.env.preserveGlobalIds = False # try to preserve
-            if isTable:
-                if not createDataset('Table',workspace,targetName,None,xmlDoc,source,None):
-                    arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
-                    return False
 
-            elif not isTable:
-                geomType = arcpy.Describe(source).shapeType
-                if not createDataset('FeatureClass',workspace,targetName,geomType,xmlDoc,source,targetRef):
-                    arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
-                    return False
-            removeDefaultValues(ds)
-            fieldMap = getFieldMap(view,ds)
-            arcpy.Append_management(view,ds,schema_type="NO_TEST",field_mapping=fieldMap)
+        if isTable:
+            arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
+        else:
+            spRefMatch = dla.compareSpatialRef(xmlDoc)
+            currentRef = arcpy.env.outputCoordinateSystem # grab currrent env settings
+            currentTrans = arcpy.env.geographicTransformations
+
+            if not spRefMatch:
+                arcpy.env.outputCoordinateSystem = targetRef
+                transformations = arcpy.ListTransformations(sourceRef, targetRef)
+                if len(transformations) > 1:
+                    transformations = transformations[0] # take the first one, this may fail in some cases according to doc if multiple transforms are required...
+                                                         # but it certainly fails if multiple values are passed on the next line.
+                arcpy.env.geographicTransformations = transformations
+
+            arcpy.FeatureClassToFeatureClass_conversion(in_features=view,out_path=workspace,out_name=targetName)
+
+            if not spRefMatch: # set the spatial reference back
+                arcpy.env.outputCoordinateSystem = currentRef
+                arcpy.env.geographicTransformations = currentTrans
+            arcpy.env.preserveGlobalIds = currentPreserveGlobalIDs
+
+        removeDefaultValues(ds) # don't want to turn nulls into defaultValues in the intermediate data
+
+        # not needed if doing the transformations approach above...
+        #    if isTable: 
+        #        if not createDataset('Table',workspace,targetName,None,xmlDoc,source,None):
+        #            arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
+        #            return False
+
+        #    elif not isTable:
+        #        geomType = arcpy.Describe(source).shapeType
+        #        if not createDataset('FeatureClass',workspace,targetName,geomType,xmlDoc,source,targetRef):
+        #            arcpy.AddError("Unable to create intermediate feature class, exiting: " + workspace + os.sep + targetName)
+        #            return False
+        #    fieldMap = getFieldMap(view,ds)
+        #    arcpy.Append_management(view,ds,schema_type="NO_TEST",field_mapping=fieldMap)
 
         dla.addMessage(arcpy.GetMessages(2)) # only serious errors
         count = arcpy.GetCount_management(ds).getOutput(0)

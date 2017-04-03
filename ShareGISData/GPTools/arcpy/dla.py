@@ -47,7 +47,7 @@ _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
 
 _ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','SHAPELENGTH','SHAPEAREA','STLENGTH()','STAREA()','RASTER','GLOBALID']
-_ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','globalIDFieldName']
+_ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','GlobalIDFieldName']
 _CIMWKSP = 'CIMWKSP'
 _lyrx = '.lyrx'
 _http = 'http://'
@@ -1243,7 +1243,7 @@ def processGlobalIds(xmlDoc):
                 if not supportedWS:
                     addMessage("Target Workspace type prevents preserving GlobalIDs")
                     return process
-                spatRefMatch = compareSpatialRef(xmlDoc)
+                spatRefMatch = true # compareSpatialRef(xmlDoc) ignore here, use in dlaExtract to determine approach
                 if spatRefMatch:
                     ids = checkGlobalIdIndex(descs,sGlobalId)
                     idt = checkGlobalIdIndex(desct,tGlobalId)

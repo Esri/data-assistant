@@ -154,9 +154,8 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             if not spRefMatch:
                 arcpy.env.outputCoordinateSystem = targetRef
                 transformations = arcpy.ListTransformations(sourceRef, targetRef)
-                if len(transformations) > 1:
-                    transformations = transformations[0] # take the first one, this may fail in some cases according to doc if multiple transforms are required...
-                                                         # but it certainly fails if multiple values are passed on the next line.
+                #if len(transformations) > 1:
+                transformations = ";".join(transformations) # concat the values - format change for setting the values.
                 arcpy.env.geographicTransformations = transformations
 
             arcpy.FeatureClassToFeatureClass_conversion(in_features=view,out_path=workspace,out_name=targetName)

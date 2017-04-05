@@ -1231,35 +1231,26 @@ def processGlobalIds(xmlDoc):
     tGlobalId = getFieldByName(desct,'globalIDFieldName')
 
     if sGlobalId != None and tGlobalId != None:
-        try:
-            if arcpy.ListFields(source,sGlobalId,'GlobalID')[0].type == arcpy.ListFields(target,tGlobalId,'GlobalID')[0].type:
-                addMessage('Source and Target datasets both have GlobalID fields')
+        if arcpy.ListFields(source,sGlobalId,'GlobalID')[0].type == arcpy.ListFields(target,tGlobalId,'GlobalID')[0].type:
+            addMessage('Source and Target datasets both have GlobalID fields')
 
-                supportedWS = checkDatabaseType(source)
-                if not supportedWS:
-                    addMessage("Source Workspace type prevents preserving GlobalIDs")
-                    return process
-                supportedWS = checkDatabaseType(target)
-                if not supportedWS:
-                    addMessage("Target Workspace type prevents preserving GlobalIDs")
-                    return process
-                #spatRefMatch = true # compareSpatialRef(xmlDoc) ignore here, use in dlaExtract to determine approach
-                #if spatRefMatch:
-                ids = checkGlobalIdIndex(descs,sGlobalId)
-                idt = checkGlobalIdIndex(desct,tGlobalId)
+            supportedWSs = checkDatabaseType(source)
+            if not supportedWSs:
+                addMessage("Source Workspace type prevents preserving GlobalIDs")
+            supportedWSt = checkDatabaseType(target)
+            if not supportedWSt:
+                addMessage("Target Workspace type prevents preserving GlobalIDs")
+            ids = checkGlobalIdIndex(descs,sGlobalId)
+            idt = checkGlobalIdIndex(desct,tGlobalId)
 
-                errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
-                if not ids:
-                    addMessage('Source ' + errmsg)
-                if not idt:
-                    addMessage('Target ' + errmsg)
+            errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
+            if not ids:
+                addMessage('Source ' + errmsg)
+            if not idt:
+                addMessage('Target ' + errmsg)
 
-                if ids and idt:
-                    process = True
-                #else:
-                #    addMessage('Spatial References do not match, unable to preserve GlobalIDs')
-        except:
-            pass
+            if ids and idt and supportedWSs and supportedWSt:
+                process = True
 
     return process
 

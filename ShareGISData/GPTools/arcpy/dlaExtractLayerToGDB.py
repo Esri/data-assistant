@@ -140,10 +140,10 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
         currentPreserveGlobalIDs = arcpy.env.preserveGlobalIds
         if dla.processGlobalIds(xmlDoc): # both datasets have globalids in the correct workspace types
             arcpy.env.preserveGlobalIds = True # try to preserve
-            dla.addMessage("Proceeding to copy rows and attempt to preserve GlobalIDs")
+            dla.addMessage("Attempting to preserve GlobalIDs")
         else:
             arcpy.env.preserveGlobalIds = False # try to preserve
-
+            dla.addMessage("Unable to preserve GlobalIDs")
         if isTable:
             arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
         else:

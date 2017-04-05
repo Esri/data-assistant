@@ -1243,21 +1243,21 @@ def processGlobalIds(xmlDoc):
                 if not supportedWS:
                     addMessage("Target Workspace type prevents preserving GlobalIDs")
                     return process
-                spatRefMatch = true # compareSpatialRef(xmlDoc) ignore here, use in dlaExtract to determine approach
-                if spatRefMatch:
-                    ids = checkGlobalIdIndex(descs,sGlobalId)
-                    idt = checkGlobalIdIndex(desct,tGlobalId)
+                #spatRefMatch = true # compareSpatialRef(xmlDoc) ignore here, use in dlaExtract to determine approach
+                #if spatRefMatch:
+                ids = checkGlobalIdIndex(descs,sGlobalId)
+                idt = checkGlobalIdIndex(desct,tGlobalId)
 
-                    errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
-                    if not ids:
-                        addMessage('Source ' + errmsg)
-                    if not idt:
-                        addMessage('Target ' + errmsg)
+                errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
+                if not ids:
+                    addMessage('Source ' + errmsg)
+                if not idt:
+                    addMessage('Target ' + errmsg)
 
-                    if ids and idt:
-                        process = True
-                else:
-                    addMessage('Spatial References do not match, unable to preserve GlobalIDs')
+                if ids and idt:
+                    process = True
+                #else:
+                #    addMessage('Spatial References do not match, unable to preserve GlobalIDs')
         except:
             pass
 

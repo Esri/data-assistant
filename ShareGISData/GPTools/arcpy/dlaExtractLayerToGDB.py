@@ -142,7 +142,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             arcpy.env.preserveGlobalIds = True # try to preserve
             dla.addMessage("Attempting to preserve GlobalIDs")
         else:
-            arcpy.env.preserveGlobalIds = False # try to preserve
+            arcpy.env.preserveGlobalIds = False # don't try to preserve
             dla.addMessage("Unable to preserve GlobalIDs")
         if isTable:
             arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
@@ -154,7 +154,6 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             if not spRefMatch:
                 arcpy.env.outputCoordinateSystem = targetRef
                 transformations = arcpy.ListTransformations(sourceRef, targetRef)
-                #if len(transformations) > 1:
                 transformations = ";".join(transformations) # concat the values - format change for setting the values.
                 arcpy.env.geographicTransformations = transformations
 
@@ -323,8 +322,6 @@ def removeDefaultValues(dataset):
     for sfield in sourceFields:
         fname = sfield.name
         if fname != dla._noneFieldName and sfield.defaultValue != None:
-            if fname.count('.') > 0:
-                fname = fname.replace('.','_')
             try:
                 arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
             except:

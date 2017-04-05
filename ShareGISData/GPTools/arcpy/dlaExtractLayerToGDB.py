@@ -321,7 +321,7 @@ def removeDefaultValues(dataset):
     dla.addMessage("Removing Default Value property from intermediate database fields")
     for sfield in sourceFields:
         fname = sfield.name
-        if fname != dla._noneFieldName and sfield.defaultValue != None:
+        if sfield.defaultValue != None:
             try:
                 arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
             except:

@@ -88,7 +88,7 @@ def calculate(xmlFileName,workspace,name,ignore):
 
         # make sure the field exists in the field calculator dataset, this will include all source and target fields.
         dla.addDlaField(table,targetName,field,attrs,ftype,flength)
-    
+
     allFields = sourceFields + targetFields # this should be the same as the dataset fields at this point
     desc = arcpy.Describe(table)
     layerNames = []

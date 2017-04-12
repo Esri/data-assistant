@@ -162,7 +162,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             if not spRefMatch: # set the spatial reference back
                 arcpy.env.outputCoordinateSystem = currentRef
                 arcpy.env.geographicTransformations = currentTrans
-            arcpy.env.preserveGlobalIds = currentPreserveGlobalIDs
+        arcpy.env.preserveGlobalIds = currentPreserveGlobalIDs
 
         removeDefaultValues(ds) # don't want to turn nulls into defaultValues in the intermediate data
 

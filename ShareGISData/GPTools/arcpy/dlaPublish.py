@@ -141,6 +141,9 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
     if useReplaceSettings == True and (expr == '' or expr == None):
         dla.addError("There must be an expression for replacing by field value, current value = '" + str(expr) + "'")
         return False
+    currGlobalIDs = arcpy.env.preserveGlobalIds
+    if dla.processGlobalIds(xmlDoc) and currGlobalIDs == False: # both datasets have globalids in the correct workspace types
+        arcpy.env.preserveGlobalIds = True
     target = dla.getLayerPath(target)
     if target.startswith("http") == True:
         success = dlaService.doPublishHttp(dlaTable,target,expr,useReplaceSettings)
@@ -153,6 +156,9 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
                 success = False       
         else:
             success = dla.appendRows(dlaTable,target,'')
+
+    if currGlobalIDs != arcpy.env.preserveGlobalIds:
+        arcpy.env.preserveGlobalIds = currGlobalIDs
     return success
 
 def getWhereClause(xmlDoc):

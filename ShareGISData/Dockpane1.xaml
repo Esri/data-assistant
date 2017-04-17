@@ -186,7 +186,7 @@
                       AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       Height="100" Width="Auto" SelectionChanged="Method5Grid_SelectionChanged" Margin="230,-50,5,5">
                             <DataGrid.Columns>
-                                <DataGridTextColumn x:Name="PreviewField" Header="Preview Values" Binding="{Binding Path=Value}" MinWidth="100" IsReadOnly="True" Width="100" CanUserResize="True"/>
+                                <DataGridTextColumn x:Name="PreviewField" Header="Preview Values" Binding="{Binding Path=Value}" MinWidth="150" IsReadOnly="True" Width="Auto"  CanUserResize="True"/>
                             </DataGrid.Columns>
                         </DataGrid>
 

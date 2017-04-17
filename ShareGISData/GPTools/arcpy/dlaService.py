@@ -336,33 +336,45 @@ def checkLayerIsService(layerStr):
     else:
         return False
 
-def checkServiceCapabilities(sourcePath,required):
+def checkServiceCapabilities(pth,checklist):
     ## Added May2016. Ensure that feature layer has been added and warn if capabilities are not available
-    if sourcePath == None:
+    if pth == None:
         dla.addMessage('Error: No path available for layer')            
         return False
-    #dla.addMessage('Checking: ' + sourcePath)    
-    if checkLayerIsService(sourcePath):
-        url = sourcePath
+    #dla.addMessage('Checking: ' + pth)    
+    if checkLayerIsService(pth):
+        url = pth
         if isFeatureLayerUrl(url):
             data = arcpy.GetSigninToken()
             token = data['token']
             name = getServiceName(url)
-            #print('Service',name)
-            res = hasCapabilities(url,token,['Create','Delete'])
-            if res != True and required == False:
-                dla.addWarning('WARNING: ' + name + ' does not have Create and Delete privileges')
-                dla.addMessage('Verify the service properties for: ' + url)
-                dla.addMessage('This tool might continue but other tools will not run until this is addressed')
-            elif res != True and required == True:
-                addWarning('WARNING: ' + name + ' does not have Create and Delete privileges')
+            # checklist is a list like: ['Create','Delete']
+            res = hasCapabilities(url,token,checklist)
+            if res != True:
                 dla.addMessage('Verify the service properties for: ' + url)
                 dla.addMessage('This tool will not run until this is addressed')
             return res
         else:
-            dla.addMessage(sourcePath + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
+            dla.addMessage(pth + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
             return False
     else:
-        return True
+        return None # if it's not a service return None
 
 ## end May 2016 section
+
+def validateSourceUrl(pth):
+    valid = checkServiceCapabilities(pth,['Query'])
+    return valid # can be None, True, False - only False is an error
+
+def validateTargetUrl(pth):
+    valid = checkServiceCapabilities(pth,['Create','Delete'])
+    return valid # can be None, True, False - only False is an error
+
+def validateTargetAppend(pth):
+    valid = checkServiceCapabilities(pth,['Create'])
+    return valid # can be None, True, False - only False is an error
+
+def validateTargetReplace(pth):
+    valid = validateTargetUrl(pth)
+    return valid # can be None, True, False - only False is an error
+

@@ -68,25 +68,35 @@ def publish(xmlFileNames):
         dla.addMessage(source)
         dla.addMessage(target)
 
-        svceS = dlaService.checkLayerIsService(source)
-        svceT = dlaService.checkLayerIsService(target)
-
-        ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
-        if not dlaService.checkServiceCapabilities(source,True):
-            return False
-        if not dlaService.checkServiceCapabilities(target,True):
-            return False
-
-        if svceS == True or svceT == True:
+        if dlaService.checkLayerIsService(source) or dlaService.checkLayerIsService(target):
             token = dlaService.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
+            # exit here before doing other things if not signed in
             if token == None:
                 dla.addError("User must be signed in for this tool to work with services")
-                return
+                return False
 
         expr = getWhereClause(xmlDoc)
         if _useReplaceSettings == True and (expr == '' or expr == None):
             dla.addError("There must be an expression for replacing by field value, current value = " + str(expr))
             return False
+
+        errs = False
+        if dlaService.validateSourceUrl(source) == False:
+            dla.addError("Source path does not appear to be a valid feature layer")
+            errs = True
+
+        if _useReplaceSettings == True:
+            if dlaService.validateTargetReplace(target) == False:
+                dla.addError("Target path does not have correct privileges")
+                errs = True
+        elif _useReplaceSettings == False:
+            if dlaService.validateTargetAppend(target) == False:
+                dla.addError("Target path does not have correct privileges")
+                errs = True
+
+        if errs:
+            return False
+
 
         dla.setWorkspace()
 
@@ -126,7 +136,7 @@ def publish(xmlFileNames):
             print(err)
         else:
             layers.append(target)
-
+    
     arcpy.SetParameter(_outParam,';'.join(layers))
 
 def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):

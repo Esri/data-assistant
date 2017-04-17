@@ -90,19 +90,27 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     if sourcePath == None or targetPath == None:
         return False
 
-    ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
+    ## Warn user if capabilities are not correct, exit if not valid layers
     errs = False
-    if not dlaService.checkServiceCapabilities(sourcePath,False):
-        dla.addMessage("Errors in Source Service Capabilities, exiting without writing the output file")
+    if dlaService.validateSourceUrl(sourcePath) == False:
+        dla.addError("Errors in Source Service Capabilities, exiting without writing the output file")
         errs = True
-    if not dlaService.checkServiceCapabilities(targetPath,False):
-        dla.addMessage("Errors in Target Service Capabilities, exiting without writing the output file")
+    if dlaService.validateTargetUrl(targetPath) == False:
+        dla.addError("Errors in Target Service Capabilities, exiting without writing the output file")
         errs = True
+    try:
+        desc = arcpy.Describe(sourcePath)
+    except:
+        dla.addError("Unable to Describe the source dataset, exiting")
+        errs = True
+    try:
+        descT = arcpy.Describe(targetPath)
+    except:
+        dla.addError("Unable to Describe the target dataset, exiting")
+        errs = True
+
     if errs:
         return False
-
-    desc = arcpy.Describe(sourcePath)
-    descT = arcpy.Describe(targetPath)
 
     xmlDoc = Document()
     root = xmlDoc.createElement('SourceTargetMatrix')

@@ -151,8 +151,10 @@ def getIgnoreFieldNames(desc):
 def getFieldByName(desc,name):
     val = None
     try:
-        val = eval("desc." + name)
+        val = eval('desc.' + name)
     except:
+        val = None
+    if val == '':
         val = None
     return val
 
@@ -1231,26 +1233,25 @@ def processGlobalIds(xmlDoc):
     tGlobalId = getFieldByName(desct,'globalIDFieldName')
 
     if sGlobalId != None and tGlobalId != None:
-        if arcpy.ListFields(source,sGlobalId,'GlobalID')[0].type == arcpy.ListFields(target,tGlobalId,'GlobalID')[0].type:
-            addMessage('Source and Target datasets both have GlobalID fields')
+        addMessage('Source and Target datasets both have GlobalID fields')
 
-            supportedWSs = checkDatabaseType(source)
-            if not supportedWSs:
-                addMessage("Source Workspace type prevents preserving GlobalIDs")
-            supportedWSt = checkDatabaseType(target)
-            if not supportedWSt:
-                addMessage("Target Workspace type prevents preserving GlobalIDs")
-            ids = checkGlobalIdIndex(descs,sGlobalId)
-            idt = checkGlobalIdIndex(desct,tGlobalId)
+        supportedWSs = checkDatabaseType(source)
+        if not supportedWSs:
+            addMessage("Source Workspace type prevents preserving GlobalIDs")
+        supportedWSt = checkDatabaseType(target)
+        if not supportedWSt:
+            addMessage("Target Workspace type prevents preserving GlobalIDs")
+        ids = checkGlobalIdIndex(descs,sGlobalId)
+        idt = checkGlobalIdIndex(desct,tGlobalId)
 
-            errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
-            if not ids:
-                addMessage('Source ' + errmsg)
-            if not idt:
-                addMessage('Target ' + errmsg)
+        errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
+        if not ids:
+            addMessage('Source ' + errmsg)
+        if not idt:
+            addMessage('Target ' + errmsg)
 
-            if ids and idt and supportedWSs and supportedWSt:
-                process = True
+        if ids and idt and supportedWSs and supportedWSt:
+            process = True
 
     return process
 

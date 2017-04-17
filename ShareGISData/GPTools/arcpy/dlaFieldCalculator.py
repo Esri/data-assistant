@@ -87,7 +87,9 @@ def calculate(xmlFileName,workspace,name,ignore):
             flength = target_values[targetName]['flength']
 
         # make sure the field exists in the field calculator dataset, this will include all source and target fields.
-        dla.addDlaField(table,targetName,field,attrs,ftype,flength)
+        retcode = dla.addDlaField(table,targetName,field,attrs,ftype,flength)
+        if retcode == False:
+            addError("Unable to add field " + targetName + " to database to calculate values, exiting")
     
     allFields = sourceFields + targetFields # this should be the same as the dataset fields at this point
     desc = arcpy.Describe(table)

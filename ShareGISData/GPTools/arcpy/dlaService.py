@@ -351,6 +351,7 @@ def checkServiceCapabilities(pth,checklist):
             # checklist is a list like: ['Create','Delete']
             res = hasCapabilities(url,token,checklist)
             if res != True:
+                dla.addMessage('WARNING: ' + name + ' does not have ' + '+'.join(checklist) + ' privileges')
                 dla.addMessage('Verify the service properties for: ' + url)
                 dla.addMessage('This tool will not run until this is addressed')
             return res

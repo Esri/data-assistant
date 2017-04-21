@@ -34,30 +34,37 @@ namespace DataAssistant
     /// </summary>
     public partial class Dockpane1View : UserControl
     {
+
         private bool checkXmlFileName(string filepath)
         {
             bool valid = false;
             bool srcValid = false;
             bool targValid = false;
             bool projValid = false;
+
+            string _project = "//Project";
+            string _source = "//Source";
+            string _target = "//Target";
+
+
             if (System.IO.File.Exists(filepath))
             {
                 string folder = getFolder(filepath);
                 loadXml(filepath); // load the xml file but do not update the UI
 
-                System.Xml.XmlNode project = _xml.SelectSingleNode("//Project");
+                System.Xml.XmlNode project = _xml.SelectSingleNode(_project);
                 if (project == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Warning: Unable to locate Project xml element in folder " + folder);
                 else
                     projValid = checkSourceTargetPath(folder, project.InnerText);
 
-                System.Xml.XmlNode source = _xml.SelectSingleNode("//Source");
+                System.Xml.XmlNode source = _xml.SelectSingleNode(_source);
                 if (source == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error: Unable to locate Source xml element in the file");
                 else
                     srcValid = checkSourceTargetPath(folder, source.InnerText);
 
-                System.Xml.XmlNode target = _xml.SelectSingleNode("//Target");
+                System.Xml.XmlNode target = _xml.SelectSingleNode(_target);
                 if (target == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error: Unable to locate Target xml element in the file");
                 else
@@ -94,8 +101,14 @@ namespace DataAssistant
 
         private bool checkDatasetExists(string dataset)
         {
+            string _sde = ".sde\\";
+            string _gdb = ".gdb\\";
+            string _lyrx = ".lyrx";
+            string _aprx = ".aprx";
+            string _http = "http://";
+
             bool exists = false;
-            if (dataset.ToLower().StartsWith("http://"))
+            if (dataset.ToLower().StartsWith(_http))
             {
                 Uri ds = new Uri(dataset);
                 try
@@ -106,24 +119,24 @@ namespace DataAssistant
                 catch { exists = false; }
 
             }
-            else if (dataset.ToLower().Contains(".sde\\"))
+            if (dataset.ToLower().Contains(_sde))
             {
-                string sde = dataset.Substring(0, dataset.LastIndexOf(".sde") + 4);
+                string sde = dataset.Substring(0, dataset.LastIndexOf(_sde) + _sde.Length);
                 if (System.IO.File.Exists(sde)) // just checking .sde file 
                     exists = true;
             }
-            else if (dataset.ToLower().Contains(".gdb\\"))
+            if (dataset.ToLower().Contains(_gdb))
             {
-                string db = dataset.Substring(0, dataset.LastIndexOf(".gdb") + 4);
+                string db = dataset.Substring(0, dataset.LastIndexOf(_gdb) + _gdb.Length);
                 if (System.IO.Directory.Exists(db)) // just checking .gdb folder exists
                     exists = true;
             }
-            else if (dataset.ToLower().EndsWith(".lyrx"))
+            if (dataset.ToLower().EndsWith(_lyrx))
             {
                 if (System.IO.File.Exists(dataset))
                     exists = true;
             }
-            else if (dataset.ToLower().EndsWith(".aprx"))
+            if (dataset.ToLower().EndsWith(_aprx))
             {
                 if (System.IO.File.Exists(dataset))
                     exists = true;

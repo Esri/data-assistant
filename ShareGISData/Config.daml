@@ -5,7 +5,7 @@
     <Image>Images\Icon0.png</Image>
     <Author>Esri</Author>
     <Company>Vertex3 for Esri</Company>
-    <Date>2017.4.17</Date>
+    <Date>2017.4.21</Date>
     <Subject>Content,Framework,Data Loading Assistant</Subject>
   </AddInInfo>
   <modules>

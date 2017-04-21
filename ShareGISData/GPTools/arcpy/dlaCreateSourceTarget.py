@@ -152,7 +152,8 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     setTargetFields(root,xmlDoc,fields)
 
     # add data to the document
-    writeDataSample(xmlDoc,root,sourceNames,sourcePath,10)
+    if len(sourceNames) > 0:
+        writeDataSample(xmlDoc,root,sourceNames,sourcePath,10)
     # write it out
     xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()
@@ -313,7 +314,7 @@ def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     #    desc = arcpy.Describe(sourcePath) # dataset path/source as parameter
     #    fields = desc.fields
     #    sourceFields = [field.name for field in fields]
-
+    
     cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
 
     i = 0

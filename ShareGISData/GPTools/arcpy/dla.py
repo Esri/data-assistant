@@ -752,17 +752,18 @@ def setProject(xmlfile,projectFilePath):
         if _xmlFolder == None:
             prj = getProject()
         _xmlFolder = os.path.dirname(xmlfile)
-        if not os.path.exists(projectFilePath):
-            projectFilePath = os.path.join(_xmlFolder,projectFilePath)
-        if os.path.exists(projectFilePath):
-            _project = arcpy.mp.ArcGISProject(projectFilePath)
-        else:
-            addMessage(str(projectFilePath) + ' does not exist, continuing')
+        if projectFilePath != None:
+            if not os.path.exists(projectFilePath):
+                projectFilePath = os.path.join(_xmlFolder,projectFilePath)
+            if os.path.exists(projectFilePath):
+                _project = arcpy.mp.ArcGISProject(projectFilePath)
+            else:
+                addMessage(str(projectFilePath) + ' does not exist, continuing')
 
     except:
-        addError("Unable to set the current project, continuing")
+        #addError("Unable to set the current project, continuing")
         _project = None
-        _xmlFolder = None
+        #_xmlFolder = None
 
     return _project
 
@@ -772,7 +773,7 @@ def getProject():
         try:
             _project = arcpy.mp.ArcGISProject("CURRENT")
         except:
-            addError("Unable to obtain a reference to the current project, continuing")
+            #addMessage("Unable to obtain a reference to the current project, continuing")
             _project = None
     return _project
 
@@ -1047,19 +1048,19 @@ def setupProxy():
 
 def getConnectionFile(connectionProperties):
 
-    #dir = os.path.dirname(os.path.realpath(__file__)) *** change to project folder...
-    # dir = os.path.dirname(getProject().filePath)
-    dir = os.path.dirname(_xmlFolder) # change to xmlfolder since this will be better for portability when xml/data outside of the project
+    global _xmlFolder
+    if _xmlFolder == None:
+        addError("_xmlFolder has not been set in code, exiting")
     cp = connectionProperties['connection_info']
     srvr = getcp(cp,'server')
     inst = getcp(cp,'db_connection_properties')
     db = getcp(cp,'database')
     fname = (srvr+inst+db+".sde").replace(":","").replace("\\","")
-    connfile = os.path.join(dir,fname)
+    connfile = os.path.join(_xmlFolder,fname)
     if os.path.exists(connfile):
         os.remove(connfile)
     args = []
-    args.append(out_folder_path=dir)
+    args.append(out_folder_path=_xmlFolder)
     args.append(out_name=fname)
     if getcp(cp,'dbclient') != None:
         args.append(database_platform=getcp(cp,'dbclient'))

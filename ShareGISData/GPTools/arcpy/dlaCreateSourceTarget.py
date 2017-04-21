@@ -79,6 +79,7 @@ def createDlaFile(source,target,xmlFileName):
     elif str(source) == str(target):
         dla.addError("2 string layers with the same value is not supported by this tool, please rename one of the layers, exiting.")
     else:
+        prj = dla.getProject()
         sourcePath = dla.getLayerPath(source)
         targetPath = dla.getLayerPath(target)
         writeDocument(sourcePath,targetPath,xmlFileName)
@@ -121,7 +122,11 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = dla.getProject()
-    setSourceTarget(dataset,xmlDoc,"Project",dla.dropXmlFolder(xmlFileName,prj.filePath))
+    if prj == None:
+        prj = ''
+    else:
+        prj = prj.filePath
+    setSourceTarget(dataset,xmlDoc,"Project",dla.dropXmlFolder(xmlFileName,prj))
     setSourceTarget(dataset,xmlDoc,"Source",dla.dropXmlFolder(xmlFileName,sourcePath))
     setSourceTarget(dataset,xmlDoc,"Target",dla.dropXmlFolder(xmlFileName,targetPath))
 

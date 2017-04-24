@@ -108,16 +108,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GPTools\arcpy\dlaClasses.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="GPTools\arcpy\dla.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dlaExtractLayerToGDB.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="GPTools\arcpy\dlaPreviewTesting.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dlaService.py">
@@ -160,7 +154,6 @@
     <Content Include="GPTools\arcpy\MatchLocal.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="GPTools\arcpy\testHarness.py" />
     <Content Include="GPTools\DataLoadingAssistant.tbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

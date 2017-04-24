@@ -121,13 +121,13 @@ namespace DataAssistant
             }
             if (dataset.ToLower().Contains(_sde))
             {
-                string sde = dataset.Substring(0, dataset.LastIndexOf(_sde) + _sde.Length);
+                string sde = dataset.Substring(0, dataset.LastIndexOf(_sde) + (_sde.Length-1));
                 if (System.IO.File.Exists(sde)) // just checking .sde file 
                     exists = true;
             }
             if (dataset.ToLower().Contains(_gdb))
             {
-                string db = dataset.Substring(0, dataset.LastIndexOf(_gdb) + _gdb.Length);
+                string db = dataset.Substring(0, dataset.LastIndexOf(_gdb) + (_gdb.Length-1));
                 if (System.IO.Directory.Exists(db)) // just checking .gdb folder exists
                     exists = true;
             }

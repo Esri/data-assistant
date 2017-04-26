@@ -285,7 +285,7 @@ def hasCapabilities(url,token,checkList):
         if response != None:
             try:
                 error = json.dumps(response['error'])
-                addError('Unable to access service properties ' + error)
+                dla.addError('Unable to access service properties ' + error)
                 return False
             except:
                 hasit = True
@@ -300,10 +300,10 @@ def hasCapabilities(url,token,checkList):
                     else:
                         dla.addMessage('Service supports: ' + item)
             except:
-                addError('Unable to access service capabilities')                
+                dla.addError('Unable to access service capabilities')                
                 hasit = False
         else:
-            addError('Unable to access service')                
+            dla.addError('Unable to access service')                
             hasit = False
         
     return hasit
@@ -325,7 +325,7 @@ def isFeatureLayerUrl(url):
         if parts[lngth-2] == 'FeatureServer':
             return True
     except:
-        addError("2nd last part of url != 'FeatureServer'")
+        dla.addError("2nd last part of url != 'FeatureServer'")
         return False
 
 def checkLayerIsService(layerStr):

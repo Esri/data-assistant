@@ -846,9 +846,12 @@ def getLayerPath(layer):
         addMessage(layer.filePath)
 
     if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
-        pth = layer.dataSource
-        addMessage("Used data source property")
-        addMessage(str(layer))
+        if layer.supports('dataSource'):
+            pth = layer.dataSource
+            addMessage("Used data source property")
+            addMessage(str(layer))
+        else:
+            addError("Layer does not support the datasource property.  Please ensure you selected a layer and not a group layer")
 
     elif isinstance(layer, str) and layer.lower().endswith(_lyrx):
         layer = arcpy.mp.LayerFile(layer)

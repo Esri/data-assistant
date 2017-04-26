@@ -51,6 +51,7 @@ _ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFiel
 _CIMWKSP = 'CIMWKSP'
 _lyrx = '.lyrx'
 _http = 'http://'
+_https = 'https://'
 _sde = '.sde\\'
 _gdb = '.gdb\\'
 import string
@@ -781,6 +782,8 @@ def getDatasetPath(xmlDoc,name):
     # check if file exists, then try to add project folder if missing
     pth = getNodeValue(xmlDoc,name)
     if pth.lower().startswith(_http):
+        return pth
+	if pth.lower().startswith(_https):
         return pth
     elif pth.endswith(_lyrx):
         # need to check os.path

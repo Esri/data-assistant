@@ -204,7 +204,7 @@ def handleGeometryChanges(sourceDataset,target):
         return sourceDataset
     desc = arcpy.Describe(sourceDataset) # assuming local file gdb
     dataset = sourceDataset
-    if desc.ShapeType == "Polygon" and target.lower().startswith("http://") == True:
+    if desc.ShapeType == "Polygon" and (target.lower().startswith("http://") == True or target.lower().startswith("https://") == True):
         dataset = simplifyPolygons(sourceDataset)
     else:
         dataset = sourceDataset

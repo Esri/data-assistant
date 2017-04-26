@@ -783,7 +783,7 @@ def getDatasetPath(xmlDoc,name):
     pth = getNodeValue(xmlDoc,name)
     if pth.lower().startswith(_http):
         return pth
-	if pth.lower().startswith(_https):
+    if pth.lower().startswith(_https):
         return pth
     elif pth.endswith(_lyrx):
         # need to check os.path
@@ -955,7 +955,15 @@ def repairLayerSourceUrl(layerPath,lyr):
             lastPart = str(ints[0])
         parts[len(parts) - 1] = lastPart
         path = "/".join(parts)
-
+    elif layerPath.startswith(_https): # sometimes get http path to start with, need to handle non-integer layerid in both cases
+        # fix for non-integer layer ids
+        parts = layerPath.split("/")
+        lastPart = parts[len(parts)-1]
+        ints = [int(s) for s in re.findall(r'\d+',lastPart )] # scan for the integer value in the string
+        if ints != []:
+            lastPart = str(ints[0])
+        parts[len(parts) - 1] = lastPart
+        path = "/".join(parts)
     elif path == None:
         # nothing done here
         path = layerPath
@@ -1083,7 +1091,7 @@ def getConnectionFile(connectionProperties):
         args.append(username=getcp(cp,'date'))
 
     arcpy.CreateDatabaseConnection_management (','.join(args))
-                                            
+
     return connfile
 
 def getcp(cp,name):
@@ -1183,6 +1191,8 @@ def checkDatabaseType(path):
     supported = False
     try:
         if path.lower().startswith(_http):
+            supported = True
+        elif path.lower().startswith(_https):
             supported = True
         elif path.lower().count(_sde) == 1:
             supported = True

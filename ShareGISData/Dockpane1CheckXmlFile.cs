@@ -106,9 +106,20 @@ namespace DataAssistant
             string _lyrx = ".lyrx";
             string _aprx = ".aprx";
             string _http = "http://";
-
+            string _https = "https://";
             bool exists = false;
             if (dataset.ToLower().StartsWith(_http))
+            {
+                Uri ds = new Uri(dataset);
+                try
+                {
+                    var query = ds.Query; // just a simple url test
+                    exists = true;
+                }
+                catch { exists = false; }
+
+            }
+            if (dataset.ToLower().StartsWith(_https))
             {
                 Uri ds = new Uri(dataset);
                 try

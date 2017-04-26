@@ -104,7 +104,7 @@ def publish(xmlFileNames):
             datasetType = 'Table'
         else:
             datasetType = 'FeatureClass'
-        
+
         if not dla.isStaged(xmlDoc):
             res = dlaExtractLayerToGDB.extract(xmlFile,None,dla.workspace,source,target,datasetType)
             if res != True:
@@ -136,7 +136,7 @@ def publish(xmlFileNames):
             print(err)
         else:
             layers.append(target)
-    
+
     arcpy.SetParameter(_outParam,';'.join(layers))
 
 def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
@@ -163,7 +163,7 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
             if dla.deleteRows(target,expr) == True:
                 success = dla.appendRows(dlaTable,target,expr)
             else:
-                success = False       
+                success = False
         else:
             success = dla.appendRows(dlaTable,target,'')
 
@@ -183,17 +183,17 @@ def getWhereClause(xmlDoc):
         if type == 'String':
             value = "'" + value + "'"
         expr = fieldName + " " + operator + " " + value
-        
+
     elif operator == 'Where':
         expr = value
-    else: 
+    else:
         expr = '' # empty string by default
-        
+
     return expr
 
 def getTargetType(xmlDoc,fname):
     # get the target field type
-    for tfield in xmlDoc.getElementsByTagName('TargetField'):       
+    for tfield in xmlDoc.getElementsByTagName('TargetField'):
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")
@@ -220,7 +220,7 @@ def simplifyPolygons(sourceDataset):
         arcpy.Delete_management(simplify)
     if arcpy.Exists(simplify + '_Pnt'):
         arcpy.Delete_management(simplify + '_Pnt')
-        
+
     arcpy.SimplifyPolygon_cartography(sourceDataset, simplify, "POINT_REMOVE", "1 Meters")
     return simplify
 

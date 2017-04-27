@@ -72,8 +72,8 @@ def main(argv = None):
     createDlaFile(source,target,xmlFileName)
 
 def createDlaFile(source,target,xmlFileName):
-
     # entry point for calling this tool from another python script
+    res = False
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
     elif str(source) == str(target):
@@ -82,15 +82,18 @@ def createDlaFile(source,target,xmlFileName):
         prj = dla.getProject()
         sourcePath = dla.getLayerPath(source)
         targetPath = dla.getLayerPath(target)
-        writeDocument(sourcePath,targetPath,xmlFileName)
-    return True
+        if str(sourcePath) == '' or str(targetPath) == '':
+            dla.addError("This tool requires both a source and target dataset, exiting.")
+            return res
+        else:
+            res = writeDocument(sourcePath,targetPath,xmlFileName)
+    return res
 
 
 def writeDocument(sourcePath,targetPath,xmlFileName):
 
     if sourcePath == None or targetPath == None:
         return False
-
     ## Warn user if capabilities are not correct, exit if not valid layers
     errs = False
     if dlaService.validateSourceUrl(sourcePath) == False:
@@ -162,6 +165,7 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     # write it out
     xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()
+    return True
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
     if desc.datasetType.lower() == 'table':

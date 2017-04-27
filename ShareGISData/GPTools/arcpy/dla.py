@@ -781,9 +781,7 @@ def getProject():
 def getDatasetPath(xmlDoc,name):
     # check if file exists, then try to add project folder if missing
     pth = getNodeValue(xmlDoc,name)
-    if pth.lower().startswith(_http):
-        return pth
-    if pth.lower().startswith(_https):
+    if pth.lower().startswith(_http) == True or pth.lower().startswith(_https) == True:
         return pth
     elif pth.endswith(_lyrx):
         # need to check os.path
@@ -831,7 +829,7 @@ def getMapLayer(layerName):
                             layer = lyr
                             found = True # take the first layer with matching name
     except:
-        addMessage("Unable to get layer from maps")
+        addMessage("Warning: Unable to get layer from maps")
         return None
 
     return layer
@@ -845,11 +843,10 @@ def getLayerPath(layer):
         addMessage("Used .lyrx filePath as source")
         addMessage(layer.filePath)
 
-    if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
+    elif isinstance(layer, arcpy._mp.Layer): # map layer as parameter
         if layer.supports('dataSource'):
             pth = layer.dataSource
             addMessage("Used data source property")
-            addMessage(str(layer))
         else:
             addError("Layer does not support the datasource property.  Please ensure you selected a layer and not a group layer")
 
@@ -861,16 +858,18 @@ def getLayerPath(layer):
         except:
             addMessage("Failed to use .lyrx filePath as source")
 
-    else:
+    else: # should be a string, try to describe
         try:
             desc = arcpy.Describe(layer) # dataset path/source as parameter
             pth = desc.catalogPath
         except:
-            lyr = getMapLayer(layer) # layer name in the project/map
+            lyr = getMapLayer(layer) # layer name in the project/map - if not described then could be layer name
             if lyr != None and lyr.supports("DataSource"):
                 pth = lyr.dataSource
                 layer = lyr
-
+            else:
+                addError("Unable to get the DataSource for the layer: " + str(layer))
+                return ''
     # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
     pth = repairLayerSourceUrl(pth,layer)
     # handle special case for joined layers
@@ -931,6 +930,7 @@ def getSDELayer(layer,pth):
 def repairLayerSourceUrl(layerPath,lyr):
     # take a layer path or layer name and return the data source or repaired source
     # lyr parameter is here but only used in CIMWKSP case.
+    # note that multiple if statements are used - and there can be a progression of path changes - not elif statements.
     if layerPath == "" or layerPath == None:
         return layerPath
     path = None
@@ -942,32 +942,24 @@ def repairLayerSourceUrl(layerPath,lyr):
             path = layerPath.replace("\\",'/')
             layerPath = path
 
-    elif layerPath.startswith(_CIMWKSP):
+    if layerPath.startswith(_http) == True or layerPath.startswith(_https) == True: # sometimes get http/https path to start with, need to handle non-integer layerid in both cases
+        # fix for non-integer layer ids
+        parts = layerPath.split("/")
+        lastPart = parts[len(parts)-1]
+        ints = [int(s) for s in re.findall(r'\d+',lastPart )] # scan for the integer value in the string
+        if ints != []:
+            lastPart = str(ints[0])
+        parts[len(parts) - 1] = lastPart
+        path = "/".join(parts)
+
+    if layerPath.startswith(_CIMWKSP):
         # create database connection and use that path
         connfile = getConnectionFile(lyr.connectionProperties)
         path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
         path = path.replace("\\\\","\\")
         #path = getSDELayer(lyr,layerPath)
 
-    if layerPath.startswith(_http): # sometimes get http path to start with, need to handle non-integer layerid in both cases
-        # fix for non-integer layer ids
-        parts = layerPath.split("/")
-        lastPart = parts[len(parts)-1]
-        ints = [int(s) for s in re.findall(r'\d+',lastPart )] # scan for the integer value in the string
-        if ints != []:
-            lastPart = str(ints[0])
-        parts[len(parts) - 1] = lastPart
-        path = "/".join(parts)
-    elif layerPath.startswith(_https): # sometimes get http path to start with, need to handle non-integer layerid in both cases
-        # fix for non-integer layer ids
-        parts = layerPath.split("/")
-        lastPart = parts[len(parts)-1]
-        ints = [int(s) for s in re.findall(r'\d+',lastPart )] # scan for the integer value in the string
-        if ints != []:
-            lastPart = str(ints[0])
-        parts[len(parts) - 1] = lastPart
-        path = "/".join(parts)
-    elif path == None:
+    if path == None:
         # nothing done here
         path = layerPath
 
@@ -976,7 +968,6 @@ def repairLayerSourceUrl(layerPath,lyr):
 def getTempTable(name):
     tname = workspace + os.sep + name
     return tname
-
 
 def setWorkspace():
     global workspace

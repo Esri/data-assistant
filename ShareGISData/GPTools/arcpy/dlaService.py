@@ -312,8 +312,10 @@ def getServiceName(url):
     parts = url.split('/')
     lngth = len(parts)
     if len(parts) > 8:
-        dla.addMessage("Service Name: " + parts[7])
-        return parts[7]
+        dla.addMessage("Service Name: " + parts[len(parts)-3])
+        return parts[len(parts)-3]
+    else:
+        return None
 
 def isFeatureLayerUrl(url):
     # assume layer string has already had \ and GIS Servers or other characters switched to be a url
@@ -337,45 +339,47 @@ def checkLayerIsService(layerStr):
         return False
 
 def checkServiceCapabilities(pth,checklist):
-    ## Added May2016. Ensure that feature layer has been added and warn if capabilities are not available
+    res = False
     if pth == None:
         dla.addMessage('Error: No path available for layer')            
         return False
-    #dla.addMessage('Checking: ' + pth)    
     if checkLayerIsService(pth):
         url = pth
         if isFeatureLayerUrl(url):
             data = arcpy.GetSigninToken()
             token = data['token']
             name = getServiceName(url)
-            # checklist is a list like: ['Create','Delete']
-            res = hasCapabilities(url,token,checklist)
-            if res != True:
-                dla.addMessage('WARNING: ' + name + ' does not have ' + '+'.join(checklist) + ' privileges')
-                dla.addMessage('Verify the service properties for: ' + url)
-                dla.addMessage('This tool will not run until this is addressed')
-            return res
+            if name != None:
+                # checklist is a list like: ['Create','Delete']
+                res = hasCapabilities(url,token,checklist)
+                if res != True:
+                    dla.addMessage('WARNING: ' + name + ' does not have ' + '+'.join(checklist) + ' privileges')
+                    dla.addMessage('Verify the service properties for: ' + url)
+                    dla.addMessage('This tool will not run until this is addressed')
+                return res
+            else:
+                dla.addMessage("Unable to retrieve Service name from the url")
+                return res
         else:
             dla.addMessage(pth + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
             return False
     else:
         return None # if it's not a service return None
 
-## end May 2016 section
 
 def validateSourceUrl(pth):
     valid = checkServiceCapabilities(pth,['Query'])
-    return valid # can be None, True, False - only False is an error
+    return valid # can be None, True, False 
 
 def validateTargetUrl(pth):
     valid = checkServiceCapabilities(pth,['Create','Delete'])
-    return valid # can be None, True, False - only False is an error
+    return valid # can be None, True, False 
 
 def validateTargetAppend(pth):
     valid = checkServiceCapabilities(pth,['Create'])
-    return valid # can be None, True, False - only False is an error
+    return valid # can be None, True, False
 
 def validateTargetReplace(pth):
     valid = validateTargetUrl(pth)
-    return valid # can be None, True, False - only False is an error
+    return valid # can be None, True, False 
 

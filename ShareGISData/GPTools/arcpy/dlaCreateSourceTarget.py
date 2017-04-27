@@ -82,8 +82,11 @@ def createDlaFile(source,target,xmlFileName):
         prj = dla.getProject()
         sourcePath = dla.getLayerPath(source)
         targetPath = dla.getLayerPath(target)
-        if str(sourcePath) == '' or str(targetPath) == '':
-            dla.addError("This tool requires both a source and target dataset, exiting.")
+        if sourcePath == '' or targetPath == '':
+            if sourcePath == '':
+                dla.addError("Invalid Path/Type for Source layer , exiting: " + str(source) )
+            if targetPath == '':
+                dla.addError("Invalid Path/Type for Target layer, exiting: " + str(target) )
             return res
         else:
             res = writeDocument(sourcePath,targetPath,xmlFileName)

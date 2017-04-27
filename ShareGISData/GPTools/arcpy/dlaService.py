@@ -295,7 +295,7 @@ def hasCapabilities(url,token,checkList):
                 dla.addMessage('Service REST capabilities: ' + capabilities)
                 for item in checkList:
                     if capabilities.find(item) == -1:
-                        dla.addMessage('Service does not support: ' + item)
+                        #dla.addMessage('Service does not support: ' + item)
                         hasit = False
                     else:
                         dla.addMessage('Service supports: ' + item)

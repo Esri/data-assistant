@@ -841,7 +841,6 @@ def getLayerPath(layer):
     if isinstance(layer,arcpy._mp.LayerFile): # map layerFile as parameter
         pth = layer.filePath
         addMessage("Used .lyrx filePath as source")
-        addMessage(layer.filePath)
 
     elif isinstance(layer, arcpy._mp.Layer): # map layer as parameter
         if layer.supports('dataSource'):
@@ -858,7 +857,11 @@ def getLayerPath(layer):
         except:
             addMessage("Failed to use .lyrx filePath as source")
 
-    else: # should be a string, try to describe
+    else: # should be a string, check if feature layer string, then try to describe
+        pth = repairLayerSourceUrl(layer,layer)
+        if isFeatureLayerUrl(pth):
+            return pth
+        # else - not needed but else logic below
         try:
             desc = arcpy.Describe(layer) # dataset path/source as parameter
             pth = desc.catalogPath
@@ -875,6 +878,7 @@ def getLayerPath(layer):
     # handle special case for joined layers
     pth = getJoinedLayer(layer,pth)
 
+    addMessage(pth)
     return pth
 
 def getJoinedLayer(layer,pth):
@@ -937,7 +941,11 @@ def repairLayerSourceUrl(layerPath,lyr):
 
     if layerPath.startswith('GIS Servers\\'):
         # turn into url
-        layerPath = layerPath.replace("GIS Servers\\",_http)
+        layerPath = layerPath.replace("GIS Servers\\",'')
+        if layerPath.startswith(_http) == True or layerPath.startswith(_https) == True:
+            layerPath = layerPath # do nothing
+        else:
+            layerPath = _http + layerPath
         if layerPath.find('\\') > -1:
             path = layerPath.replace("\\",'/')
             layerPath = path
@@ -1379,3 +1387,16 @@ def getTargetType(xmlDoc,fname):
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")
+
+def isFeatureLayerUrl(url):
+    # assume layer string has already had \ and GIS Servers or other characters switched to be a url
+    parts = url.split('/')
+    lngth = len(parts)
+    if lngth > 2:
+        try: 
+            # check for feature server text
+            if parts[lngth-2] == 'FeatureServer':
+                return True
+        except:
+            return False
+    return False

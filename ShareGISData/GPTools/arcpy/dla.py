@@ -938,6 +938,7 @@ def repairLayerSourceUrl(layerPath,lyr):
     if layerPath == "" or layerPath == None:
         return layerPath
     path = None
+    layerPath = str(layerPath) # seems to be url object in some cases
 
     if layerPath.startswith('GIS Servers\\'):
         # turn into url

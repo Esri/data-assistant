@@ -87,7 +87,7 @@
       <SubType>Designer</SubType>
     </AddInContent>
     <AddInContent Include="Images\AddInDesktop16.png" />
-    <AddInContent Include="Images\AddInDesktop32.png" />
+    <AddInContent Include="Images\StageData.png" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataClasses.cs" />
@@ -101,12 +101,20 @@
       <DependentUpon>Dockpane2Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dockpane2SettingsViewModel.cs" />
+    <Compile Include="Dockpane1CheckXmlFile.cs" />
+    <Compile Include="Dockpane1Domains.cs" />
     <Compile Include="gridTooltipCreator.cs" />
     <Compile Include="Module1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="GPTools\arcpy\dla.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GPTools\arcpy\dlaExtractLayerToGDB.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="GPTools\arcpy\dlaService.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\arcpy\dlaAppendData.py">
@@ -125,9 +133,6 @@
     <AddInContent Include="Images\GenericButtonBlue32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GPTools\arcpy\dlaExtractLayerToGDB.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="GPTools\arcpy\dlaFieldCalculator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -140,6 +145,9 @@
     <Content Include="GPTools\arcpy\dlaReplaceByField.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="GPTools\arcpy\dlaStage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="GPTools\arcpy\FieldMatcher.xsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -147,7 +155,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="GPTools\DataLoadingAssistant.tbx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

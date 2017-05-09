@@ -26,7 +26,7 @@ No data will be deleted in the target dataset, and all data from the source will
 
 import dlaPublish, arcpy, dla
 
-dlaPublish.useReplaceSettings = False # setting this to False will Append data
+dlaPublish._useReplaceSettings = False # setting this to False will Append data
 
 arcpy.AddMessage("Appending Data")
 

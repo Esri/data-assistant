@@ -61,34 +61,38 @@ namespace DataAssistant
             string val = combo.SelectionBoxItem as string;
             string targName = getTargetFieldName();
             string attrName = getSourceFieldName();
-            for (int i = 0; i < _datarows.Count; i++)
+            if (_datarows != null)
             {
-                string textval = "";
-                try
+
+                for (int i = 0; i < _datarows.Count; i++)
                 {
-                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                    if (att != null)
+                    string textval = "";
+                    try
                     {
-                        switch (val)
+                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                        if (att != null)
                         {
-                            case "Uppercase":
-                                textval = textInfo.ToUpper(att.InnerText);
-                                break;
-                            case "Lowercase":
-                                textval = textInfo.ToLower(att.InnerText);
-                                break;
-                            case "Title":
-                                textval = textInfo.ToTitleCase(att.InnerText.ToLower());
-                                break;
-                            case "Capitalize":
-                                textval = char.ToUpper(att.InnerText[0]) + att.InnerText.Substring(1).ToLower();
-                                break;
+                            switch (val)
+                            {
+                                case "Uppercase":
+                                    textval = textInfo.ToUpper(att.InnerText);
+                                    break;
+                                case "Lowercase":
+                                    textval = textInfo.ToLower(att.InnerText);
+                                    break;
+                                case "Title":
+                                    textval = textInfo.ToTitleCase(att.InnerText.ToLower());
+                                    break;
+                                case "Capitalize":
+                                    textval = char.ToUpper(att.InnerText[0]) + att.InnerText.Substring(1).ToLower();
+                                    break;
+                            }
                         }
+                        textval = targName + "=" + textval;
                     }
-                    textval = targName + "=" + textval;
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
                 }
-                catch { textval = targName + "=" + "None"; }
-                grid.Items.Add(new PreviewRow() { Value = textval });
             }
         }
         private void Method5Preview_Click()
@@ -175,30 +179,34 @@ namespace DataAssistant
             grid.Items.Clear();
             string targName = getTargetFieldName();
             string attrName = getSourceFieldName();
-            for (int i = 0; i < _datarows.Count; i++)
+            if (_datarows != null)
             {
-                string textval = "";
-                try
+
+                for (int i = 0; i < _datarows.Count; i++)
                 {
-                    string res = "";
-                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                    if (att != null)
+                    string textval = "";
+                    try
                     {
-                        try
+                        string res = "";
+                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                        if (att != null)
                         {
-                            string txt = Method91Value.Text.Replace(_spaceVal, " ");
-                            var split = att.InnerText.Split(txt.ToCharArray());
-                            int num;
-                            Int32.TryParse(Method92Value.Text, out num);
-                            res = split[num];
-                            textval = res;
+                            try
+                            {
+                                string txt = Method91Value.Text.Replace(_spaceVal, " ");
+                                var split = att.InnerText.Split(txt.ToCharArray());
+                                int num;
+                                Int32.TryParse(Method92Value.Text, out num);
+                                res = split[num];
+                                textval = res;
+                            }
+                            catch { res = "Error"; }
                         }
-                        catch { res = "Error"; }
+                        textval = targName + "=" + res;
                     }
-                    textval = targName + "=" + res;
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
                 }
-                catch { textval = targName + "=" + "None"; }
-                grid.Items.Add(new PreviewRow() { Value = textval });
             }
 
         }
@@ -212,7 +220,7 @@ namespace DataAssistant
 
         private void Method11Preview_Click()
         {
-            setPreviewRows(Method11Value.Text);
+            setPreviewDomainMapRows(getSourceFieldName());
         }
         private void showResult(string value)
         {
@@ -224,12 +232,12 @@ namespace DataAssistant
             catch
             {MessageBox.Show("Unable to preview results");}
         }
-        private System.Xml.XmlNodeList getDataNodes()
-        {
-            string xpath = "//Data/Row"; // xpath for Rows
-            System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
-            return nodelist;
-        }
+        //private System.Xml.XmlNodeList getDataNodes()
+        //{
+        //    string xpath = "//Data/Row"; // xpath for Rows
+        //    System.Xml.XmlNodeList nodelist = _xml.SelectNodes(xpath);
+       //     return nodelist;
+       // }
         //private void ClickLabel(object sender, MouseButtonEventArgs e)
         //{
         //    showResult("Click");
@@ -238,6 +246,8 @@ namespace DataAssistant
         {
             if(_methodnum < 0 || PreviewCheckBox.IsChecked == false)
                 return;
+            PreviewGrid.Visibility = Visibility.Visible;
+
             switch (_methodnum) { // preview values for each stack panel
                 case 0: // None
                     Method0Preview_Click();
@@ -297,7 +307,7 @@ namespace DataAssistant
             }
             else if (onoff == true || PreviewCheckBox.IsChecked == true)
             {
-                PreviewGrid.Height = 100;
+                //PreviewGrid.Height = 100;
                 setPreviewRowsInit();
                 PreviewGrid.InvalidateArrange();
             }
@@ -319,28 +329,31 @@ namespace DataAssistant
             DataGrid grid = PreviewGrid;
             grid.Items.Clear();
             string targName = getTargetFieldName();
-            for (int i = 0; i < _datarows.Count; i++)
+            if (_datarows != null)
             {
-                string textval = "";
-                try
+                for (int i = 0; i < _datarows.Count; i++)
                 {
-                    if(attrName == null)
-                        textval = targName + "=None";
-                    else
+                    string textval = "";
+                    try
                     {
-                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                        if (att != null)
-                            textval = targName + "=\"" + att.InnerText + "\"";
+                        if (attrName == null)
+                            textval = targName + "=None";
                         else
                         {
-                            //textval = targName + "=" + attrName;
-                            textval = targName + "=\"" + replaceFieldValues(attrName, i) + "\"";
-                            //MessageBox.Show(textval);
-                        }   
+                            System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                            if (att != null)
+                                textval = targName + "=\"" + att.InnerText + "\"";
+                            else
+                            {
+                                //textval = targName + "=" + attrName;
+                                textval = targName + "=\"" + replaceFieldValues(attrName, i) + "\"";
+                                //MessageBox.Show(textval);
+                            }
+                        }
                     }
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
                 }
-                catch { textval = targName + "=" + "None"; }
-                grid.Items.Add(new PreviewRow() { Value = textval });
             }
         }
         private void setPreviewSubstringRows(string attrName, int start, int length)
@@ -348,52 +361,39 @@ namespace DataAssistant
             DataGrid grid = PreviewGrid;
             grid.Items.Clear();
             string targName = getTargetFieldName();
-            for (int i = 0; i < _datarows.Count; i++)
+            if(_datarows!=null)
             {
-                string textval = "";
-              
-                if (attrName == null)
-                    textval = targName + "=None";
-                else
+                for (int i = 0; i < _datarows.Count; i++)
                 {
-                    System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                    if (att != null)
+                    string textval = "";
+                    try
                     {
-                        int len = length;
-                        int startat = start;
-                        if (att.InnerText != "")
-                            textval = att.InnerText;
+                        if (attrName == null)
+                            textval = targName + "=None";
                         else
-                            textval = "None"; // att.InnerText should be "None" but make sure if ""
-                        try
                         {
-                            if (length == -1 && textval != "None") // right
+                            System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                            if (att != null)
                             {
-                                if (start >= att.InnerText.Length)
+                                try
                                 {
-                                    startat = 0;
-                                    len = att.InnerText.Length;
+                                    if (length == -1)
+                                    {
+                                        // num chars for right function
+                                        textval = targName + "=" + att.InnerText.Substring(att.InnerText.Length - start);
+                                    }
+                                    else
+                                    {
+                                        textval = targName + "=" + att.InnerText.Substring(start, length);
+                                    }
                                 }
-                                else
-                                {
-                                    startat = att.InnerText.Length - start;
-                                    len = start;
-                                }
-                                textval = att.InnerText.Substring(startat, len); 
+                                catch { textval = targName + "=" + "None"; }
                             }
-                            else if (length > -1 && textval != "None")
-                            {
-                                if (start + length > att.InnerText.Length)
-                                    len = att.InnerText.Length - start;
-                                textval = att.InnerText.Substring(start, len); 
-                            }
-                        }
-                        catch
-                        { // initialized to value None or InnerText
                         }
                     }
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
                 }
-                grid.Items.Add(new PreviewRow() { Value = targName + "=" + textval });
             }
         }
         private void setPreviewValueMapRows(string attrName)
@@ -401,63 +401,133 @@ namespace DataAssistant
             DataGrid grid = PreviewGrid;
             grid.Items.Clear();
             string targName = getTargetFieldName();
-            for (int i = 0; i < _datarows.Count; i++)
+            if (_datarows != null)
             {
-                string textval = "";
-                try
+
+                for (int i = 0; i < _datarows.Count; i++)
                 {
-                    if (attrName == null)
-                        textval = targName + "=None";
-                    else
+                    string textval = "";
+                    try
                     {
-                        System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
-                        if (att != null)
+                        if (attrName == null)
+                            textval = targName + "=None";
+                        else
+                        {
+                            System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                            if (att != null)
+                            {
+                                try
+                                {
+                                    textval = att.InnerText;
+                                    bool found = false;
+                                    for (int r = 0; r < Method3Grid.Items.Count; r++)
+                                    {
+                                        ValueMapRow row = Method3Grid.Items.GetItemAt(r) as ValueMapRow;
+                                        // value map replace function
+                                        decimal numSource, numTarget;
+                                        bool canConvert1 = decimal.TryParse(att.InnerText, out numSource);
+                                        bool canConvert2 = decimal.TryParse(row.Source.ToString(), out numTarget);
+                                        if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
+                                        {
+                                            textval = row.Target.ToString();//textval.Replace(row.Source, row.Target);
+                                            found = true;
+                                        }
+                                        else if (att.InnerText == row.Source.ToString())
+                                        {
+                                            textval = row.Target.ToString();//textval.Replace(row.Source, row.Target);
+                                            found = true;
+                                        }
+                                    }
+                                    if (Method3Otherwise.Text != "" && Method3Otherwise.Text != null && !found)
+                                    {
+                                        textval = Method3Otherwise.Text;
+                                    }
+                                    textval = targName + "=" + textval;
+                                }
+                                catch { textval = targName + "=" + "None"; }
+                            }
+                        }
+                    }
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
+                }
+            }
+        }
+
+        private void setPreviewDomainMapRows(string attrName)
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            if (_datarows != null)
+            {
+
+                for (int i = 0; i < _datarows.Count; i++)
+                {
+                    string textval = "";
+                    try
+                    {
+                        if (attrName == null)
+                            textval = targName + "=None";
+                        else
+                        {
+                            System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName]; // the data rows from source dataset
+                            if (att != null)
+                            {
+                                try
+                                {
+                                    textval = att.InnerText.ToString();
+                                    for (int r = 0; r < Method11Grid.Items.Count; r++)
+                                    {
+                                        // domain map replace function
+                                        // match source code to target code
+                                        DomainMapRow row = Method11Grid.Items.GetItemAt(r) as DomainMapRow;
+                                        decimal numSource, numTarget;
+                                        bool canConvert1 = decimal.TryParse(att.InnerText, out numSource);
+                                        bool canConvert2 = decimal.TryParse(row.Source[row.SourceSelectedItem].Id, out numTarget);
+                                        if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
+                                        {
+                                            textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                        }
+                                        else if (att.InnerText == row.Source[row.SourceSelectedItem].Id)
+                                        {
+                                            textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                        }
+                                    }
+                                    textval = targName + "=" + textval;
+                                }
+                                catch { textval = targName + "=" + "None"; }
+                            }
+                        }
+                    }
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
+                }
+            }
+        }
+
+        private string replaceFieldValues(string expr, int rownum)
+        {
+            if (_datarows != null)
+            {
+
+                for (int i = 0; i < _datarows.Count; i++)
+                {
+                    if (i == rownum)
+                    {
+                        foreach (System.Xml.XmlAttribute att in _datarows[i].Attributes)
                         {
                             try
                             {
-                                textval = att.InnerText;
-                                for (int r = 0; r < Method3Grid.Items.Count; r++)
-                                {
-                                    // value map replace function
-                                    ValueMapRow row = Method3Grid.Items.GetItemAt(r) as ValueMapRow;
-                                    if(att.InnerText.ToString() == row.Source.ToString())
-                                    {
-                                        textval = textval.Replace(row.Source, row.Target);                 
-                                    }
-                                    else if(Method3Otherwise.Text != "" && Method3Otherwise.Text != null)
-                                    { 
-                                        textval = Method3Otherwise.Text; 
-                                    }
-                                }
-                                textval = targName + "=" + textval;
+                                string val = att.InnerText;
+                                expr = expr.Replace(att.Name, val);
                             }
-                            catch { textval = targName + "=" + "None"; }
+                            catch { }
                         }
-                    }
-                }
-                catch { textval = targName + "=" + "None"; }
-                grid.Items.Add(new PreviewRow() { Value = textval });
-            }
-        }
-        private string replaceFieldValues(string expr, int rownum)
-        {
-            for (int i = 0; i < _datarows.Count; i++)
-            {
-                if (i == rownum)
-                {
-                    foreach (System.Xml.XmlAttribute att in _datarows[i].Attributes)
-                    {
-                        try
-                        {
-                            string val = att.InnerText;
-                            expr = expr.Replace(att.Name, val);
-                        }
-                        catch {  }
                     }
                 }
             }
             return expr;
-
         }
         
         

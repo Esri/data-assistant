@@ -90,7 +90,6 @@ namespace DataAssistant
                 catch { }
             }
         }
-        
         private void saveM1()
         {
             // make sure method is saved to Xml for the field node
@@ -105,7 +104,6 @@ namespace DataAssistant
                 }
                 catch { }
             }
-
         }
         private void saveM2()
         {
@@ -127,7 +125,6 @@ namespace DataAssistant
                 }
                 catch { }
             }
-
         }
         private void saveM3()
         {
@@ -168,7 +165,10 @@ namespace DataAssistant
                         }
                     }
                     System.Xml.XmlNode othnode = _xml.CreateElement("Otherwise");
-                    othnode.InnerText = Method3Otherwise.Text;
+                    string oth = Method3Otherwise.Text;
+                    if (oth.StartsWith("\n ") || oth.Equals(""))
+                        oth = "None";
+                    othnode.InnerText = oth;
                     noder.AppendChild(othnode);
                     saveFieldGrid();
                 }
@@ -176,7 +176,6 @@ namespace DataAssistant
             }
         }
 
-        
         private void saveM4()
         {
             // Change Case
@@ -271,8 +270,6 @@ namespace DataAssistant
             }
 
         }
-
-        
         private void saveM7()
         {
             // Right
@@ -292,11 +289,9 @@ namespace DataAssistant
                 }
                 catch { }
             }
-
         }
         private void saveM8()
         {
-
             // Substring
             System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
             if (nodes != null)
@@ -315,14 +310,10 @@ namespace DataAssistant
                         node.InnerText = Method82Slider.Value.ToString();
                     else
                         addNode(nodes, "Length", Method82Slider.Value.ToString());
-
                     saveFieldGrid();
                 }
                 catch { }
             }
-
- 
-
         }
         private void saveM9()
         {
@@ -392,24 +383,61 @@ namespace DataAssistant
         }
         private void saveM11()
         {
-            // Expression
+            // DomainMap
             System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
             if (nodes != null)
             {
+                DataGrid grid = this.Method11Grid as DataGrid;
+                if (grid == null)
+                    return;
                 try
                 {
-                    nodes[0].SelectSingleNode("Method").InnerText = getMethodVal();
-                    System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("Expression");
+                    string method = getMethodVal();
+                    nodes[0].SelectSingleNode("Method").InnerText = method;
                     trimNodes(nodes, 3);
-                    if (node != null)
-                        node.InnerText = Method11Value.Text;
-                    else
-                        addNode(nodes, getMethodVal(), Method11Value.Text);
+                    System.Xml.XmlNode noder = nodes[0].SelectSingleNode(method);
+                    if (noder == null)
+                    {
+                        noder = _xml.CreateElement(method);
+                        nodes[0].AppendChild(noder);
+                    }
+                    noder.RemoveAll();
+                    for (int s = 0; s < grid.Items.Count; s++)
+                    {
+                        object values = grid.Items[s];
+                        DomainMapRow row = grid.Items.GetItemAt(s) as DomainMapRow;
+                        if (row != null)
+                        {
+                            System.Xml.XmlNode snode = _xml.CreateElement("sValue");
+                            if (row.SourceSelectedItem > -1) // there may not be a selection
+                            {
+                                snode.InnerText = row.Source[row.SourceSelectedItem].Id;
+                                noder.AppendChild(snode);
+                                snode = _xml.CreateElement("sLabel");
+                                snode.InnerText = row.Source[row.SourceSelectedItem].Tooltip;
+                                noder.AppendChild(snode);
+                            }
+                            else
+                            {
+                                snode.InnerText = _noneField;
+                                noder.AppendChild(snode);
+                                snode = _xml.CreateElement("sLabel");
+                                snode.InnerText = _noneField;
+                                noder.AppendChild(snode);
+                            }
+                            System.Xml.XmlNode tnode = _xml.CreateElement("tValue");
+                            tnode.InnerText = row.Target[row.TargetSelectedItem].Id;
+                            noder.AppendChild(tnode);
+
+                            tnode = _xml.CreateElement("tLabel");
+                            tnode.InnerText = row.Target[row.TargetSelectedItem].Tooltip;
+                            noder.AppendChild(tnode);
+                        }
+                    }
                     saveFieldGrid();
                 }
                 catch { }
             }
-
         }
         private string getMethodVal()
         {
@@ -417,7 +445,6 @@ namespace DataAssistant
             method = method.Substring(method.LastIndexOf(':') + 2);
             return method;
         }
-
         private void SourceButton_Click(object sender, RoutedEventArgs e)
         {
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
@@ -425,12 +452,9 @@ namespace DataAssistant
             if (fileloc != null)
             {
                 if (System.Windows.Forms.MessageBox.Show("You should only Change the source dataset if the schemas match", "Update Source Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                {
                     SourceLayer.Text = fileloc;
-                }
             }
         }
-
         private void TargetButton_Click(object sender, RoutedEventArgs e)
         {
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
@@ -438,9 +462,7 @@ namespace DataAssistant
             if (fileloc != null)
             {
                 if (System.Windows.Forms.MessageBox.Show("You should only Change the target dataset if the schemas match", "Update Target Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                {
                     TargetLayer.Text = fileloc;
-                }
             }
         }
         private string getSourceTargetLocation(string initialLocation, string title)
@@ -456,17 +478,14 @@ namespace DataAssistant
                 {
                     IEnumerable<Item> items = dlg.Items;
                     foreach (Item selectedItem in items)
-                    {
                         thePath = selectedItem.Path;
-                    }
                 }
             }
             return thePath;
         }
-
         private void updateReplaceNodes()
         {
-
+            // Replace By Field value selection
             System.Xml.XmlNode dsnode = _xml.SelectSingleNode("//Datasets");
             System.Xml.XmlNodeList nodes;
             System.Xml.XmlNode nodenew;
@@ -505,17 +524,13 @@ namespace DataAssistant
                     addNode(nodes, "Value", ReplaceValue.Text);
                 saveFieldGrid();
             }
-        }
-        
-        
+        }        
         private void trimNodes(System.Xml.XmlNodeList nodes,int trimval)
         {
             if (nodes != null && nodes[0] != null)
             {
                 while (nodes[0].ChildNodes.Count > trimval)
-                {
                     nodes[0].RemoveChild(nodes[0].LastChild);
-                }
             }
         }
         private void addNode(System.Xml.XmlNodeList nodes,string name,string value)

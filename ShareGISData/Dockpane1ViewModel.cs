@@ -121,6 +121,16 @@ namespace DataAssistant
             Geoprocessing.OpenToolDialog(setupGP.getToolbox("AppendData"), param_values);
         }
     }
+    internal class Dockpane1_StageDataButton : Button
+    {
+        protected override void OnClick()
+        {
+            setupGP.init();
+            var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
+
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("StageData"), param_values);
+        }
+    }
     internal class Dockpane1_ReplaceDataButton : Button
     {
         protected override void OnClick()

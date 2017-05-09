@@ -1,11 +1,11 @@
 ﻿<ArcGIS defaultAssembly="DataAssistant.dll" defaultNamespace="DataAssistant" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="December-2016" desktopVersion="1.3">
+  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="2017.6.20" desktopVersion="1.4">
     <Name>DataAssistant</Name>
     <Description>The Data Assistant can be used to transform your organization’s data and load it into a database or service.</Description>
     <Image>Images\Icon0.png</Image>
     <Author>Esri</Author>
     <Company>Vertex3 for Esri</Company>
-    <Date>12/6/2016</Date>
+    <Date>2017.4.26</Date>
     <Subject>Content,Framework,Data Loading Assistant</Subject>
   </AddInInfo>
   <modules>
@@ -20,9 +20,11 @@
           <button refID="DataAssistant_Dockpane1_CreateFile" size="large" />
           <button refID="DataAssistant_Dockpane1_ShowButton" size="large" />
           <button refID="DataAssistant_Dockpane1_PreviewButton" size="large" />
+          <button refID="DataAssistant_Dockpane1_StageButton" size="large" />
           <button refID="DataAssistant_Dockpane1_AppendDataButton" size="large" />
           <button refID="DataAssistant_Dockpane1_ReplaceDataButton" size="large" />
           <button refID="DataAssistant_Dockpane2Settings_ShowButton" size="large" />
+          <button refID="DataAssistant_StageData" size="large" />
         </group>
       </groups>
       <controls>
@@ -37,19 +39,21 @@
           <tooltip heading="Preview Results">
             Preview Results in a local database using a subset of the records<disabledText /></tooltip>
         </button>
+        <button id="DataAssistant_Dockpane1_StageButton" caption="Stage Data" className="Dockpane1_StageDataButton" loadOnClick="true" smallImage="Images\StageData.png" largeImage="Images\StageData.png">
+          <tooltip heading="Stage data to Intermediate Database">
+            Stage Results in a local database using a subset of the records, skip final processing<disabledText /></tooltip>
+        </button>
         <button id="DataAssistant_Dockpane1_AppendDataButton" caption="Append Data" className="Dockpane1_AppendDataButton" loadOnClick="true" smallImage="Images\Icon3.png" largeImage="Images\Icon3.png">
           <tooltip heading="Append Data">
-            Append Data to a database or Portal service<disabledText /></tooltip>
+            Append Data to a database or Portal service, if data was previously staged the intermediate data will be used as a source<disabledText /></tooltip>
         </button>
         <button id="DataAssistant_Dockpane1_ReplaceDataButton" caption="Replace Data" className="Dockpane1_ReplaceDataButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
           <tooltip heading="Replace Data">
-            Replace Data by field value in a database or Portal service<disabledText />
-          </tooltip>
+            Replace Data by field value in a database or Portal service, if data was previously staged the intermediate data will be used as a source<disabledText /></tooltip>
         </button>
         <button id="DataAssistant_Dockpane2Settings_ShowButton" caption="Settings" className="Dockpane2Settings_ShowButton" loadOnClick="true" smallImage="Images\Icon5.png" largeImage="Images\Icon5.png">
           <tooltip heading="Change Settings">Change Optional Settings<disabledText /></tooltip>
         </button>
-        
       </controls>
       <dockPanes>
         <dockPane id="DataAssistant_Dockpane1" caption="Configure Data Mapping" className="Dockpane1ViewModel" dock="group" dockWith="esri_core_contentsDockPane">

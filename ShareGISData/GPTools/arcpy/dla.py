@@ -1,5 +1,4 @@
-﻿
-"""
+﻿"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -32,20 +31,33 @@ import urllib.parse as parse
 import urllib.request as request
 from xml.dom.minidom import Document
 
-debug = False
+debug = False # print field calculator messages.
 startTime = time.localtime() # start time for a script
 workspace = "dla.gdb" # default, override in script
 successParameterNumber = 3 # parameter number to set at end of script to indicate success of the program
-maxErrorCount = 20 # max errors before a script will stop
+maxErrorCount = 20000 # max errors before a script will stop
 _errCount = 0 # count the errors and only report things > maxRowCount errors...
 _proxyhttp = None # "127.0.0.1:80" # ip address and port for proxy, you can also add user/pswd like: username:password@proxy_url:port
 _proxyhttps = None # same as above for any https sites - not needed for these tools but your proxy setup may require it.
 _project = None
+_xmlFolder = None
 
 _noneFieldName = '(None)'
 _dirName = os.path.dirname( os.path.realpath( __file__) )
 maxrows = 10000000
-noneName = '(None)'
+
+_ignoreFields = ['FID','OBJECTID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','SHAPELENGTH','SHAPEAREA','STLENGTH()','STAREA()','RASTER','GLOBALID']
+_ignoreFieldNames = ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','RasterFieldName','GlobalIDFieldName']
+_CIMWKSP = 'CIMWKSP'
+_lyrx = '.lyrx'
+_http = 'http://'
+_https = 'https://'
+_sde = '.sde\\'
+_gdb = '.gdb\\'
+import string
+import random
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 # helper functions
 def timer(input):
@@ -68,7 +80,7 @@ def addMessage(val):
     # write a message to the screen
     try:
         if sys.stdin.isatty():
-            arcpy.AddMessage(str(val))
+            #arcpy.AddMessage(str(val))
             print (str(val))
         else:
             arcpy.AddMessage(str(val))
@@ -94,7 +106,7 @@ def addError(val):
     arcpy.AddError(str(val))
 
 def writeFinalMessage(msg):
-    global _errCount    
+    global _errCount
     if msg != None:
         addMessage(str(msg))
     addMessage("Process completed with " + str(_errCount) + " errors")
@@ -126,6 +138,26 @@ def getFields(xmlFile):
         fields = getXmlElements(xmlFile,atype)
         if fields != []:
             return fields
+
+def getIgnoreFieldNames(desc):
+
+    ignore = _ignoreFields
+    for name in _ignoreFieldNames:
+        val = getFieldByName(desc,name)
+        if val != None:
+            val = val[val.rfind('.')+1:]
+            ignore.append(val)
+    return ignore
+
+def getFieldByName(desc,name):
+    val = None
+    try:
+        val = eval('desc.' + name)
+    except:
+        val = None
+    if val == '':
+        val = None
+    return val
 
 def collect_text(node):
     # "A function that collects text inside 'node', returning that text."
@@ -185,24 +217,6 @@ def cleanup(inWorkspace):
     cleanupGarbage()
     arcpy.ClearWorkspaceCache_management(inWorkspace)
 
-def getWorkspacePath(path):
-    # get the path of the workspace
-    workspace = arcpy.Describe(path) # preset
-    dirName = os.path.dirname(path)
-    if dirName and arcpy.Exists(dirName):
-        dataset = arcpy.Describe(dirName)
-    try:
-        if dataset and dataset.datasetType == "FeatureDataset":
-            # strip off last value to get workspace
-            dirs = dirName.split(os.sep)
-            dirs.pop()
-            datasetStr = os.sep.join(dirs)
-            workspace = arcpy.Describe(datasetStr) # use the next level up from feature dataset
-    except:
-        workspace = dataset # use the first dataset, datasetType fails on workspace values
-
-    return workspace
-
 def getCleanName(nameVal):
     # strip leading database prefix values
     cleanName = nameVal
@@ -220,9 +234,13 @@ def makeFeatureView(workspace,sourceFC,viewName,whereClause,xmlFields):
         fields = arcpy.ListFields(sourceFC)
         fStr = getViewString(fields,xmlFields)
         try:
-            arcpy.MakeFeatureLayer_management(sourceFC, viewName , whereClause, workspace, fStr)
+            if str(whereClause).strip() == '':
+                whereClause = None
+            arcpy.MakeFeatureLayer_management(sourceFC, viewName, whereClause,None, fStr),
         except:
             showTraceback()
+            if whereClause is None:
+                whereClause = "(None)"
             addMessage("Error occured, where clause: " + whereClause)
         #addMessage("Feature Layer " + viewName + " created for " + str(whereClause))
     else:
@@ -248,23 +266,6 @@ def makeTableView(workspace,sourceTable,viewName,whereClause,xmlField):
         exit(-1)
     return(viewName)
 
-def xmakeFeatureViewForLayerx(workspace,sourceLayer,viewName,whereClause,xmlFields):
-    # Process: Make Feature Layers - drop prefixes as needed
-    #if arcpy.Exists(sourceLayer):
-    #if arcpy.Exists(workspace + os.sep + viewName):
-    #    arcpy.Delete_management(workspace + os.sep + viewName) # delete view if it exists
-
-    desc = arcpy.Describe(sourceLayer)
-    fields = arcpy.ListFields(sourceLayer)
-    fLayerStr = getViewString(fields,xmlFields)
-    arcpy.MakeFeatureLayer_management(sourceLayer, viewName, whereClause, workspace,fLayerStr)
-    #else:
-    #addError(sourceLayer + " does not exist, exiting")
-
-    if not arcpy.Exists(viewName):
-        exit(-1)
-    return(viewName)
-
 def getViewString(fields,xmlFields):
     # get the string for creating a view
     viewStr = ""
@@ -282,6 +283,8 @@ def getViewString(fields,xmlFields):
         thisFieldStr = field.name + " " + thisFieldName + " VISIBLE NONE;"
         viewStr += thisFieldStr
 
+    if viewStr.endswith(';'):
+        viewStr = viewStr[:-1]
     return viewStr
 
 def getWhereClause(dataset):
@@ -302,42 +305,49 @@ def deleteRows(table,expr):
     if debug:
         addMessageLocal(table)
     retcode = False
-    tname = table[table.rfind(os.sep) + 1:]
-    #if arcpy.Exists(table):
-    vname = tname + "_ViewDelete"
+    targTable = getDatasetName(table)
+    vname = targTable + "_ViewDelete"
+
     if arcpy.Exists(vname):
         arcpy.Delete_management(vname) # delete view if it exists
 
     arcpy.MakeTableView_management(table, vname ,  expr)
     arcpy.DeleteRows_management(vname)
-    addMessageLocal("Existing " + tname + " rows deleted ")
+    addMessageLocal("Existing " + targTable + " rows deleted ")
     try:
         arcpy.Delete_management(vname) # delete view if it exists
         retcode = True
     except:
         addMessageLocal("Could not delete view, continuing...")
-    #else:
-    #    addMessageLocal( "Dataset " + tname + " does not exist, skipping ")
-    #    retcode = False
+
     return retcode
 
 def appendRows(sourceTable,targetTable,expr):
-    # append rows in feature class with a where clause
-    workspace = sourceTable[:sourceTable.rfind("\\")]
-    arcpy.env.Workspace = workspace
-    if debug:
-        addMessageLocal(tableName)
+    # append rows in dataset with a where clause
     retcode = False
-    targTable = targetTable[targetTable.rfind("\\")+1:]
-    sTable = sourceTable[sourceTable.rfind("\\")+1:]
-    viewName = sTable + "_ViewAppend"
-    desc = arcpy.Describe(targetTable)
-    viewName = makeView(desc.dataElementType,workspace,sourceTable,viewName,expr,[])
 
-    numSourceFeat = arcpy.GetCount_management(viewName).getOutput(0)
-    addMessage("Appending " + sTable + " TO " + targTable)
-    result = arcpy.Append_management(viewName,targetTable,"NO_TEST")
-    addMessageLocal(targTable + " rows Appended ")
+    sTable = getDatasetName(sourceTable)
+    view = sTable + "_ViewAppend" + id_generator(size=3)
+    if isTable(targetTable):
+        deType = 'Table'
+    else:
+        deType = 'FeatureClass'
+
+    view = makeView(deType,workspace,sourceTable,view,expr,[])
+
+    numSourceFeat = arcpy.GetCount_management(view).getOutput(0)
+    addMessage("Appending " + sTable + " TO " + getDatasetName(targetTable))
+
+    if targetTable.lower().endswith(_lyrx):
+        targetTable = getLayerFromString(targetTable)
+    try:
+        result = arcpy.Append_management(inputs=view,target=targetTable,schema_type='NO_TEST')
+    except:
+        msgs = arcpy.GetMessages()
+        addError(msgs)
+        return False
+
+    addMessageLocal('Rows appended')
 
     numTargetFeat = arcpy.GetCount_management(targetTable).getOutput(0)
     addMessage(numSourceFeat + " features in source dataset")
@@ -371,7 +381,7 @@ def listDatasets(gdb):
                 for fc in fcs:
                     descfc = arcpy.Describe(fc)
                     if descfc.DatasetType == "FeatureClass":
-                        dsNames.append(nameTrimmer(fc))
+                        dsNames.append(baseName(fc))
                         dsFullNames.append(desc.CatalogPath + os.sep + fc)
                         if debug:
                             arcpy.AddMessage(desc.CatalogPath + os.sep + fc)
@@ -382,7 +392,7 @@ def listDatasets(gdb):
     for fClass in fcs:
         descfc = arcpy.Describe(fClass)
         if descfc.DatasetType == "FeatureClass":
-            dsNames.append(nameTrimmer(fClass))
+            dsNames.append(baseName(fClass))
             dsFullNames.append(gdb + os.sep + fClass)
             if debug:
                 arcpy.AddMessage(gdb + os.sep + fClass)
@@ -391,7 +401,7 @@ def listDatasets(gdb):
     for table in wsTables:
         descfc = arcpy.Describe(table)
         if descfc.DatasetType == "Table":
-            dsNames.append(nameTrimmer(table))
+            dsNames.append(baseName(table))
             dsFullNames.append(gdb + os.sep + table)
             if debug:
                 arcpy.AddMessage(gdb + os.sep + table)
@@ -411,8 +421,10 @@ def getFullName(searchName,names,fullNames):
 
     return ""
 
-def nameTrimmer(name):
+def baseName(name):
     # trim any database prefixes from table names
+    if name.lower().endswith(_lyrx):
+        name = name[:len(name)-len(_lyrx)]
     if name.count(".") > 0:
         return name.split(".")[name.count(".")].upper()
     else:
@@ -477,6 +489,9 @@ def getFieldValues(mode,fields,datasets):
 
 def addDlaField(table,targetName,field,attrs,ftype,flength):
     # add a field to a dla Geodatabase
+    if targetName == _noneFieldName:
+        return True
+
     retcode = False
     try:
         attrs.index(targetName) # check if field exists, compare uppercase
@@ -487,13 +502,13 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
             tupper = targetName.upper()
             for nm in attrs:
                 nupper = nm.upper()
-                if tupper == nupper and nupper != 'GLOBALID': # if case insensitive match, note GlobalID cannot be renamed
+                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName: # if case insensitive match, note GlobalID and others cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
                     addMessage("Field altered: " + nm + " to " + targetName)
                     upfield = True
-            if upfield == False:
+            if upfield == False and targetName != _noneFieldName:
                 retcode = addField(table,targetName,ftype,flength)
                 addMessage("Field added: " + targetName)
         except :
@@ -601,9 +616,9 @@ def convertDataset(dataElementType,sourceTable,workspace,targetName,whereClause)
 def makeView(deType,workspace,sourceTable,viewName,whereClause, xmlFields):
     # make a view
     view = None
-    if deType == "DETable":
+    if deType.lower().endswith('table'):
         view = makeTableView(workspace,sourceTable,viewName, whereClause,xmlFields)
-    if deType == "DEFeatureClass":
+    if deType.lower().endswith('featureclass'):
         view = makeFeatureView(workspace,sourceTable,viewName, whereClause, xmlFields)
 
     return view
@@ -618,7 +633,7 @@ def exportDataset(sourceWorkspace,sourceName,targetName,dataset,xmlFields):
         desc = arcpy.Describe(sourceTable)
         deType = desc.dataElementType
         whereClause = getWhereClause(dataset)
-        viewName = sourceName + "_View"
+        viewName = sourceName + "_View" + id_generator(size=3)
         view = makeView(deType,workspace,sourceTable,viewName, whereClause,xmlFields)
         count = arcpy.GetCount_management(view).getOutput(0)
         addMessageLocal(str(count) + " source rows")
@@ -652,7 +667,7 @@ def importDataset(sourceWorkspace,sourceName,targetName,dataset,xmlFields):
             return False
         desc = arcpy.Describe(sourceTable)
         deType = desc.dataElementType
-        viewName = sourceName + "_View"
+        viewName = sourceName + "_View" + id_generator(size=3)
         view = makeView(deType,workspace,sourceTable,viewName, whereClause, xmlFields)
         count = arcpy.GetCount_management(view).getOutput(0)
         addMessageLocal(str(count) + " source rows")
@@ -707,35 +722,96 @@ def repairName(name):
 
 
 def getSourceName(xmlDoc):
-    name = getDatasetName(xmlDoc,"Source")
+    path = getNodeValue(xmlDoc,"Source")
+    name = getDatasetName(path)
     return name
 
 def getTargetName(xmlDoc):
-    name = getDatasetName(xmlDoc,"Target")
+    path = getNodeValue(xmlDoc,"Target")
+    name = getDatasetName(path)
     return name
 
-def getDatasetName(xmlDoc,doctype):
-    layer = getNodeValue(xmlDoc,doctype)
+def getDatasetName(path):
     fullname = ''
-    if layer.find("/") > -1:
-        parts = layer.split("/")
+    if path.find("/") > -1:
+        parts = path.split("/")
         fullname = parts[len(parts)-3]
+    elif path.lower().endswith(_lyrx):
+        fullname = getLayerSourceString(path)
     else:
-        fullname = layer[layer.rfind(os.sep)+1:]
-    trimname = nameTrimmer(fullname)    
+        fullname = path[path.rfind(os.sep)+1:]
+    trimname = baseName(fullname)
     name = repairName(trimname)
 
     return name
 
-def getProject():
+def setProject(xmlfile,projectFilePath):
+    # set the current project to enable relative file paths for processing
     global _project
+    global _xmlFolder
+    try:
+        if _xmlFolder == None:
+            prj = getProject()
+        _xmlFolder = os.path.dirname(xmlfile)
+        if projectFilePath != None:
+            if not os.path.exists(projectFilePath):
+                projectFilePath = os.path.join(_xmlFolder,projectFilePath)
+            if os.path.exists(projectFilePath):
+                _project = arcpy.mp.ArcGISProject(projectFilePath)
+            else:
+                addMessage(str(projectFilePath) + ' does not exist, continuing')
+
+    except:
+        #addError("Unable to set the current project, continuing")
+        _project = None
+        #_xmlFolder = None
+
+    return _project
+
+def getProject():
+    global _project, _xmlFolder
     if _project == None:
         try:
             _project = arcpy.mp.ArcGISProject("CURRENT")
         except:
-            addError("Unable to obtain a reference to the current project, exiting")
+            #addMessage("Unable to obtain a reference to the current project, continuing")
             _project = None
     return _project
+
+def getDatasetPath(xmlDoc,name):
+    # check if file exists, then try to add project folder if missing
+    pth = getNodeValue(xmlDoc,name)
+    if pth.lower().startswith(_http) == True or pth.lower().startswith(_https) == True:
+        return pth
+    elif pth.endswith(_lyrx):
+        # need to check os.path
+        if not os.path.exists(pth):
+            pth = os.path.join(_xmlFolder,pth)
+            if not os.path.exists(pth):
+                addError("Unable to locate layer path: " + pth)
+    else:
+        # need to check arcpy
+        if not arcpy.Exists(pth):
+            pth = os.path.join(_xmlFolder,pth)
+            if not arcpy.Exists(pth):
+                addError("Unable to locate dataset path: " + pth)
+    return pth
+
+def dropProjectPath(pth):
+    # drop the project path from datasets to support relative paths and moving files between machines.
+    if _xmlFolder != None:
+        pth = pth.replace(_xmlFolder,'')
+        if pth.startswith('\\'):
+            pth = pth[1:]
+    return pth
+
+def dropXmlFolder(xmlfile,pth):
+    # drop the xml file path from datasets to support relative paths and moving files between machines.
+    dir = os.path.dirname(xmlfile)
+    pth = pth.replace(dir,'')
+    if pth.startswith('\\'):
+      pth = pth[1:]
+    return pth
 
 def getMapLayer(layerName):
     name = layerName[layerName.rfind('\\')+1:]
@@ -753,53 +829,129 @@ def getMapLayer(layerName):
                             layer = lyr
                             found = True # take the first layer with matching name
     except:
-        addMessage("Unable to get layer from maps")
+        addMessage("Warning: Unable to get layer from maps")
         return None
-       
+
     return layer
 
 def getLayerPath(layer):
     # get the source data path for a layer
     pth = ''
-    if isinstance(layer, arcpy._mp.Layer): # map layer as parameter
-        pth = layer.dataSource
-    else:
+
+    if isinstance(layer,arcpy._mp.LayerFile): # map layerFile as parameter
+        pth = layer.filePath
+        addMessage("Used .lyrx filePath as source")
+
+    elif isinstance(layer, arcpy._mp.Layer): # map layer as parameter
+        if layer.supports('dataSource'):
+            pth = layer.dataSource
+            addMessage("Used data source property")
+        else:
+            addError("Layer does not support the datasource property.  Please ensure you selected a layer and not a group layer")
+
+    elif isinstance(layer, str) and layer.lower().endswith(_lyrx):
+        layer = arcpy.mp.LayerFile(layer)
+        try:
+            pth = layer.filePath
+            addMessage("Used .lyrx filePath as source")
+        except:
+            addMessage("Failed to use .lyrx filePath as source")
+
+    else: # should be a string, check if feature layer string, then try to describe
+        pth = repairLayerSourceUrl(layer,layer)
+        if isFeatureLayerUrl(pth):
+            return pth
+        # else - not needed but else logic below
         try:
             desc = arcpy.Describe(layer) # dataset path/source as parameter
             pth = desc.catalogPath
         except:
-            lyr = getMapLayer(layer) # layer name in the project/map
+            lyr = getMapLayer(layer) # layer name in the project/map - if not described then could be layer name
             if lyr != None and lyr.supports("DataSource"):
                 pth = lyr.dataSource
                 layer = lyr
-
+            else:
+                addError("Unable to get the DataSource for the layer: " + str(layer))
+                return ''
     # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
-    pth = repairLayerSourceUrl(pth,layer) 
+    pth = repairLayerSourceUrl(pth,layer)
+    # handle special case for joined layers
+    pth = getJoinedLayer(layer,pth)
 
+    addMessage(pth)
     return pth
+
+def getJoinedLayer(layer,pth):
+    # if there is a join then save a layer file and return that path
+    path = pth
+    if isinstance(layer, str): # map layer as parameter
+        layer = getMapLayer(layer)
+
+    try:
+        conn = layer.connectionProperties.get("source", None) # check for a joined layer
+    except:
+        conn = None
+
+    if conn != None and not arcpy.Exists(path):
+
+        lname = layer.name + _lyrx
+        result = arcpy.MakeFeatureLayer_management(layer,lname)
+        layer = result.getOutput(0)
+
+        arcpy.env.overwriteOutput = True
+        projFolder = os.path.dirname(getProject().filePath)
+        lyrFile = os.path.join(projFolder,lname)
+        arcpy.SaveToLayerFile_management(layer,lyrFile)
+
+        desc = arcpy.Describe(lyrFile)
+        path = desc.catalogPath
+
+    return path
+
+def getSDELayer(layer,pth):
+    # if there is an SDE layer with CIMWORKSPACE save a layer and return the path
+    path = pth
+    if isinstance(layer, str): # map layer as parameter
+        layer = getMapLayer(layer)
+
+    if pth.startswith(_CIMWKSP):
+
+        lname = layer.name + _lyrx
+        result = arcpy.MakeFeatureLayer_management(layer,lname)
+        layer = result.getOutput(0)
+
+        arcpy.env.overwriteOutput = True
+        projFolder = os.path.dirname(getProject().filePath)
+        lyrFile = os.path.join(projFolder,lname)
+        arcpy.SaveToLayerFile_management(layer,lyrFile)
+
+        desc = arcpy.Describe(lyrFile)
+        path = desc.catalogPath
+
+    return path
 
 
 def repairLayerSourceUrl(layerPath,lyr):
     # take a layer path or layer name and return the data source or repaired source
     # lyr parameter is here but only used in CIMWKSP case.
+    # note that multiple if statements are used - and there can be a progression of path changes - not elif statements.
     if layerPath == "" or layerPath == None:
         return layerPath
     path = None
+    layerPath = str(layerPath) # seems to be url object in some cases
 
     if layerPath.startswith('GIS Servers\\'):
-        # turn into url 
-        layerPath = layerPath.replace("GIS Servers\\","http://")
+        # turn into url
+        layerPath = layerPath.replace("GIS Servers\\",'')
+        if layerPath.startswith(_http) == True or layerPath.startswith(_https) == True:
+            layerPath = layerPath # do nothing
+        else:
+            layerPath = _http + layerPath
         if layerPath.find('\\') > -1:
             path = layerPath.replace("\\",'/')
             layerPath = path
 
-    elif layerPath.startswith('CIMWKSP'):
-        # create database connection and use that path
-        connfile = getConnectionFile(lyr.connectionProperties)
-        path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
-        path = path.replace("\\\\","\\")
-
-    if layerPath.startswith('http'): # sometimes get http path to start with, need to handle non-integer layerid in both cases
+    if layerPath.startswith(_http) == True or layerPath.startswith(_https) == True: # sometimes get http/https path to start with, need to handle non-integer layerid in both cases
         # fix for non-integer layer ids
         parts = layerPath.split("/")
         lastPart = parts[len(parts)-1]
@@ -809,46 +961,22 @@ def repairLayerSourceUrl(layerPath,lyr):
         parts[len(parts) - 1] = lastPart
         path = "/".join(parts)
 
-    elif path == None: 
+    if layerPath.startswith(_CIMWKSP):
+        # create database connection and use that path
+        connfile = getConnectionFile(lyr.connectionProperties)
+        path = os.path.join(connfile + os.sep + layerPath[layerPath.rfind(">")+1:]) # </CIMWorkspaceConnection>fcname
+        path = path.replace("\\\\","\\")
+        #path = getSDELayer(lyr,layerPath)
+
+    if path == None:
         # nothing done here
         path = layerPath
-    
+
     return path
 
 def getTempTable(name):
     tname = workspace + os.sep + name
     return tname
-
-def doInlineAppend(source,target):
-    # perform the append from a source table to a target table
-    success = False
-    if arcpy.Exists(target):
-        numSourceFeat = arcpy.GetCount_management(source).getOutput(0)
-        #addMessage("Truncating  "  + target)
-        #arcpy.TruncateTable_management(target)
-        addMessage("Appending " + source + " TO " + target)
-        result = arcpy.Append_management(source,target, "NO_TEST")
-        numTargetFeat = arcpy.GetCount_management(target).getOutput(0)
-        addMessage(numSourceFeat + " features in source dataset")
-        addMessage(numTargetFeat + " features in target dataset")
-        msgs = arcpy.GetMessages()
-        arcpy.AddMessage(msgs)
-        success = True
-
-        if int(numTargetFeat) != int(numSourceFeat):
-            arcpy.AddMessage("WARNING: Different number of rows in Target table, " + numTargetFeat )
-        if int(numTargetFeat) == 0:
-            addError("ERROR: 0 Features in target dataset")
-            success = False
-                       
-        if debug:
-            addMessage("completed")
-    else:
-        addMessage("Target: " + target + " does not exist")
-        success = False
-
-    #cleanupGarbage()
-    return success
 
 def setWorkspace():
     global workspace
@@ -858,10 +986,6 @@ def setWorkspace():
         arcpy.CreateFileGDB_management(_dirName,wsName)
     workspace = ws
     arcpy.env.workspace = workspace
-    #if arcpy.env.scratchWorkspace == None: -- too many issues with locking using project/scratch gdb for intermediate data
-     #workspace = arcpy.env.scratchGDB # just put it in temp for now - not project gdb
-    #else:
-    #    workspace = arcpy.env.scratchWorkspace
 
 def deleteWorkspace():
     global workspace
@@ -873,7 +997,7 @@ def getLayerVisibility(layer,xmlFileName):
     xmlDoc = getXmlDoc(xmlFileName)
     targets = xmlDoc.getElementsByTagName("TargetName")
     names = [collect_text(node).upper() for node in targets]
-    esrinames = ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH','GlobalID','GLOBALID']
+    esrinames = _ignoreFields # ['SHAPE','OBJECTID','SHAPE_AREA','SHAPE_LENGTH','GlobalID','GLOBALID']
     desc = arcpy.Describe(layer)
     if desc.dataType == "FeatureLayer":
         fieldInfo = desc.fieldInfo
@@ -897,69 +1021,6 @@ def refreshLayerVisibility():
             except:
                 addMessage("Could not set layer visibility")
 
-def sendRequest(url, qDict=None, headers=None):
-    """Robust request maker - from github https://github.com/khibma/ArcGISProPythonAssignedLicensing/blob/master/ProLicense.py"""
-    #Need to handle chunked response / incomplete reads. 2 solutions here: http://stackoverflow.com/questions/14442222/how-to-handle-incompleteread-in-python
-    #This function sends a request and handles incomplete reads. However its found to be very slow. It adds 30 seconds to chunked
-    #responses. Forcing the connection to HTTP 10 (1.0) at the top, for some reason makes it faster.         
-    
-    qData = parse.urlencode(qDict).encode('UTF-8') if qDict else None    
-    reqObj = request.Request(url)
-    
-    if headers != None:
-        for k, v in headers.items():
-            reqObj.add_header(k, v)
-            
-    try:
-        if qDict == None:  #GET            
-            r = request.urlopen(reqObj)
-        else:  #POST            
-            r = request.urlopen(reqObj, qData)
-        responseJSON=""
-        while True:
-            try:                            
-                responseJSONpart = r.read()                
-            except client.IncompleteRead as icread:                
-                responseJSON = responseJSON + icread.partial.decode('utf-8')
-                continue
-            else:                
-                responseJSON = responseJSON + responseJSONpart.decode('utf-8')
-                break       
-        
-        return (json.loads(responseJSON))
-       
-    except Exception as RESTex:
-        print("Exception occurred making REST call: " + RESTex.__str__()) 
-
-def openRequest(url,params):
-    """
-    Open an http request, handles the difference between urllib and urllib2 implementations if the includes are
-    done correctly in the imports section of this file. Currently disabled.
-    """
-    response = None
-    if uselib2 == True:
-        data = urllib.urlencode(params)
-        data = data.encode('utf8')
-        req = urllib2.Request(url,data)  
-        response = urllib2.urlopen(req)
-    else:
-        data = parse.urlencode(params)
-        data = data.encode('utf8')
-        req = request.Request(url,data)
-        response = request.urlopen(req)
-    
-    return response
-
-def getSigninToken():
-    data = arcpy.GetSigninToken()
-    token = None
-    if data is not None:
-        token = data['token']
-        #expires = data['expires']
-        #referer = data['referer']
-    else:
-        arcpy.AddMessage("Error: No token - Please sign in to ArcGIS Online or your Portal to continue")
-    return token
 
 def getXmlDoc(xmlFile):
     # open the xmldoc and return contents
@@ -974,97 +1035,7 @@ def getXmlDoc(xmlFile):
 
     return xmlDoc
 
-## Added May 2016 
-def hasCapabilities(url,token,checkList):
-    hasit = False
-    if token != None and isFeatureLayerUrl(url):
-        params = {'f': 'pjson', 'token':token}
-        response = sendRequest(url,params)
-        if response != None:
-            try:
-                error = json.dumps(response['error'])
-                addError('Unable to access service properties ' + error)
-                return False
-            except:
-                hasit = True
-            
-            try:
-                capabilities = json.dumps(response['capabilities'])
-                addMessage('Service REST capabilities: ' + capabilities)
-                for item in checkList:
-                    if capabilities.find(item) == -1:
-                        addMessage('Service does not support: ' + item)
-                        hasit = False
-                    else:
-                        addMessage('Service supports: ' + item)
-            except:
-                addError('Unable to access service capabilities')                
-                hasit = False
-        else:
-            addError('Unable to access service')                
-            hasit = False
-        
-    return hasit
 
-def getServiceName(url):
-    parts = url.split('/')
-    lngth = len(parts)
-    if len(parts) > 8:
-        addMessage("Service Name: " + parts[7])
-        return parts[7]
-
-def isFeatureLayerUrl(url):
-    # assume layer string has already had \ and GIS Servers or other characters switched to be a url
-    parts = url.split('/')
-    lngth = len(parts)
-    try: 
-        # check for number at end
-        # last = int(parts[lngth-1])
-        if parts[lngth-2] == 'FeatureServer':
-            return True
-    except:
-        addError("2nd last part of url != 'FeatureServer'")
-        return False
-
-def checkLayerIsService(layerStr):
-    ## moved here from dlaPublish
-    # Check if the layer string is a service
-    if layerStr.lower().startswith("http") == True or layerStr.lower().startswith("gis servers") == True:
-        return True
-    else:
-        return False
-
-def checkServiceCapabilities(sourcePath,required):
-    ## Added May2016. Ensure that feature layer has been added and warn if capabilities are not available
-    if sourcePath == None:
-        addMessage('Error: No path available for layer')            
-        return False
-    #addMessage('Checking: ' + sourcePath)    
-    if checkLayerIsService(sourcePath):
-        url = sourcePath
-        if isFeatureLayerUrl(url):
-            data = arcpy.GetSigninToken()
-            token = data['token']
-            name = getServiceName(url)
-            #print('Service',name)
-            res = hasCapabilities(url,token,['Create','Delete'])
-            if res != True and required == False:
-                addMessage('WARNING: ' + name + ' does not have Create and Delete privileges')
-                addMessage('Verify the service properties for: ' + url)
-                addMessage('This tool might continue but other tools will not run until this is addressed')
-            elif res != True and required == True:
-                addError('WARNING: ' + name + ' does not have Create and Delete privileges')
-                addMessage('Verify the service properties for: ' + url)
-                addMessage('This tool will not run until this is addressed')
-            return res
-        else:
-            addMessage(sourcePath + ' Does not appear to be a feature service layer, exiting. Check that you selected a layer not a service')
-            return False
-    else:
-        return True
-
-## end May 2016 section
-    
 def getSpatialReference(desc): # needs gp Describe object
     try:
         spref = str(desc.spatialReference.factoryCode)
@@ -1079,11 +1050,11 @@ def getSpatialReference(desc): # needs gp Describe object
 def setupProxy():
     proxies = {}
     if _proxyhttp != None:
-        proxies['http'] = 'http://' + _proxyhttp
+        proxies['http'] = _http + _proxyhttp
         os.environ['http'] = _proxyhttp
     if _proxyhttps != None:
         proxies['https'] = _proxyhttps
-        os.environ['https'] = 'http://' + _proxyhttps
+        os.environ['https'] = _http + _proxyhttps
     if proxies != {}:
         proxy = urllib.ProxyHandler(proxies)
         opener = urllib.build_opener(proxy)
@@ -1091,31 +1062,43 @@ def setupProxy():
 
 def getConnectionFile(connectionProperties):
 
-    dir = os.path.dirname(os.path.realpath(__file__))
+    global _xmlFolder
+    if _xmlFolder == None:
+        addError("_xmlFolder has not been set in code, exiting")
     cp = connectionProperties['connection_info']
     srvr = getcp(cp,'server')
     inst = getcp(cp,'db_connection_properties')
     db = getcp(cp,'database')
     fname = (srvr+inst+db+".sde").replace(":","").replace("\\","")
-    connfile = os.path.join(dir,fname)
+    connfile = os.path.join(_xmlFolder,fname)
     if os.path.exists(connfile):
         os.remove(connfile)
+    args = []
+    args.append(out_folder_path=_xmlFolder)
+    args.append(out_name=fname)
+    if getcp(cp,'dbclient') != None:
+        args.append(database_platform=getcp(cp,'dbclient'))
+    args.append(instance=inst)
+    if getcp(cp,'authentication_mode') != None:
+        args.append(account_authentication=getcp(cp,'authentication_mode'))
+    if getcp(cp,'username') != None:
+        args.append(username=getcp(cp,'username'))
+    if getcp(cp,'password') != None:
+        args.append(username=getcp(cp,'password'))
+    args.append(database=db)
+    if getcp(cp,'schema') != None:
+        args.append(username=getcp(cp,'schema'))
+    if getcp(cp,'version') != None:
+        args.append(username=getcp(cp,'version'))
+    if getcp(cp,'date') != None:
+        args.append(username=getcp(cp,'date'))
 
-    arcpy.CreateDatabaseConnection_management (out_folder_path=dir,
-                                            out_name=fname,
-                                            database_platform=getcp(cp,'dbclient'),
-                                            instance=inst,
-                                            account_authentication=getcp(cp,'authentication_mode'),
-                                            username=getcp(cp,'username'),
-                                            password=getcp(cp,'password'),
-                                            database=db,
-                                            schema=getcp(cp,'schema'),
-                                            version=getcp(cp,'version'),
-                                            date=getcp(cp,'date'))
+    arcpy.CreateDatabaseConnection_management (','.join(args))
+
     return connfile
 
 def getcp(cp,name):
-    retval = ""
+    retval = None
     try:
         retval = cp[name]
         if name.lower() == 'authentication_mode':
@@ -1133,3 +1116,288 @@ def getcp(cp,name):
     except:
         pass
     return retval
+
+def isTable(ds):
+    desc = arcpy.Describe(ds)
+    if desc.datasetType.lower() == 'table':
+        return True
+    else:
+        return False
+
+def getSpatialReferenceString(xmlDoc,lyrtype):
+    sprefstr = ''
+    # try factoryCode first
+    try:
+        sprefstr = getNodeValue(xmlDoc,lyrtype + "FactoryCode")
+        if sprefstr == '':
+            sprefstr = getNodeValue(xmlDoc,lyrtype + "SpatialReference")
+    except:
+        try:
+            sprefstr = getNodeValue(xmlDoc,lyrtype + "SpatialReference")
+        except:
+            pass
+    return sprefstr
+
+def checkGlobalIdIndex(desc,gidName):
+    valid = False
+    for index in desc.indexes:
+        try:
+            if index.isUnique and index.fields[0].name == gidName: # index must be on correct field and unique
+                valid = True
+        except:
+            pass
+    return valid
+
+def checkDatabaseTypes(source,target):
+    # check database types - SQL source db and SQL gdb as target
+    supported = False
+    try:
+        wsType = "None"
+        smsg = 'Workspace type does not support preserving GlobalIDs'
+        try:
+            wsType = arcpy.Describe(source).dataSource
+        except:
+            wsType = arcpy.Describe(source[:source.rfind(os.sep)]).workspaceType # might be in a feature dataset
+
+        if wsType != 'RemoteDatabase':
+            addMessage(wsType + ' Source ' + smsg)
+            supported = False
+        else:
+            supported = True
+
+        wsType = "None"
+        try:
+            wsType = arcpy.Describe(target).workspaceType
+        except:
+            wsType = arcpy.Describe(target[:target.rfind(os.sep)]).workspaceType # might be in a feature dataset
+
+        if wsType != 'RemoteDatabase':
+            addMessage(wsType + ' Target ' + smsg)
+            supported = False
+        elif supported == True:
+            supported = True
+    except:
+        supported = False
+
+    return supported
+def get_geodatabase_path(input_table):
+    '''Return the Geodatabase path from the input table or feature class.
+    :param input_table: path to the input table or feature class
+    '''
+    workspace = os.path.dirname(input_table)
+    if [any(ext) for ext in ('.gdb', '.mdb', '.sde') if ext in os.path.splitext(workspace)]:
+        return workspace
+    else:
+        return os.path.dirname(workspace)
+def checkDatabaseType(path):
+    # check database types - SQL source db and SQL gdb as target
+    supported = False
+    try:
+        if path.lower().startswith(_http):
+            supported = True
+        elif path.lower().startswith(_https):
+            supported = True
+        elif path.lower().count(_sde) == 1:
+            supported = True
+        elif path.lower().endswith(_lyrx):
+            source = getLayerFromString(path)
+            if source.dataSource.startswith(_CIMWKSP):
+                supported = True
+            elif arcpy.Exists(source.dataSource):
+                path = get_geodatabase_path(input_table=source.dataSource)
+                d = arcpy.Describe(path)
+                if d.workspaceType == "RemoteDatabase":
+                    supported = True
+        elif path.lower().count(_gdb) == 1:
+            supported = False
+    except:
+        supported = False
+
+    return supported
+
+def compareSpatialRef(xmlDoc):
+    # compare source and target spatial references
+    spatRefMatch = False
+    sref = getSpatialReferenceString(xmlDoc,'Source')
+    tref = getSpatialReferenceString(xmlDoc,'Target')
+
+    if tref is None or sref is None:
+        return spatRefMatch
+    if tref == sref:
+        spatRefMatch = True
+    else:
+        sref_obj = arcpy.SpatialReference()
+        tref_obj = arcpy.SpatialReference()
+        sref_obj.loadFromString(sref)
+        tref_obj.loadFromString(tref)
+        if sref_obj.factoryCode == tref_obj.factoryCode:
+            spatRefMatch = True
+        elif ';' in sref and ';' in tref and tref.split(';')[0] == sref.split(';')[0]:
+            spatRefMatch = True
+
+    return spatRefMatch
+def processGlobalIds(xmlDoc):
+    # logic check to determine if preserving globalids is possible
+    process = False
+
+    source = getDatasetPath(xmlDoc,'Source')
+    descs = arcpy.Describe(source)
+
+    target = getDatasetPath(xmlDoc,'Target')
+    desct = arcpy.Describe(target)
+
+    sGlobalId = getFieldByName(descs,'globalIDFieldName')
+    tGlobalId = getFieldByName(desct,'globalIDFieldName')
+
+    if sGlobalId != None and tGlobalId != None:
+        addMessage('Source and Target datasets both have GlobalID fields')
+
+        supportedWSs = checkDatabaseType(source)
+        if not supportedWSs:
+            addMessage("Source Workspace type prevents preserving GlobalIDs")
+        supportedWSt = checkDatabaseType(target)
+        if not supportedWSt:
+            addMessage("Target Workspace type prevents preserving GlobalIDs")
+        ids = checkGlobalIdIndex(descs,sGlobalId)
+        idt = checkGlobalIdIndex(desct,tGlobalId)
+
+        errmsg = 'Dataset does not have a unique index on GlobalID field, unable to preserve GlobalIDs'
+        if not ids:
+            addMessage('Source ' + errmsg)
+        if not idt:
+            addMessage('Target ' + errmsg)
+
+        if ids and idt and supportedWSs and supportedWSt:
+            process = True
+
+    return process
+
+def getStagingName(source,target):
+    stgName = getDatasetName(source) + "_" + getDatasetName(target)
+    return stgName
+
+def removeStagingElement(xmlDoc):
+    # remove staging element from xmlDoc
+    if len(xmlDoc.getElementsByTagName('Staged')) > 0:
+        root = xmlDoc.getElementsByTagName('Datasets')[0]
+        nodes = root.getElementsByTagName('Staged')
+        for node in nodes:
+            root.removeChild(node)
+
+    return xmlDoc
+
+def insertStagingElement(xmlDoc):
+    # insert an element to indicate that the data has been staged
+    if len(xmlDoc.getElementsByTagName('Staged')) == 0:
+        root = xmlDoc.getElementsByTagName('Datasets')[0]
+        staged = xmlDoc.createElement("Staged")
+        # set source and target elements
+        nodeText = xmlDoc.createTextNode('true')
+        staged.appendChild(nodeText)
+        root.appendChild(staged)
+
+    return xmlDoc
+
+def isStaged(xmlDoc):
+    # insert an element to indicate that the data has been staged
+    if len(xmlDoc.getElementsByTagName('Staged')) > 0:
+        staged = True
+    else:
+        staged = False
+
+    return staged
+
+def hasJoin(source):
+    # counts table names in fields to determine if joined
+    desc = arcpy.Describe(source)
+    fc = desc.featureClass
+    hasJoin = False
+    tables = []
+    for field in fc.fields:
+        if field.name.find('.') > 0:
+            val = field.name.split('.')[0]
+            if val not in tables:
+                tables.append(val)
+    if len(tables) > 1:
+        hasJoin = True
+
+    return hasJoin
+
+def checkIsLayerFile(val,valStr):
+    # for layer file parameters the value passed in is a layer but the string version of the layer is a path to the lyrx file...
+    if valStr.lower().endswith(_lyrx):
+        return valStr
+    else:
+        return val
+
+def getFieldIndexList(values,value):
+    # get the index number of a field in a list - case insensitive
+    for idx, val in enumerate(values):
+        if val.upper() == value.upper():
+            return idx
+
+def getLayerSourceString(lyrPath):
+    if isinstance(lyrPath,str) and lyrPath.lower().endswith(_lyrx):
+        if not os.path.exists(lyrPath):
+            addMessage(str(_xmlFolder))
+            lyrPath = os.path.join(_xmlFolder,lyrPath)
+        layer = arcpy.mp.LayerFile(lyrPath)
+        fc = layer.listLayers()[0]
+        return fc.dataSource
+
+def getLayerFromString(lyrPath):
+    if isinstance(lyrPath,str) and lyrPath.lower().endswith(_lyrx):
+        layer = arcpy.mp.LayerFile(lyrPath)
+        fc = layer.listLayers()[0]
+        return fc
+    else:
+        return lyrPath
+
+def getXmlDocName(xmlFile):
+    # normalize and fix paths
+    try:
+        xmlFile = xmlFile.strip("'")
+        xmlFile = os.path.normpath(xmlFile)
+    except:
+        addError("Unable to process file name: " + xmlFile)
+    return xmlFile
+
+def getReplaceBy(xmlDoc):
+    # get the where clause using the xml document or return ''
+    repl = xmlDoc.getElementsByTagName("ReplaceBy")[0]
+    fieldName = getNodeValue(repl,"FieldName")
+    operator = getNodeValue(repl,"Operator")
+    value = getNodeValue(repl,"Value")
+    expr = ''
+    type = getTargetType(xmlDoc,fieldName)
+    if fieldName != '' and fieldName != '(None)' and operator != "Where":
+        if type == 'String':
+            value = "'" + value + "'"
+        expr = fieldName + " " + operator + " " + value
+
+    elif operator == 'Where':
+        expr = value
+    else:
+        expr = '' # empty string by default
+
+    return expr
+
+def getTargetType(xmlDoc,fname):
+    # get the target field type
+    for tfield in xmlDoc.getElementsByTagName('TargetField'):
+        nm = tfield.getAttribute("Name")
+        if nm == fname:
+            return tfield.getAttribute("Type")
+
+def isFeatureLayerUrl(url):
+    # assume layer string has already had \ and GIS Servers or other characters switched to be a url
+    parts = url.split('/')
+    lngth = len(parts)
+    if lngth > 2:
+        try: 
+            # check for feature server text
+            if parts[lngth-2] == 'FeatureServer':
+                return True
+        except:
+            return False
+    return False

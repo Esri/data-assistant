@@ -1,8 +1,11 @@
 *.pyc
-*.txt
 ShareGISData/obj/*
+!ShareGISData/obj/Release
+ShareGISData/obj/Release/*
 ShareGISData/bin/*
 !ShareGISData/bin/Release
 ShareGISData/bin/Release/*
 !ShareGISData/bin/Release/*.esriAddInX
 ShareGISData/bin/Release/GPTools/*
+ShareGISData/GPTools/arcpy/dla.gdb/*
+!ShareGISData/bin/ReleaseTesting

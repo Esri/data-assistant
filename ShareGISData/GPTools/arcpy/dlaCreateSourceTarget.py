@@ -19,7 +19,7 @@
 # December 2015
 # Loop through the source and target datasets and write an xml document
 
-import os, sys, traceback, time, xml.dom.minidom, arcpy, dla
+import os, sys, traceback, time, xml.dom.minidom, arcpy, dla, dlaService
 from xml.dom.minidom import Document, parse, parseString
 import xml.etree.ElementTree as etree
 import re
@@ -28,7 +28,10 @@ import re
 debug = False 
 # Parameters
 source = arcpy.GetParameter(0) # source dataset to analyze
+sourceStr = arcpy.GetParameterAsText(0) # source dataset to analyze
 target = arcpy.GetParameter(1) # target dataset to analyze
+targetStr = arcpy.GetParameterAsText(1) # target dataset to analyze
+
 xmlFileName = arcpy.GetParameterAsText(2) # output file name argument
 matchLibrary = 'true' # arcpy.GetParameterAsText(3) always use automatch now. When starting the match library is blank anyway
 #  so this will have no effect until the user starts working with it.
@@ -48,8 +51,13 @@ matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
     global source,target,xmlFileName   
+
+    source = dla.checkIsLayerFile(source,sourceStr)
+    target = dla.checkIsLayerFile(target,targetStr)
+
     dla.addMessage("Source: " + str(source))
     dla.addMessage("Target: " + str(target))
+
     dla.addMessage("File: " + xmlFileName)
     if not os.path.exists(matchxslt):
         msg = matchxslt + " does not exist, exiting"
@@ -64,32 +72,52 @@ def main(argv = None):
     createDlaFile(source,target,xmlFileName)
 
 def createDlaFile(source,target,xmlFileName):
-
     # entry point for calling this tool from another python script
+    res = False
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
-    elif source == target:
-        dla.addError("2 layers with the same name is not supported by this tool, please rename one of the layers, exiting.")
+    elif str(source) == str(target):
+        dla.addError("2 string layers with the same value is not supported by this tool, please rename one of the layers, exiting.")
     else:
+        prj = dla.getProject()
         sourcePath = dla.getLayerPath(source)
         targetPath = dla.getLayerPath(target)
-        writeDocument(sourcePath,targetPath,xmlFileName)
-    return True
+        if sourcePath == '' or targetPath == '':
+            if sourcePath == '':
+                dla.addError("Invalid Path/Type for Source layer , exiting: " + str(source) )
+            if targetPath == '':
+                dla.addError("Invalid Path/Type for Target layer, exiting: " + str(target) )
+            return res
+        else:
+            res = writeDocument(sourcePath,targetPath,xmlFileName)
+    return res
 
 
 def writeDocument(sourcePath,targetPath,xmlFileName):
 
     if sourcePath == None or targetPath == None:
         return False
+    ## Warn user if capabilities are not correct, exit if not valid layers
+    errs = False
+    if dlaService.validateSourceUrl(sourcePath) == False:
+        dla.addError("Errors in Source Service Capabilities, exiting without writing the output file")
+        errs = True
+    if dlaService.validateTargetUrl(targetPath) == False:
+        dla.addError("Errors in Target Service Capabilities, exiting without writing the output file")
+        errs = True
+    try:
+        desc = arcpy.Describe(sourcePath)
+    except:
+        dla.addError("Unable to Describe the source dataset, exiting")
+        errs = True
+    try:
+        descT = arcpy.Describe(targetPath)
+    except:
+        dla.addError("Unable to Describe the target dataset, exiting")
+        errs = True
 
-    ## Added May2016. warn user if capabilities are not correct, exit if not a valid layer
-    if not dla.checkServiceCapabilities(sourcePath,False):
+    if errs:
         return False
-    if not dla.checkServiceCapabilities(targetPath,False):
-        return False
-
-    desc = arcpy.Describe(sourcePath)
-    descT = arcpy.Describe(targetPath)
 
     xmlDoc = Document()
     root = xmlDoc.createElement('SourceTargetMatrix')
@@ -100,9 +128,13 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = dla.getProject()
-    setSourceTarget(dataset,xmlDoc,"Project",prj.filePath)
-    setSourceTarget(dataset,xmlDoc,"Source",sourcePath)
-    setSourceTarget(dataset,xmlDoc,"Target",targetPath)
+    if prj == None:
+        prj = ''
+    else:
+        prj = prj.filePath
+    setSourceTarget(dataset,xmlDoc,"Project",dla.dropXmlFolder(xmlFileName,prj))
+    setSourceTarget(dataset,xmlDoc,"Source",dla.dropXmlFolder(xmlFileName,sourcePath))
+    setSourceTarget(dataset,xmlDoc,"Target",dla.dropXmlFolder(xmlFileName,targetPath))
 
     setSpatialReference(dataset,xmlDoc,desc,"Source")
     setSpatialReference(dataset,xmlDoc,descT,"Target")
@@ -114,7 +146,8 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
 
     fields = getFields(descT)
     sourceFields = getFields(desc)
-    sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields]
+    #sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields] ***
+    sourceNames = [field.name for field in sourceFields]
     upperNames = [nm.upper() for nm in sourceNames]
 
     #try:
@@ -122,22 +155,24 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
 
         fNode = xmlDoc.createElement("Field")
         fieldroot.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name #[field.name.rfind(".")+1:] ***
         matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames)
 
     # write the source field values
     setSourceFields(root,xmlDoc,sourceFields)
     setTargetFields(root,xmlDoc,fields)
-    # Should add a template section for value maps, maybe write domains...
-    # could try to preset field mapping and domain mapping...
 
     # add data to the document
-    writeDataSample(xmlDoc,root,sourceNames,sourcePath,10)
+    if len(sourceNames) > 0:
+        writeDataSample(xmlDoc,root,sourceNames,sourcePath,10)
     # write it out
     xmlDoc.writexml( open(xmlFileName, 'wt', encoding='utf-8'),indent="  ",addindent="  ",newl='\n')
     xmlDoc.unlink()
+    return True
 
 def setSpatialReference(dataset,xmlDoc,desc,lyrtype):
+    if desc.datasetType.lower() == 'table':
+        return
     try:
         spref = str(desc.spatialReference.factoryCode)
         if spref == None or spref == '' or spref == '0':
@@ -156,6 +191,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
     enode = None
     count = 0
     nmupper = fieldName.upper()
+    strippedNames = [name[name.rfind('.')+1:].upper() for name in sourceNames] # look for first match if there are prefixes
     if matchLibrary == True: # only do this if matchLibrary parameter is True
         doc = etree.parse(matchfile)
         nodes = doc.findall(".//Field[TargetName='"+fieldName+"']")
@@ -164,7 +200,7 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
                 nodecount = int(node.get('count'))
                 if nodecount > count:
                     sname = node.find("SourceName").text
-                    if sname in sourceNames or sname == '' or sname == None or sname == dla.noneName:
+                    if sname in sourceNames or sname == '' or sname == None or sname == dla._noneFieldName:
                         enode = node
                         count = nodecount
             except:
@@ -183,9 +219,25 @@ def matchSourceFields(xmlDoc,fNode,field,fieldName,sourceNames,upperNames):
         addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
         addFieldElement(xmlDoc,fNode,"Method",'Copy')
+    elif nmupper in upperNames and enode == None:
+        # logic for uppercase field name match, later the field will be renamed to essentially force a copy/rename unless something else set by user
+        idx = upperNames.index(nmupper)
+        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
+        addFieldElement(xmlDoc,fNode,"Method",'Copy')
+    elif nmupper in strippedNames and enode == None:
+        # logic for prefixed field name match
+        idx = None
+        for i in range(0,len(strippedNames)):
+            if strippedNames[i] == nmupper:
+                idx = i # take the last matching value - if it exists again through a join more likely to want that value...
+        #idx = strippedNames.index(nmupper)
+        addFieldElement(xmlDoc,fNode,"SourceName",sourceNames[idx]) # use the original source name
+        addFieldElement(xmlDoc,fNode,"TargetName",fieldName) # use the original target name
+        addFieldElement(xmlDoc,fNode,"Method",'Copy')
     else:
         # otherwise just add None
-        addFieldElement(xmlDoc,fNode,"SourceName",dla.noneName)
+        addFieldElement(xmlDoc,fNode,"SourceName",dla._noneFieldName)
         addFieldElement(xmlDoc,fNode,"TargetName",fieldName)
         addFieldElement(xmlDoc,fNode,"Method",'None')
 
@@ -215,15 +267,14 @@ def setSourceTarget(root,xmlDoc,name,dataset):
 def setSourceFields(root,xmlDoc,fields):
     # Set SourceFields section of document
     sourceFields = xmlDoc.createElement("SourceFields")
-    # add a blank entry at the start for "dla.noneName"
     fNode = xmlDoc.createElement("SourceField")
     sourceFields.appendChild(fNode)
-    fNode.setAttribute("Name",dla.noneName)
+    fNode.setAttribute("Name",dla._noneFieldName)
         
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")
         sourceFields.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name # ***[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -239,7 +290,7 @@ def setTargetFields(root,xmlDoc,fields):
     for field in fields:
         fNode = xmlDoc.createElement("TargetField")
         targetFields.appendChild(fNode)
-        fieldName = field.name[field.name.rfind(".")+1:]
+        fieldName = field.name #[field.name.rfind(".")+1:]
         fNode.setAttribute("Name",fieldName)
         fNode.setAttribute("AliasName",field.aliasName)
         fNode.setAttribute("Type",field.type)
@@ -256,25 +307,14 @@ def addFieldElement(xmlDoc,node,name,value):
 
 def getFields(desc):
     fields = []
-    ignore = ['FID','OBJECTID','GlobalID','GLOBALID','SHAPE','SHAPE_AREA','SHAPE_LENGTH','SHAPE_LEN','STLength()','StArea()','raster']
-    for name in ['OIDFieldName','ShapeFieldName','LengthFieldName','AreaFieldName','GlobalIDFieldName','RasterFieldName']:
-        val = getFieldExcept(desc,name)
-        if val != None:
-            val = val[val.rfind('.')+1:] 
-            ignore.append(val)
+    ignore = dla.getIgnoreFieldNames(desc)
+    ignore = [nm.upper() for nm in ignore]
+
     for field in desc.fields:
-        if field.name[field.name.rfind('.')+1:] not in ignore:
+        if field.name[field.name.rfind('.')+1:].upper() not in ignore:
             fields.append(field)
 
     return fields
-
-def getFieldExcept(desc,name):
-    val = None
-    try:
-        val = eval("desc." + name)
-    except:
-        val = None
-    return val
 
 def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     # get a subset of data for preview and other purposes
@@ -282,10 +322,15 @@ def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     data = xmlDoc.createElement("Data")
     root.appendChild(data)
 
+    #if sourcePath.endswith('.lyrx'):
+    #    desc = arcpy.Describe(sourcePath) # dataset path/source as parameter
+    #    fields = desc.fields
+    #    sourceFields = [field.name for field in fields]
+    
     cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
 
     i = 0
-    #dla.addMessage(str(sourceFields))
+    prefixes = []
     for row in cursor:
         if i == 10:
             return

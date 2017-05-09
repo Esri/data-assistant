@@ -17,9 +17,12 @@ using System.Data;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Controls.Primitives;
+
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
+using ArcGIS.Desktop.Mapping;
 using System.Xml;
 using System.Xml.Xsl;
 using System.Xml.XPath;
@@ -64,6 +67,41 @@ namespace DataAssistant
                 copyXml(_filename,_revertname);
             }
         }
+        private string getProjectFolder()
+        {
+            string pth = "";
+            ArcGIS.Desktop.Core.Project prj = ArcGIS.Desktop.Core.Project.Current;
+            pth = prj.HomeFolderPath;
+            return pth;
+        }
+        private string getFolder(string fname)
+        {
+            string folder = "";
+            string prjFolder = getProjectFolder();
+            string xmlFolder = System.IO.Path.GetDirectoryName(fname);
+            if (!Equals(prjFolder, xmlFolder))
+                folder = xmlFolder;
+            else
+                folder = xmlFolder;
+
+            return folder;
+
+        }
+        private string setFolder(string fname)
+        {
+            _xmlFolder = getFolder(fname);
+            return _xmlFolder;           
+        }
+
+        private string getDatasetPath(string pth)
+        {
+            string dsPath = pth;
+            if (pth.StartsWith("http://") || pth.Contains(":\\") || pth.StartsWith(_xmlFolder))
+            { }
+            else
+                dsPath = System.IO.Path.Combine(_xmlFolder, pth);
+            return dsPath;
+        }
         private static string _filename;// = System.IO.Path.Combine(AddinAssemblyLocation(), "ConfigData.xml");
         System.Xml.XmlNodeList _datarows;
 
@@ -78,7 +116,13 @@ namespace DataAssistant
         private int _selectedRowNum = -1;
         int _methodnum = -1;
         string _revertname = System.IO.Path.Combine(AddinAssemblyLocation(), "RevertFile.xml");
+        string _xmlFolder = "";
 
+        private List<ComboData> _domainTargetValues = new List<ComboData>();
+        private List<ComboData> _domainSourceValues = new List<ComboData>();
+        private List<ComboData> _domainValues = new List<ComboData>();
+        private string _source = "Source";
+        private string _target = "Target";
         public Dockpane1View()
         {
             InitializeComponent();
@@ -88,9 +132,9 @@ namespace DataAssistant
             // load the selected file
             if (System.IO.File.Exists(fname))
             {
+                setFolder(fname);
                 setXmlFileName(fname);
-                //_xml.Load(_filename);
-                if(loadXml(_filename))
+                if (loadXml(_filename))
                 {
                     this._skipSelectionChanged = true;
                     setXmlDataProvider(this.FieldGrid, fieldXPath);
@@ -104,7 +148,7 @@ namespace DataAssistant
         {
             if (!System.IO.File.Exists(filename))
             {
-                MessageBox.Show(filename + " does not exist, please select a file");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(filename + " does not exist, please select a file");
                 return false;
             }
             string xmlstr = System.IO.File.ReadAllText(filename);
@@ -129,21 +173,23 @@ namespace DataAssistant
 
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
             if (node == null)
-                MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
             else
                 SourceLayer.Text = node.InnerText;
 
             node = _xml.SelectSingleNode("//Datasets/Target");
             if (node == null)
-                MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
             else
                 TargetLayer.Text = node.InnerText;
 
             setXmlDataProvider(ReplaceField, "//TargetField/@Name");
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
             setReplaceValues(nodes);
-            setPreviewValues(false);
-            
+            //MethodPanelApply.IsEnabled = false;
+            //PreviewGrid.Visibility = Visibility.Hidden;
+            //setPreviewValues(false);
+
         }
         private void setRevertButton()
         {
@@ -192,7 +238,7 @@ namespace DataAssistant
                         clearReplaceValues();
                     }
                 }
-                catch { MessageBox.Show("Error setting replace"); }
+                catch { ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error setting replace"); }
             }
             else
             {
@@ -299,7 +345,7 @@ namespace DataAssistant
                 }
                 catch
                 {
-                    MessageBox.Show("Error setting Xml data provider");
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error setting Xml data provider");
                 }
             }
         }
@@ -319,8 +365,10 @@ namespace DataAssistant
                 return;
             _selectedRowNum = FieldGrid.SelectedIndex;
             var cfg = getConfigSettingsForField();
+            _skipSelectionChanged = true;
             int methodnum = setFieldSelectionValues(cfg); // just use the int for now.
-            
+            _skipSelectionChanged = false;
+            _methodnum = methodnum;
             setPanelVisibility(methodnum);
         }
         private System.Xml.XmlNodeList getFieldNodes(int fieldnum)
@@ -347,7 +395,7 @@ namespace DataAssistant
             }
             catch
             {
-                MessageBox.Show("Could not find SourceName element for field (row) number " + fieldnum.ToString());
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Could not find SourceName element for field (row) number " + fieldnum.ToString());
                 return nodes;
             }
             string xpath = "//SourceField[@Name='" + sname + "']"; // Source field values
@@ -393,6 +441,25 @@ namespace DataAssistant
             }
             return fname;
         }
+        private string getFieldIsEnabled()
+        {
+            string enabled = "true";
+            if (FieldGrid.SelectedIndex == -1)
+                return enabled;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes.Count == 1 && nodes != null)
+            {
+                try
+                {
+                    string en = nodes.Item(0).Attributes["IsEnabled"].Value;
+                    if (en != null)
+                        enabled = en.ToLower();
+                }
+                catch { enabled = "true"; }
+            }
+            return enabled;
+        }
         private int getConfigSettingsForField()
         {
             if (FieldGrid.SelectedIndex == -1)
@@ -421,13 +488,27 @@ namespace DataAssistant
 
             return num;
         }
+        private void setApplyEnabled()
+        {
+            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
+            {
+                if (getFieldIsEnabled() == "true")
+                    MethodPanelApply.IsEnabled = true;
+                else
+                    MethodPanelApply.IsEnabled = false;
+
+            }
+        }
         private int setFieldSelectionValues(int methodnum)
         {
             comboMethod.SelectedIndex = methodnum;
-            setMethodVisibility(methodnum);
-            _methodnum = methodnum;
+            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
+            {
+                setApplyEnabled();
+                PreviewGrid.Visibility = Visibility.Hidden;
+            }
 
-            switch(methodnum){ // fill in the values for each stack panel
+            switch (methodnum){ // fill in the values for each stack panel
                 case 0: // None
                     break;
                 case 1: // Copy
@@ -463,27 +544,38 @@ namespace DataAssistant
                 case 10: // Conditional Value
                     setConditionValues();
                     break;
-                case 11: // Expression
-                    Method11Value.Text = getPanelValue(11, "Expression");
+                case 11: // Domain Map
+                    setDomainMapValues(11, getPanelValue(11, "DomainMap"));
                     break;
+
+                    //case 11: // Expression
+                    //Method11Value.Text = getPanelValue(11, "Expression");
+                    //break;
 
             }
 
             return methodnum;
         }
-        private void setMethodVisibility(int methodnum)
+
+        private bool getPanelEnabled(int methodnum)
         {
-            if (MethodControls == null || ! MethodControls.IsInitialized)
+            bool theval = true;
+            if (FieldGrid.SelectedIndex == -1)
+                return theval;
+            int fieldnum = FieldGrid.SelectedIndex + 1;
+            var nodes = getFieldNodes(fieldnum);
+            if (nodes.Count == 1)
             {
-                return;
+                try
+                {
+                    var node = nodes.Item(0).Attributes.Item(0);
+                    if (node != null)
+                        bool.TryParse(node.InnerText.ToLower(), out theval);
+                }
+                catch
+                { }
             }
-            //if (methodnum < 3)
-            //{
-            //    MethodControls.Visibility = System.Windows.Visibility.Hidden;
-            //}
-            //else
-            MethodControls.Visibility = System.Windows.Visibility.Visible;
-            //PreviewText.Text = "";
+            return theval;
         }
 
         private string getPanelValue(int methodnum,string nodename)
@@ -575,7 +667,7 @@ namespace DataAssistant
             else
                 ValueMapRemove.IsEnabled = false;
         }
- 
+
         private void setSpaceVal(string separator,TextBox txt)
         {
             if (txt != null && separator != txt.Text)
@@ -634,17 +726,19 @@ namespace DataAssistant
                     if (cname == sourcename)
                         found = true;
                 }
-                if (!found && sourcename != _noneField && sourcename != null && sourcename != "")
+                if (!found && sourcename != _noneField)
                 {
                     try
-                        { grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename }); }
-                    catch (Exception e)
-                    {   
-                        MessageBox.Show(e.Message.ToString());
-                        return; 
+                    {
+                        grid.Items.Add(new ConcatRow() { Checked = found, Name = sourcename });
+                    }
+                    catch
+                    {
+                        ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Error setting checkbox values");
                     }
                 }
             }
+            grid.Items.Refresh();           
         }
 
         private void setSubstringValues(string start, string length)
@@ -687,10 +781,21 @@ namespace DataAssistant
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this._skipSelectionChanged)
+            if (this._skipSelectionChanged || MethodPanelApply == null || !MethodPanelApply.IsInitialized)
+            {
                 return;
-            setFieldSelectionValues(comboMethod.SelectedIndex);
-            setPanelVisibility(comboMethod.SelectedIndex);
+            }
+            if (comboMethod.SelectedIndex != _methodnum && !this._skipSelectionChanged)
+            {
+                setFieldSelectionValues(comboMethod.SelectedIndex);
+                setPanelVisibility(comboMethod.SelectedIndex);
+                //setPreviewValues(false);
+                PreviewGrid.Visibility = Visibility.Hidden;
+                _methodnum = comboMethod.SelectedIndex;
+                if (MethodPanelApply != null)
+                    setApplyEnabled();
+                    //MethodPanelApply.IsEnabled = true;
+            }
         }
 
         private void setPanelVisibility(int index)
@@ -709,6 +814,12 @@ namespace DataAssistant
                         try
                         {
                             panel.Visibility = System.Windows.Visibility.Visible;
+                            if(this.FieldGrid.SelectedIndex != -1)
+                            {
+                                bool enabled = getPanelEnabled(this.FieldGrid.SelectedIndex);
+                                panel.IsEnabled = enabled;
+                                comboMethod.IsEnabled = enabled;
+                            }
                             panel.InvalidateArrange();
                             panel.UpdateLayout();
                         }
@@ -778,11 +889,10 @@ namespace DataAssistant
             if (val == false)
                 Method5ClearAll.IsEnabled = false;
         }
-        private void Method5_BeginningEdit(object sender, SelectionChangedEventArgs e)
-        {
-            // not editable
-        }
 
+        private void Method5Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+        }
         private void Method5Check_Checked(object sender, RoutedEventArgs e)
         {
             CheckBox check = sender as CheckBox;
@@ -823,45 +933,6 @@ namespace DataAssistant
 
             }
         }
-
-
-
-        //private DataGridCell GetCell(DataGrid grid, DataGridRow row, int column)
-        //{
-        //    if (row != null)
-        //    {
-        //        DataGridCellsPresenter presenter = GetVisualChild<DataGridCellsPresenter>(row);
-
-        //        if (presenter == null)
-        //        {
-        //            grid.ScrollIntoView(row, grid.Columns[column]);
-        //            presenter = GetVisualChild<DataGridCellsPresenter>(row);
-        //        }
-
-        //        DataGridCell cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(column);
-        //        return cell;
-        //    }
-        //    return null;
-        //}
-        //public T GetVisualChild<T>(Visual parent) where T : Visual
-        //{
-        //    T child = default(T);
-        //    int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
-        //    for (int i = 0; i < numVisuals; i++)
-        //    {
-        //        Visual v = (Visual)VisualTreeHelper.GetChild(parent, i);
-        //        child = v as T;
-        //        if (child == null)
-        //        {
-        //            child = GetVisualChild<T>(v);
-        //        }
-        //        if (child != null)
-        //        {
-        //            break;
-        //        }
-        //    }
-        //    return child;
-        //}
 
         private void Method3Target_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -910,7 +981,10 @@ namespace DataAssistant
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     //this.FileName.Text = dlg.FileName;
-                    loadFile(dlg.FileName);
+                    if (checkXmlFileName(dlg.FileName))
+                    {
+                        loadFile(dlg.FileName);
+                    }
                 }
             }
 
@@ -921,45 +995,13 @@ namespace DataAssistant
             TextBox txt = sender as TextBox;
             if (getXmlFileName() != txt.Text)
             {
-                setXmlFileName(txt.Text);
-                loadFile(txt.Text);
+                if (checkXmlFileName(txt.Text))
+                {
+                    setXmlFileName(txt.Text);
+                    loadFile(txt.Text);
+                }
             }
         }
-
-        //private DataRowView rowBeingEdited = null;
-
-        //private void Method3Grid_CurrentCellChanged(object sender, EventArgs e)
-        //{
-
-        //    DataGrid dataGrid = sender as DataGrid;
-        //    DataGridRow row = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromIndex(0);
-        //    DataGridCell rowColumn = dataGrid.Columns[0].GetCellContent(row).Parent as DataGridCell;
-
-        //    DataGridCell cell = GetCell(Method3Grid, row, 1);
-        //    var cellValue = rowColumn.Content;
-        //    if (cellValue != null)
-        //    {
-        //        ValueMapRow vmrow = rowColumn.Content as ValueMapRow;
-        //        //string currValue = vmrow.Target;
-        //    }
-        //}
-        //private void Method3Grid_CellEditEndingx(object sender, DataGridCellEditEndingEventArgs e)
-        //{
-        //    DataRowView rowView = e.Row.Item as DataRowView;
-        //    rowBeingEdited = rowView;
-
-        //}
-        //private bool isManualEditCommit;
-        //private void Method3Grid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        //{
-        //    if (!isManualEditCommit)
-        //    {
-        //        isManualEditCommit = true;
-        //        DataGrid grid = (DataGrid)sender;
-        //        grid.CommitEdit(DataGridEditingUnit.Row, true);
-        //        isManualEditCommit = false;
-        //    }
-        //}
 
         private void ValueMapAdd_Click(object sender, RoutedEventArgs e)
         {
@@ -993,7 +1035,6 @@ namespace DataAssistant
             var comboBox = sender as ComboBox;
             if (this._skipSelectionChanged || comboBox.IsLoaded == false)
                 return;
-            int temp = _selectedRowNum;
             bool doSave = false;
             
             if (((ComboBox)sender).IsLoaded && (e.AddedItems.Count > 0 || e.RemovedItems.Count > 0) && FieldGrid.SelectedIndex != -1)
@@ -1169,7 +1210,7 @@ namespace DataAssistant
                 }
                 catch (Exception err2)
                 {
-                    MessageBox.Show(err2.ToString());
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(err2.ToString());
                     return false;
                 }
             }
@@ -1224,13 +1265,12 @@ namespace DataAssistant
 
         private void RevertButton_Click(object sender, RoutedEventArgs e)
         {
-            if (System.Windows.Forms.MessageBox.Show("Are you sure you want to re-open this file?", "Revert/Re-Open File", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Are you sure you want to re-open this file?", "Revert/Re-Open File", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 copyXml(_revertname, _filename);
                 loadFile(_filename);
             }
 
         }
-
     }
 }

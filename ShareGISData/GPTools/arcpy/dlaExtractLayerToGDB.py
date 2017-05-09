@@ -272,7 +272,7 @@ def getSpatialReference(xmlDoc,lyrtype):
     spref = None
     # try factoryCode first
     sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "FactoryCode")
-    if sprefstr != '':
+    if sprefstr != '' and sprefstr != '0':
         #arcpy.AddMessage(lyrtype + ":" + sprefstr)
         spref = arcpy.SpatialReference(int(sprefstr))
     else:    

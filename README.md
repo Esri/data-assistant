@@ -12,7 +12,7 @@ The data-assistant repo includes an ArcGIS Pro Add-in that helps communities (st
 
 If you do not want to compile in Visual Studio, click/install data-aggregation\ShareGISData\bin\Debug\DataAssistant.esriAddInX.
 
-### Esri Solutions 
+### Esri Solutions
 
 Esri provides a number of solutions that utilize this Add-in.
 * [ArcGIS for Emergency Management's Community Addresses](http://links.esri.com/emergencymanagement/help/AggregateAddresses/)
@@ -20,7 +20,7 @@ Esri provides a number of solutions that utilize this Add-in.
 * [ArcGIS for Local Government's Community Addresses](http://links.esri.com/localgovernment/help/AggregateAddresses/)
 * [ArcGIS for Local Government's Community Parcels](http://links.esri.com/localgovernment/help/AggregateParcels/)
 * [ArcGIS for State Government's Community Addresses](http://links.esri.com/stategovernment/help/AggregateAddresses/)
-* [ArcGIS for State Government's Community Parcels](http://links.esri.com/stategovernment/help/AggregateParcels/)     
+* [ArcGIS for State Government's Community Parcels](http://links.esri.com/stategovernment/help/AggregateParcels/)
 
 ### Additional Help
 
@@ -32,7 +32,7 @@ is provided with each solution on the ArcGIS Solution Site.
 
 ## Requirements
 
-* ArcGIS Pro 1.3.1
+* ArcGIS Pro 1.4
 
 ## Resources
 
@@ -72,6 +72,3 @@ limitations under the License.
 
 A copy of the license is available in the repository's
 [LICENSE.txt](LICENSE.txt) file.
-
-[](Esri Tags: ArcGISSolutions Local-Government Emergency-Management State-Government State Local Government Emergency Data-Assistant)
-[](Esri Language: C-Sharp)

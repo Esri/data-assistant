@@ -381,7 +381,7 @@ namespace DataAssistant
             {
                 try
                 {
-                    var lyr = LayerFactory.CreateFeatureLayer(new Uri(dataset), MapView.Active.Map);
+                    var lyr = Helpers.CreateFeatureLayer(new Uri(dataset), MapView.Active.Map);
                     FeatureLayer flayer = lyr as FeatureLayer;
                     ArcGIS.Core.Data.TableDefinition def = null;
                     ArcGIS.Core.CIM.CIMDataConnection cim = flayer.GetDataConnection();

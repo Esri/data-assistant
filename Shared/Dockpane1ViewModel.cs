@@ -161,7 +161,7 @@ namespace DataAssistant
                     found = true;
             }
             if (!found)
-                Project.Current.AddAsync(ItemFactory.Create(_gpFolder));
+                Helpers.AddProjectItem(_gpFolder);
 
             //var pth = Project.Current.DefaultToolboxPath;
                 

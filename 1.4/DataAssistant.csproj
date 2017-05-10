@@ -86,93 +86,133 @@
     <AddInContent Include="Config.daml">
       <SubType>Designer</SubType>
     </AddInContent>
-    <AddInContent Include="Images\AddInDesktop16.png" />
-    <AddInContent Include="Images\StageData.png" />
+    <AddInContent Include="..\Shared\Images\AddInDesktop16.png">
+      <Link>Images\AddInDesktop16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\StageData.png">
+      <Link>Images\StageData.png</Link>
+    </AddInContent>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataClasses.cs" />
-    <Compile Include="Dockpane1.xaml.cs">
+    <Compile Include="..\Shared\DataClasses.cs" />
+    <Compile Include="..\Shared\Dockpane1.xaml.cs">
       <DependentUpon>Dockpane1.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dockpane1Apply.cs" />
-    <Compile Include="Dockpane1ViewModel.cs" />
-    <Compile Include="Dockpane1Preview.cs" />
-    <Compile Include="Dockpane2Settings.xaml.cs">
+    <Compile Include="..\Shared\Dockpane1Apply.cs" />
+    <Compile Include="..\Shared\Dockpane1ViewModel.cs" />
+    <Compile Include="..\Shared\Dockpane1Preview.cs" />
+    <Compile Include="..\Shared\Dockpane2Settings.xaml.cs">
       <DependentUpon>Dockpane2Settings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dockpane2SettingsViewModel.cs" />
-    <Compile Include="Dockpane1CheckXmlFile.cs" />
-    <Compile Include="Dockpane1Domains.cs" />
-    <Compile Include="gridTooltipCreator.cs" />
-    <Compile Include="Module1.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\Shared\Dockpane2SettingsViewModel.cs" />
+    <Compile Include="..\Shared\Dockpane1CheckXmlFile.cs" />
+    <Compile Include="..\Shared\Dockpane1Domains.cs" />
+    <Compile Include="..\Shared\gridTooltipCreator.cs" />
+    <Compile Include="..\Shared\Module1.cs" />
+    <Compile Include="..\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GPTools\arcpy\dla.py">
+    <Content Include="..\Shared\GPTools\arcpy\dla.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dla.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaExtractLayerToGDB.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaExtractLayerToGDB.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaExtractLayerToGDB.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaService.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaService.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaService.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaAppendData.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaAppendData.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaAppendData.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaCreateSourceTarget.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
     </Content>
-    <AddInContent Include="Images\Icon0.png" />
-    <AddInContent Include="Images\Icon1.png" />
-    <AddInContent Include="Images\Icon2.png" />
-    <AddInContent Include="Images\Icon3.png" />
-    <AddInContent Include="Images\Icon4.png" />
-    <AddInContent Include="Images\Icon5.png" />
-    <AddInContent Include="Images\GenericButtonBlue16.png" />
-    <AddInContent Include="Images\GenericButtonBlue32.png" />
+    <AddInContent Include="..\Shared\Images\Icon0.png">
+      <Link>Images\Icon0.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Icon1.png">
+      <Link>Images\Icon1.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Icon2.png">
+      <Link>Images\Icon2.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Icon3.png">
+      <Link>Images\Icon3.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Icon4.png">
+      <Link>Images\Icon4.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Icon5.png">
+      <Link>Images\Icon5.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\GenericButtonBlue16.png">
+      <Link>Images\GenericButtonBlue16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\GenericButtonBlue32.png">
+      <Link>Images\GenericButtonBlue32.png</Link>
+    </AddInContent>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GPTools\arcpy\dlaFieldCalculator.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaFieldCalculator.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaPreview.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaPreview.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaPreview.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaPublish.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaPublish.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaReplaceByField.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaReplaceByField.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaReplaceByField.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\dlaStage.py">
+    <Content Include="..\Shared\GPTools\arcpy\dlaStage.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaStage.py</Link>
     </Content>
-    <Content Include="GPTools\arcpy\FieldMatcher.xsl">
+    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
     </Content>
-    <Content Include="GPTools\arcpy\MatchLocal.xml">
+    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\MatchLocal.xml</Link>
     </Content>
-    <Content Include="GPTools\DataLoadingAssistant.tbx">
+    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>GPTools\DataLoadingAssistant.tbx</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Dockpane1.xaml">
+    <Page Include="..\Shared\Dockpane1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dockpane2Settings.xaml">
+    <Page Include="..\Shared\Dockpane2Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\GenericButtonPurple16.png" />
+    <AddInContent Include="..\Shared\Images\GenericButtonPurple16.png">
+      <Link>Images\GenericButtonPurple16.png</Link>
+    </AddInContent>
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\GenericButtonPurple32.png" />
+    <AddInContent Include="..\Shared\Images\GenericButtonPurple32.png">
+      <Link>Images\GenericButtonPurple32.png</Link>
+    </AddInContent>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

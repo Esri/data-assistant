@@ -28,30 +28,30 @@
         </group>
       </groups>
       <controls>
-        <button id="DataAssistant_Dockpane1_CreateFile" caption="New File" className="Dockpane1_CreateFile" loadOnClick="true" smallImage="Images\Icon4.png" largeImage="Images\Icon4.png">
+        <button id="DataAssistant_Dockpane1_CreateFile" caption="New File" className="Dockpane1_CreateFile" loadOnClick="true" smallImage="Images\NewFile16.png" largeImage="Images\NewFile32.png">
           <tooltip heading="New Source-Target File">
             Create a New Source-Target Configuration File using datasets and layers<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane1_ShowButton" caption="Data Mapper" className="Dockpane1_ShowButton" loadOnClick="true" smallImage="Images\Icon0.png" largeImage="Images\Icon0.png">
+        <button id="DataAssistant_Dockpane1_ShowButton" caption="Data Mapper" className="Dockpane1_ShowButton" loadOnClick="true" smallImage="Images\DataMapper16.png" largeImage="Images\DataMapper32.png">
           <tooltip heading="Data Mapper">Configure settings for field and dataset mapping<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane1_PreviewButton" caption="Preview" className="Dockpane1_PreviewButton" loadOnClick="true" smallImage="Images\Icon1.png" largeImage="Images\Icon1.png">
+        <button id="DataAssistant_Dockpane1_PreviewButton" caption="Preview" className="Dockpane1_PreviewButton" loadOnClick="true" smallImage="Images\Preview16.png" largeImage="Images\Preview32.png">
           <tooltip heading="Preview Results">
             Preview Results in a local database using a subset of the records<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane1_StageButton" caption="Stage Data" className="Dockpane1_StageDataButton" loadOnClick="true" smallImage="Images\StageData.png" largeImage="Images\StageData.png">
+        <button id="DataAssistant_Dockpane1_StageButton" caption="Stage Data" className="Dockpane1_StageDataButton" loadOnClick="true" smallImage="Images\StageData16.png" largeImage="Images\StageData32.png">
           <tooltip heading="Stage data to Intermediate Database">
             Stage Results in a local database using a subset of the records, skip final processing<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane1_AppendDataButton" caption="Append Data" className="Dockpane1_AppendDataButton" loadOnClick="true" smallImage="Images\Icon3.png" largeImage="Images\Icon3.png">
+        <button id="DataAssistant_Dockpane1_AppendDataButton" caption="Append Data" className="Dockpane1_AppendDataButton" loadOnClick="true" smallImage="Images\AppendData16.png" largeImage="Images\AppendData32.png">
           <tooltip heading="Append Data">
             Append Data to a database or Portal service, if data was previously staged the intermediate data will be used as a source<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane1_ReplaceDataButton" caption="Replace Data" className="Dockpane1_ReplaceDataButton" loadOnClick="true" smallImage="Images\Icon2.png" largeImage="Images\Icon2.png">
+        <button id="DataAssistant_Dockpane1_ReplaceDataButton" caption="Replace Data" className="Dockpane1_ReplaceDataButton" loadOnClick="true" smallImage="Images\ReplaceData16.png" largeImage="Images\ReplaceData32.png">
           <tooltip heading="Replace Data">
             Replace Data by field value in a database or Portal service, if data was previously staged the intermediate data will be used as a source<disabledText /></tooltip>
         </button>
-        <button id="DataAssistant_Dockpane2Settings_ShowButton" caption="Settings" className="Dockpane2Settings_ShowButton" loadOnClick="true" smallImage="Images\Icon5.png" largeImage="Images\Icon5.png">
+        <button id="DataAssistant_Dockpane2Settings_ShowButton" caption="Settings" className="Dockpane2Settings_ShowButton" loadOnClick="true" smallImage="Images\CogWheel16.png" largeImage="Images\CogWheel32.png">
           <tooltip heading="Change Settings">Change Optional Settings<disabledText /></tooltip>
         </button>
       </controls>

@@ -86,12 +86,6 @@
     <AddInContent Include="Config.daml">
       <SubType>Designer</SubType>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\AddInDesktop16.png">
-      <Link>Images\AddInDesktop16.png</Link>
-    </AddInContent>
-    <AddInContent Include="..\Shared\Images\StageData.png">
-      <Link>Images\StageData.png</Link>
-    </AddInContent>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Shared\DataClasses.cs" />
@@ -115,6 +109,48 @@
     <Compile Include="Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
+    <AddInContent Include="..\Shared\DarkImages\AppendData16.png">
+      <Link>DarkImages\AppendData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\AppendData32.png">
+      <Link>DarkImages\AppendData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\CogWheel16.png">
+      <Link>DarkImages\CogWheel16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\CogWheel32.png">
+      <Link>DarkImages\CogWheel32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\DataMapper16.png">
+      <Link>DarkImages\DataMapper16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\DataMapper32.png">
+      <Link>DarkImages\DataMapper32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\NewFile16.png">
+      <Link>DarkImages\NewFile16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\NewFile32.png">
+      <Link>DarkImages\NewFile32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\Preview16.png">
+      <Link>DarkImages\Preview16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\Preview32.png">
+      <Link>DarkImages\Preview32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\ReplaceData16.png">
+      <Link>DarkImages\ReplaceData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\ReplaceData32.png">
+      <Link>DarkImages\ReplaceData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\StageData16.png">
+      <Link>DarkImages\StageData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\StageData32.png">
+      <Link>DarkImages\StageData32.png</Link>
+    </AddInContent>
     <Content Include="..\Shared\GPTools\arcpy\dla.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>GPTools\arcpy\dla.py</Link>
@@ -135,29 +171,47 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
     </Content>
-    <AddInContent Include="..\Shared\Images\Icon0.png">
-      <Link>Images\Icon0.png</Link>
+    <AddInContent Include="..\Shared\Images\AppendData16.png">
+      <Link>Images\AppendData16.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\Icon1.png">
-      <Link>Images\Icon1.png</Link>
+    <AddInContent Include="..\Shared\Images\AppendData32.png">
+      <Link>Images\AppendData32.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\Icon2.png">
-      <Link>Images\Icon2.png</Link>
+    <AddInContent Include="..\Shared\Images\CogWheel16.png">
+      <Link>Images\CogWheel16.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\Icon3.png">
-      <Link>Images\Icon3.png</Link>
+    <AddInContent Include="..\Shared\Images\CogWheel32.png">
+      <Link>Images\CogWheel32.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\Icon4.png">
-      <Link>Images\Icon4.png</Link>
+    <AddInContent Include="..\Shared\Images\DataMapper16.png">
+      <Link>Images\DataMapper16.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\Icon5.png">
-      <Link>Images\Icon5.png</Link>
+    <AddInContent Include="..\Shared\Images\DataMapper32.png">
+      <Link>Images\DataMapper32.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\GenericButtonBlue16.png">
-      <Link>Images\GenericButtonBlue16.png</Link>
+    <AddInContent Include="..\Shared\Images\NewFile16.png">
+      <Link>Images\NewFile16.png</Link>
     </AddInContent>
-    <AddInContent Include="..\Shared\Images\GenericButtonBlue32.png">
-      <Link>Images\GenericButtonBlue32.png</Link>
+    <AddInContent Include="..\Shared\Images\NewFile32.png">
+      <Link>Images\NewFile32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Preview16.png">
+      <Link>Images\Preview16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Preview32.png">
+      <Link>Images\Preview32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\ReplaceData16.png">
+      <Link>Images\ReplaceData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\ReplaceData32.png">
+      <Link>Images\ReplaceData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\StageData16.png">
+      <Link>Images\StageData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\StageData32.png">
+      <Link>Images\StageData32.png</Link>
     </AddInContent>
   </ItemGroup>
   <ItemGroup>
@@ -203,16 +257,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="..\Shared\Images\GenericButtonPurple16.png">
-      <Link>Images\GenericButtonPurple16.png</Link>
-    </AddInContent>
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="..\Shared\Images\GenericButtonPurple32.png">
-      <Link>Images\GenericButtonPurple32.png</Link>
-    </AddInContent>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

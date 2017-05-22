@@ -2,7 +2,7 @@
   <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="2017.6.20" desktopVersion="2.0">
     <Name>DataAssistant</Name>
     <Description>The Data Assistant can be used to transform your organization’s data and load it into a database or service.</Description>
-    <Image>Images\Icon0.png</Image>
+    <Image>Images\DataMapper32.png</Image>
     <Author>Esri</Author>
     <Company>Vertex3 for Esri</Company>
     <Date>2017.4.26</Date>

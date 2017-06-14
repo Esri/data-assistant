@@ -101,6 +101,7 @@ namespace DataAssistant
 
         private bool checkDatasetExists(string dataset)
         {
+            string _shp = ".shp";
             string _sde = ".sde\\";
             string _gdb = ".gdb\\";
             string _lyrx = ".lyrx";
@@ -148,6 +149,11 @@ namespace DataAssistant
                     exists = true;
             }
             if (dataset.ToLower().EndsWith(_aprx))
+            {
+                if (System.IO.File.Exists(dataset))
+                    exists = true;
+            }
+            if (dataset.ToLower().EndsWith(_shp))
             {
                 if (System.IO.File.Exists(dataset))
                     exists = true;

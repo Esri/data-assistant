@@ -244,7 +244,7 @@ namespace DataAssistant
         //}
         private void ClickPreviewButton(object sender, RoutedEventArgs e)
         {
-            if(_methodnum < 0 || PreviewCheckBox.IsChecked == false)
+            if(_methodnum < 0)
                 return;
             PreviewGrid.Visibility = Visibility.Visible;
 
@@ -288,31 +288,7 @@ namespace DataAssistant
 
             }
         }
-        private void PreviewCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            CheckBox chk = sender as CheckBox;
-            if (chk != null) 
-            {
-                setPreviewValues(chk.IsChecked);
-            }
-        }
 
-        private void setPreviewValues(bool? onoff)
-        {
-            if (onoff == false && PreviewCheckBox.IsChecked == false)
-            {
-                PreviewGrid.Items.Clear();
-                PreviewGrid.Height = 0;
-                PreviewGrid.InvalidateArrange();
-            }
-            else if (onoff == true || PreviewCheckBox.IsChecked == true)
-            {
-                //PreviewGrid.Height = 100;
-                setPreviewRowsInit();
-                PreviewGrid.InvalidateArrange();
-            }
-
-        }
         private void setPreviewRowsInit()
         {
             DataGrid grid = PreviewGrid;

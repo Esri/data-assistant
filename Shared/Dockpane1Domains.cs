@@ -82,7 +82,9 @@ namespace DataAssistant
             if (dataset.ToLower().StartsWith("http://"))
             {
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("service url: " + dataset);
-                if (MapView.Active.Map == null)
+                if (MapView.Active== null)
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the service domain values");
+                else if (MapView.Active.Map == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the service domain values");
                 //System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex(@"\d");
                 bool containsNum = System.Text.RegularExpressions.Regex.IsMatch(dataset.Substring(dataset.LastIndexOf("/") + 1), @"\d"); 
@@ -114,7 +116,9 @@ namespace DataAssistant
             }
             else if (dataset.ToLower().EndsWith(".lyrx"))
             {
-                if (MapView.Active.Map == null)
+                if (MapView.Active == null)
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
+                else if (MapView.Active.Map == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the layer domain values");
                 else if (!System.IO.File.Exists(dataset))
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Layer file " + dataset + " does not exist");

@@ -187,7 +187,7 @@ namespace DataAssistant
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
             setReplaceValues(nodes);
             //MethodPanelApply.IsEnabled = false;
-            //PreviewGrid.Visibility = Visibility.Hidden;
+            //PreviewGrid.Visibility = Visibility.Collapsed;
             //setPreviewValues(false);
 
         }
@@ -196,11 +196,6 @@ namespace DataAssistant
             if (RevertButton.Visibility != System.Windows.Visibility.Visible)
             {
                 RevertButton.Visibility = System.Windows.Visibility.Visible;
-                if (FileGrid.RowDefinitions[0].ActualHeight < 70)
-                {
-                    System.Windows.GridLength len = new System.Windows.GridLength(FileGrid.RowDefinitions[0].ActualHeight + 30);
-                    FileGrid.RowDefinitions[0].Height = len;
-                }
             }
         }
         private void setReplaceValues(System.Xml.XmlNodeList nodes)
@@ -505,7 +500,7 @@ namespace DataAssistant
             if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
             {
                 setApplyEnabled();
-                PreviewGrid.Visibility = Visibility.Hidden;
+                PreviewGrid.Visibility = Visibility.Collapsed;
             }
 
             switch (methodnum){ // fill in the values for each stack panel
@@ -790,7 +785,7 @@ namespace DataAssistant
                 setFieldSelectionValues(comboMethod.SelectedIndex);
                 setPanelVisibility(comboMethod.SelectedIndex);
                 //setPreviewValues(false);
-                PreviewGrid.Visibility = Visibility.Hidden;
+                PreviewGrid.Visibility = Visibility.Collapsed;
                 _methodnum = comboMethod.SelectedIndex;
                 if (MethodPanelApply != null)
                     setApplyEnabled();
@@ -808,7 +803,7 @@ namespace DataAssistant
                 {
                     string method = "Method" + methnum;
                     Object ctrl = this.FindName(method);
-                    StackPanel panel = ctrl as StackPanel;
+                    Panel panel = ctrl as Panel;
                     if (panel != null)
                     {
                         try
@@ -830,12 +825,12 @@ namespace DataAssistant
                 {
                     string method = "Method" + i;
                     Object ctrl = this.FindName(method);
-                    StackPanel panel = ctrl as StackPanel;
+                    Panel panel = ctrl as Panel;
                     if (panel != null)
                     {
                         try
                         {
-                            panel.Visibility = System.Windows.Visibility.Hidden;
+                            panel.Visibility = System.Windows.Visibility.Collapsed;
                             panel.InvalidateArrange();
                             panel.UpdateLayout();
                         }
@@ -1235,12 +1230,7 @@ namespace DataAssistant
             CheckBox chk = sender as CheckBox;
             if (chk != null)
             {
-                //ReplaceStackSettings.Height = 110;
                 ReplaceStackSettings.Visibility = System.Windows.Visibility.Visible;
-                System.Windows.GridLength len = new System.Windows.GridLength(110);
-                //System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
-                //setReplaceValues(nodes);
-                FileGrid.RowDefinitions[3].Height = len;
                 FileGrid.InvalidateArrange();
                 FileGrid.UpdateLayout();
             }
@@ -1254,9 +1244,7 @@ namespace DataAssistant
             {
                 if(!_skipSelectionChanged)
                     setReplaceValues(null);
-                ReplaceStackSettings.Visibility = System.Windows.Visibility.Hidden;
-                System.Windows.GridLength len = new System.Windows.GridLength(0);
-                FileGrid.RowDefinitions[3].Height = len;
+                ReplaceStackSettings.Visibility = System.Windows.Visibility.Collapsed;
                 FileGrid.InvalidateArrange();
                 FileGrid.UpdateLayout();
             }

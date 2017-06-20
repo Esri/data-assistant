@@ -803,7 +803,7 @@ namespace DataAssistant
                 {
                     string method = "Method" + methnum;
                     Object ctrl = this.FindName(method);
-                    StackPanel panel = ctrl as StackPanel;
+                    Panel panel = ctrl as Panel;
                     if (panel != null)
                     {
                         try
@@ -825,7 +825,7 @@ namespace DataAssistant
                 {
                     string method = "Method" + i;
                     Object ctrl = this.FindName(method);
-                    StackPanel panel = ctrl as StackPanel;
+                    Panel panel = ctrl as Panel;
                     if (panel != null)
                     {
                         try

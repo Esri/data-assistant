@@ -56,7 +56,7 @@ namespace DataAssistant
                 if (project == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Warning: Unable to locate Project xml element in folder " + folder);
                 else
-                    projValid = checkSourceTargetPath(folder, project.InnerText);
+                    projValid = checkSourceTargetPath(folder, project.InnerText,false);
 
                 System.Xml.XmlNode source = _xml.SelectSingleNode(_source);
                 if (source == null)
@@ -81,10 +81,10 @@ namespace DataAssistant
 
             return valid;
         }
-        private bool checkSourceTargetPath(string folder, string dataset)
+        private bool checkSourceTargetPath(string folder, string dataset, bool promptNotValid = true)
         {
             bool valid = false;
-            if (dataset != null)
+            if (dataset != null && dataset != "")
             {
                 if (!checkDatasetExists(dataset))
                 {
@@ -94,7 +94,7 @@ namespace DataAssistant
                 else
                     valid = true;
             }
-            if (!valid)
+            if (!valid && promptNotValid)
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Unable to locate dataset '" + dataset + "'");
             return valid;
         }

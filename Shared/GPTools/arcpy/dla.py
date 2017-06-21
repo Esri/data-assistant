@@ -139,10 +139,14 @@ def getFields(xmlFile):
         if fields != []:
             return fields
 
-def getIgnoreFieldNames(desc):
+def getIgnoreFieldNames(desc, include_globalID):
 
     ignore = _ignoreFields
-    for name in _ignoreFieldNames:
+    field_check = _ignoreFields
+    if include_globalID:
+        if 'GLOBALID' in field_check:
+            field_check.pop(field_check.index('GLOBALID'))
+    for name in field_check:
         val = getFieldByName(desc,name)
         if val != None:
             val = val[val.rfind('.')+1:]
@@ -759,7 +763,10 @@ def setProject(xmlfile,projectFilePath):
             if os.path.exists(projectFilePath):
                 _project = arcpy.mp.ArcGISProject(projectFilePath)
             else:
-                addMessage(str(projectFilePath) + ' does not exist, continuing')
+                pass
+                #Removed by Mike Miller 6/20/17, this message as relative path is by xml file and not project
+                #addMessage(str(projectFilePath) + ' does not exist, continuing')
+
 
     except:
         #addError("Unable to set the current project, continuing")
@@ -1394,7 +1401,7 @@ def isFeatureLayerUrl(url):
     parts = url.split('/')
     lngth = len(parts)
     if lngth > 2:
-        try: 
+        try:
             # check for feature server text
             if parts[lngth-2] == 'FeatureServer':
                 return True

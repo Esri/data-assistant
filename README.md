@@ -10,7 +10,7 @@ The data-assistant repo includes an ArcGIS Pro Add-in that helps communities (st
 
 ## Instructions
 
-If you do not want to compile in Visual Studio, click/install data-aggregation\ShareGISData\bin\Debug\DataAssistant.esriAddInX.
+If you do not want to compile in Visual Studio, click/install data-aggregation\1.4\bin\Release\DataAssistant.esriAddInX or data-aggregation\2.0\bin\Release\DataAssistant.esriAddInX.
 
 ### Esri Solutions
 

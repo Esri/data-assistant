@@ -1,0 +1,280 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D7BC4883-7429-42D7-9A28-7B4C9030CBC1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DataAssistant</RootNamespace>
+    <AssemblyName>DataAssistant</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\ArcGIS\Pro\bin\ArcGISPro.exe</StartProgram>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\ArcGIS\Pro\bin\ArcGISPro.exe</StartProgram>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Catalog">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Editing">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Config.daml">
+      <SubType>Designer</SubType>
+    </AddInContent>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\DataClasses.cs" />
+    <Compile Include="..\Shared\Dockpane1.xaml.cs">
+      <DependentUpon>Dockpane1.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="..\Shared\Dockpane1Apply.cs" />
+    <Compile Include="..\Shared\Dockpane1ViewModel.cs" />
+    <Compile Include="..\Shared\Dockpane1Preview.cs" />
+    <Compile Include="..\Shared\Dockpane2Settings.xaml.cs">
+      <DependentUpon>Dockpane2Settings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="..\Shared\Dockpane2SettingsViewModel.cs" />
+    <Compile Include="..\Shared\Dockpane1CheckXmlFile.cs" />
+    <Compile Include="..\Shared\Dockpane1Domains.cs" />
+    <Compile Include="..\Shared\gridTooltipCreator.cs" />
+    <Compile Include="..\Shared\Module1.cs" />
+    <Compile Include="..\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Helpers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="..\Shared\DarkImages\AppendData16.png">
+      <Link>DarkImages\AppendData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\AppendData32.png">
+      <Link>DarkImages\AppendData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\CogWheel16.png">
+      <Link>DarkImages\CogWheel16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\CogWheel32.png">
+      <Link>DarkImages\CogWheel32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\DataMapper16.png">
+      <Link>DarkImages\DataMapper16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\DataMapper32.png">
+      <Link>DarkImages\DataMapper32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\NewFile16.png">
+      <Link>DarkImages\NewFile16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\NewFile32.png">
+      <Link>DarkImages\NewFile32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\Preview16.png">
+      <Link>DarkImages\Preview16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\Preview32.png">
+      <Link>DarkImages\Preview32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\ReplaceData16.png">
+      <Link>DarkImages\ReplaceData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\ReplaceData32.png">
+      <Link>DarkImages\ReplaceData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\StageData16.png">
+      <Link>DarkImages\StageData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\DarkImages\StageData32.png">
+      <Link>DarkImages\StageData32.png</Link>
+    </AddInContent>
+    <Content Include="..\Shared\GPTools\arcpy\dla.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dla.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaExtractLayerToGDB.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaExtractLayerToGDB.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaService.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaService.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaAppendData.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaAppendData.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
+    </Content>
+    <AddInContent Include="..\Shared\Images\AddInDesktop16.png">
+      <Link>Images\AddInDesktop16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\AppendData16.png">
+      <Link>Images\AppendData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\AppendData32.png">
+      <Link>Images\AppendData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\CogWheel16.png">
+      <Link>Images\CogWheel16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\CogWheel32.png">
+      <Link>Images\CogWheel32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\DataMapper16.png">
+      <Link>Images\DataMapper16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\DataMapper32.png">
+      <Link>Images\DataMapper32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\NewFile16.png">
+      <Link>Images\NewFile16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\NewFile32.png">
+      <Link>Images\NewFile32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Preview16.png">
+      <Link>Images\Preview16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\Preview32.png">
+      <Link>Images\Preview32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\ReplaceData16.png">
+      <Link>Images\ReplaceData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\ReplaceData32.png">
+      <Link>Images\ReplaceData32.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\StageData16.png">
+      <Link>Images\StageData16.png</Link>
+    </AddInContent>
+    <AddInContent Include="..\Shared\Images\StageData32.png">
+      <Link>Images\StageData32.png</Link>
+    </AddInContent>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaFieldCalculator.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaPreview.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaPreview.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaPublish.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaReplaceByField.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaReplaceByField.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaStage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\dlaStage.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>GPTools\arcpy\MatchLocal.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>GPTools\DataLoadingAssistant.tbx</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="..\Shared\Dockpane1.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="..\Shared\Dockpane2Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.PackageAddIn" />
+  <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.CleanAddIn" />
+  <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.ConvertToRelativePath" />
+  <Import Project="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets" Condition="Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <Target Name="BeforeBuild">
+    <Error Text="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets not found." Condition="!Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets')" />
+  </Target>
+</Project>

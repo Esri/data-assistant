@@ -31,7 +31,7 @@ try:
     dla.workspace = arcpy.GetParameterAsText(2) # Geodatabase
 except:
     dla.workspace = arcpy.env.scratchGDB
-try:    
+try:
     rowLimit = arcpy.GetParameterAsText(3) # Number of records to extract
 except:
     rowLimit = None
@@ -41,7 +41,7 @@ def main(argv = None):
     global source,target
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
-    if dla.workspace == "" or dla.workspace == "#" or dla.workspace == None:  
+    if dla.workspace == "" or dla.workspace == "#" or dla.workspace == None:
         dla.workspace = arcpy.env.scratchGDB
     if source == "" or source == None:
         source = dla.getDatasetPath(xmlDoc,"Source")
@@ -57,7 +57,7 @@ def main(argv = None):
     success = extract(xmlFileName,rowLimit,dla.workspace,source,target,datasetType)
     arcpy.SetParameter(SUCCESS, success)
 
-def extract(xmlFileName,rowLimit,workspace,source,target,datasetType): 
+def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):
 
     xmlDoc = dla.getXmlDoc(xmlFileName)
     if workspace == "" or workspace == "#" or workspace == None:
@@ -97,7 +97,7 @@ def extract(xmlFileName,rowLimit,workspace,source,target,datasetType):
         arcpy.ClearWorkspaceCache_management(dla.workspace)
 
     return success
-    
+
 def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     result = True
     xmlFields = xmlDoc.getElementsByTagName("Field")
@@ -105,14 +105,14 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
     whereClause = ""
     if rowLimit != None:
         whereClause = getObjectIdWhereClause(source,rowLimit)
-            
+
     if whereClause != '' and whereClause != ' ':
         dla.addMessage("Where " + str(whereClause))
-  
+
     sourceName = dla.getDatasetName(source)
     viewName = sourceName + "_View"
     dla.addMessage(viewName)
-    
+
     targetRef = getSpatialReference(xmlDoc,"Target")
     sourceRef = getSpatialReference(xmlDoc,"Source")
     if datasetType == 'Table':
@@ -142,8 +142,8 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
             arcpy.env.preserveGlobalIds = True # try to preserve
             dla.addMessage("Attempting to preserve GlobalIDs")
         else:
-            arcpy.env.preserveGlobalIds = False # don't try to preserve
-            dla.addMessage("Unable to preserve GlobalIDs")
+            arcpy.env.preserveGlobalIds = True # don't try to preserve
+            dla.addMessage("Unable to copy Global ID to Global ID")
         if isTable:
             arcpy.TableToTable_conversion(in_rows=view,out_path=workspace,out_name=targetName)
         else:
@@ -167,7 +167,7 @@ def exportDataset(xmlDoc,source,workspace,targetName,rowLimit,datasetType):
         removeDefaultValues(ds) # don't want to turn nulls into defaultValues in the intermediate data
 
         # not needed if doing the transformations approach above...
-        #    if isTable: 
+        #    if isTable:
         #        if not createDataset('Table',workspace,targetName,None,xmlDoc,source,None):
         #            arcpy.AddError("Unable to create intermediate table, exiting: " + workspace + os.sep + targetName)
         #            return False
@@ -195,7 +195,7 @@ def getFieldMap(view,ds):
 
     fieldMaps = arcpy.FieldMappings()
     fieldMaps.addTable(ds)
-    inFields = [field.name for field in arcpy.ListFields(view) if field.name.upper() not in dla._ignoreFields] # not field.required removed after .Enabled issue 
+    inFields = [field.name for field in arcpy.ListFields(view) if field.name.upper() not in dla._ignoreFields] # not field.required removed after .Enabled issue
     removenames = []
     for i in range(fieldMaps.fieldCount):
         field = fieldMaps.fields[i]
@@ -223,7 +223,7 @@ def getFieldMap(view,ds):
         i = fieldMaps.findFieldMapIndex(name)
         fieldMaps.removeFieldMap(i)
         dla.addMessage(name + ' removed from fieldMappings')
-        
+
     return fieldMaps
 
 #def printFieldMap(fieldMap):
@@ -275,7 +275,7 @@ def getSpatialReference(xmlDoc,lyrtype):
     if sprefstr != '' and sprefstr != '0':
         #arcpy.AddMessage(lyrtype + ":" + sprefstr)
         spref = arcpy.SpatialReference(int(sprefstr))
-    else:    
+    else:
         sprefstr = dla.getNodeValue(xmlDoc,lyrtype + "SpatialReference")
         if sprefstr != '':
             #arcpy.AddMessage(lyrtype + ":" + sprefstr)
@@ -295,7 +295,7 @@ def getObjectIdWhereClause(table,rowLimit):
     ids = []
     # use the oidname in the where clause
     where = oidname + " <= " + str(rowLimit)
-    
+
     for row in searchCursor:
         ids.append(row[0]) # sql server db does not always return OBJECTIDs sorted, no shortcut
 
@@ -325,7 +325,7 @@ def removeDefaultValues(dataset):
             try:
                 arcpy.AssignDefaultToField_management(in_table=dataset,field_name=fname,default_value=None,clear_value=True) # clear the Defaults
             except:
-                dla.addMessage("Unable to set DefaultValue for " + fname) # skip GlobalIDs/other fields that cannot be updated. Should not have a default set in these cases 
+                dla.addMessage("Unable to set DefaultValue for " + fname) # skip GlobalIDs/other fields that cannot be updated. Should not have a default set in these cases
 
 if __name__ == "__main__":
     main()

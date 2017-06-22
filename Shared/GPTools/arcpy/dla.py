@@ -506,7 +506,7 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
             tupper = targetName.upper()
             for nm in attrs:
                 nupper = nm.upper()
-                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName: # if case insensitive match, note GlobalID and others cannot be renamed
+                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName and nupper != 'GLOBALID': # if case insensitive match, note GlobalID and others cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)

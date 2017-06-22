@@ -79,10 +79,10 @@ namespace DataAssistant
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("No field to map");
             }
 
-            if (dataset.ToLower().StartsWith("http://"))
+            if (dataset.ToLower().StartsWith("http://") && dataset.ToLower().StartsWith("https://"))
             {
-                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("service url: " + dataset);
-                if (MapView.Active== null)
+                //ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("service url: " + dataset);
+                if (MapView.Active == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the service domain values");
                 else if (MapView.Active.Map == null)
                     ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There must be an active map to get the service domain values");

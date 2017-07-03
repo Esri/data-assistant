@@ -1,2 +1,2 @@
 ArcGIS Solutions
-- September 2016 Release
+- June 2017 Release

@@ -139,10 +139,14 @@ def getFields(xmlFile):
         if fields != []:
             return fields
 
-def getIgnoreFieldNames(desc):
+def getIgnoreFieldNames(desc, include_globalID):
 
     ignore = _ignoreFields
-    for name in _ignoreFieldNames:
+    field_check = _ignoreFields
+    if include_globalID:
+        if 'GLOBALID' in field_check:
+            field_check.pop(field_check.index('GLOBALID'))
+    for name in field_check:
         val = getFieldByName(desc,name)
         if val != None:
             val = val[val.rfind('.')+1:]
@@ -502,7 +506,7 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
             tupper = targetName.upper()
             for nm in attrs:
                 nupper = nm.upper()
-                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName: # if case insensitive match, note GlobalID and others cannot be renamed
+                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName and nupper != 'GLOBALID': # if case insensitive match, note GlobalID and others cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
@@ -759,7 +763,10 @@ def setProject(xmlfile,projectFilePath):
             if os.path.exists(projectFilePath):
                 _project = arcpy.mp.ArcGISProject(projectFilePath)
             else:
-                addMessage(str(projectFilePath) + ' does not exist, continuing')
+                pass
+                #Removed by Mike Miller 6/20/17, this message as relative path is by xml file and not project
+                #addMessage(str(projectFilePath) + ' does not exist, continuing')
+
 
     except:
         #addError("Unable to set the current project, continuing")
@@ -1394,7 +1401,7 @@ def isFeatureLayerUrl(url):
     parts = url.split('/')
     lngth = len(parts)
     if lngth > 2:
-        try: 
+        try:
             # check for feature server text
             if parts[lngth-2] == 'FeatureServer':
                 return True

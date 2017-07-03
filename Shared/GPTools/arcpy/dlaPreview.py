@@ -32,7 +32,7 @@ except:
 _success = 2 # the last param is the derived output layer
 source = None
 target = None
-        
+
 def main(argv = None):
     preview(xmlFileName)
 
@@ -49,9 +49,9 @@ def preview(xmlFileName):
         rowLimit = 100
 
     prj = dla.setProject(xmlFileName,dla.getNodeValue(xmlDoc,"Project"))
-    if prj == None:
-        dla.addError("Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
-        return False
+    #if prj == None:
+        #dla.addError("Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
+        #return False
 
     if source == "" or source == None:
         source = dla.getDatasetPath(xmlDoc,"Source")
@@ -81,9 +81,9 @@ def preview(xmlFileName):
                 arcpy.MakeFeatureLayer_management(targetDS,layertmp)
             fieldInfo = dla.getLayerVisibility(layertmp,xmlFileName)
             if dla.isTable(targetDS):
-               arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                arcpy.MakeTableView_management(targetDS,layer,None,dla.workspace,fieldInfo)
             else:
-               arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
+                arcpy.MakeFeatureLayer_management(targetDS,layer,None,dla.workspace,fieldInfo)
             # should make only the target fields visible
             arcpy.SetParameter(_success,layer)
     else:

@@ -25,7 +25,7 @@ import xml.etree.ElementTree as etree
 import re
 
 # Local variables...
-debug = False 
+debug = False
 # Parameters
 source = arcpy.GetParameter(0) # source dataset to analyze
 sourceStr = arcpy.GetParameterAsText(0) # source dataset to analyze
@@ -50,7 +50,7 @@ matchxslt = os.path.join(dir,"FieldMatcher.xsl")
 matchfile = os.path.join(dir,"MatchLocal.xml")
 
 def main(argv = None):
-    global source,target,xmlFileName   
+    global source,target,xmlFileName
 
     source = dla.checkIsLayerFile(source,sourceStr)
     target = dla.checkIsLayerFile(target,targetStr)
@@ -124,7 +124,7 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     xmlDoc.appendChild(root)
     root.setAttribute("version",'1.1')
     root.setAttribute("xmlns:esri",'http://www.esri.com')
-    
+
     dataset = xmlDoc.createElement("Datasets")
     root.appendChild(dataset)
     prj = dla.getProject()
@@ -145,7 +145,7 @@ def writeDocument(sourcePath,targetPath,xmlFileName):
     root.appendChild(fieldroot)
 
     fields = getFields(descT)
-    sourceFields = getFields(desc)
+    sourceFields = getFields(desc, True)
     #sourceNames = [field.name[field.name.rfind(".")+1:] for field in sourceFields] ***
     sourceNames = [field.name for field in sourceFields]
     upperNames = [nm.upper() for nm in sourceNames]
@@ -263,14 +263,14 @@ def setSourceTarget(root,xmlDoc,name,dataset):
     nodeText = xmlDoc.createTextNode(dataset)
     sourcetarget.appendChild(nodeText)
     root.appendChild(sourcetarget)
-    
+
 def setSourceFields(root,xmlDoc,fields):
     # Set SourceFields section of document
     sourceFields = xmlDoc.createElement("SourceFields")
     fNode = xmlDoc.createElement("SourceField")
     sourceFields.appendChild(fNode)
     fNode.setAttribute("Name",dla._noneFieldName)
-        
+
     for field in fields:
         fNode = xmlDoc.createElement("SourceField")
         sourceFields.appendChild(fNode)
@@ -286,7 +286,7 @@ def setSourceFields(root,xmlDoc,fields):
 def setTargetFields(root,xmlDoc,fields):
     # Set TargetFields section of document
     targetFields = xmlDoc.createElement("TargetFields")
-        
+
     for field in fields:
         fNode = xmlDoc.createElement("TargetField")
         targetFields.appendChild(fNode)
@@ -305,9 +305,9 @@ def addFieldElement(xmlDoc,node,name,value):
     nodeText = xmlDoc.createTextNode(value)
     xmlName.appendChild(nodeText)
 
-def getFields(desc):
+def getFields(desc, include_globalID = False):
     fields = []
-    ignore = dla.getIgnoreFieldNames(desc)
+    ignore = dla.getIgnoreFieldNames(desc, include_globalID)
     ignore = [nm.upper() for nm in ignore]
 
     for field in desc.fields:
@@ -326,7 +326,7 @@ def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     #    desc = arcpy.Describe(sourcePath) # dataset path/source as parameter
     #    fields = desc.fields
     #    sourceFields = [field.name for field in fields]
-    
+
     cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
 
     i = 0
@@ -345,7 +345,7 @@ def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
                 except:
                     dla.showTraceback()
                     pass # backslashreplace should never throw a unicode decode error...
-                
+
         data.appendChild(xrow)
         i += 1
 

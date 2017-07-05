@@ -216,7 +216,6 @@
     <AddInContent Include="..\Shared\Images\StageData32.png">
       <Link>Images\StageData32.png</Link>
     </AddInContent>
-    <Content Include="Images\RefreshIcon.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">

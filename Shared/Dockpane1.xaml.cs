@@ -1260,15 +1260,5 @@ namespace DataAssistant
             }
 
         }
-
-        private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void MainTabs_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
     }
 }

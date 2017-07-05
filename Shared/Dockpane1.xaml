@@ -71,22 +71,21 @@
 
     <Grid Margin="6,4,6,4">
         <Grid.RowDefinitions>
-            <RowDefinition Height="15"/> <!--originally 11.5-->
-            <RowDefinition Height="15"/> <!--originally 13.5-->
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="8" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <ListBox Grid.Row="0" x:Name="MainTabs" Style="{DynamicResource PanelIndicator}" SelectedIndex="0" SelectionChanged="MainTabs_SelectionChanged_1" Grid.RowSpan="2" Grid.ColumnSpan="1" >
-            <ListBox.Items>
-                <frameworkControls:PanelHeader Text="File"/>
-                <frameworkControls:PanelHeader Text="Fields"/>
-            </ListBox.Items>
-        </ListBox>
-        <Grid Grid.Row="0" x:Name="RefreshButton" Grid.RowSpan="2" Grid.Column="1">
-            <Button DockPanel.Dock="Right" x:Name="Refresh_Button" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource Button16}" Click="MethodPanelrefreshXML_Click" ToolTip="Refresh the Source-Target Configuration File">
-                <Image Source="../2.0/Images/RefreshIcon.png" Height="11.5" Width="10"></Image>
+        <DockPanel Grid.Row="0" LastChildFill="True">
+            <Button DockPanel.Dock="Right" x:Name="Refresh_Button" VerticalAlignment="Center" Style="{StaticResource Button16}" Click="MethodPanelrefreshXML_Click" ToolTip="Refresh the Source-Target Configuration File">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericRefresh16.png"></Image>
             </Button>
-        </Grid>
+            <ListBox DockPanel.Dock="Left" x:Name="MainTabs" Style="{DynamicResource PanelIndicator}" SelectedIndex="0" >
+                <ListBox.Items>
+                    <frameworkControls:PanelHeader Text="File"/>
+                    <frameworkControls:PanelHeader Text="Fields"/>
+                </ListBox.Items>
+            </ListBox>
+        </DockPanel>
         <Grid Grid.Row="3" x:Name="FileGrid" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Grid.Style>
                 <Style TargetType="Grid">

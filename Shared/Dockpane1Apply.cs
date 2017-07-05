@@ -75,6 +75,23 @@ namespace DataAssistant
             ClickPreviewButton(sender, e);
             _skipSelectionChanged = false;
         }
+        private void MethodPanelrefreshXML_Click(object sender, RoutedEventArgs e)
+        {
+                try
+                {
+                    if (loadXml(_filename))
+                    {
+                        this._skipSelectionChanged = true;
+                        setXmlDataProvider(this.FieldGrid, fieldXPath);
+                        this._skipSelectionChanged = false;
+                        setDatasetUI();
+                        _datarows = _xml.SelectNodes("//Data/Row");
+                    }
+                }
+                catch{
+                    //Usually catches due to an error in the XML file load
+            }
+        }
         private void saveM0()
         {
             // make sure method is saved to Xml for the field node

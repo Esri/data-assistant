@@ -8,9 +8,19 @@ The data-assistant repo includes an ArcGIS Pro Add-in that helps communities (st
 * Community Addresses
 * Community Parcels
 
-## Instructions
+## Instructions (2 options)
 
-If you do not want to compile in Visual Studio, click/install data-aggregation\1.4\bin\Release\DataAssistant.esriAddInX or data-aggregation\2.0\bin\Release\DataAssistant.esriAddInX.
+### 1. Install from the compiled add-in
+
+1. Download the add-in for version [1.4](1.4/bin/Release/DataAssistant.esriAddinX) or [2.0](2.0/bin/Release/DataAssistant.esriAddinX).
+2. Double-click the .esriaddinX file to install.
+3. Launch ArcGIS Pro and find the capabilities on the Data Assistant tab.
+
+### 2. Compile the add-in
+
+1. Download or Clone this repo
+2. Open the DataAssistant Visual Studio solution for the appropriate version of Pro and build the solution.
+3. Launch ArcGIS Pro and find the capabilities on the Data Assistant tab.
 
 ### Esri Solutions
 
@@ -32,7 +42,7 @@ is provided with each solution on the ArcGIS Solution Site.
 
 ## Requirements
 
-* ArcGIS Pro 1.4
+* ArcGIS Pro 1.4 - 2.0
 
 ## Resources
 

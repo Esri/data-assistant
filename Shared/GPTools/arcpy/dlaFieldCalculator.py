@@ -89,15 +89,15 @@ def calculate(xmlFileName,workspace,name,ignore):
         # make sure the field exists in the field calculator dataset, this will include all source and target fields.
         retcode = dla.addDlaField(table,targetName,field,attrs,ftype,flength)
         if retcode == False:
-            addError("Unable to add field " + targetName + " to database to calculate values, exiting")
-    
+            dla.addError("Unable to add field " + targetName + " to database to calculate values, exiting")
+
     allFields = sourceFields + targetFields # this should be the same as the dataset fields at this point
     desc = arcpy.Describe(table)
     layerNames = []
     names = []
     ftypes = []
     lengths = []
-    ignore = dla.getIgnoreFieldNames(desc) # gdb system fields that will be handled automatically and cannot be calculated
+    ignore = dla.getIgnoreFieldNames(desc, True) # gdb system fields that will be handled automatically and cannot be calculated
     ignore = [nm.upper() for nm in ignore]
 
     for field in desc.fields: # get the uppercase names for everything that exists in the dataset

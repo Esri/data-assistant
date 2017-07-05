@@ -86,7 +86,7 @@
                 </ListBox.Items>
             </ListBox>
         </DockPanel>
-        <Grid Grid.Row="3" x:Name="FileGrid" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
+        <Grid Grid.Row="2" x:Name="FileGrid" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Visible"/>
@@ -166,7 +166,7 @@
                 </DockPanel>
             </Grid>
         </Grid>
-        <Grid Grid.Row="3" x:Name="FieldsGrid" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+        <Grid Grid.Row="2" x:Name="FieldsGrid" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Collapsed"/>

@@ -1260,5 +1260,17 @@ namespace DataAssistant
             }
 
         }
+
+        private void AddCustomValueMap(object sender, RoutedEventArgs e)
+        {
+            string theText = CustomValueField.Text;
+            CustomValueField.Clear();
+
+            ComboData newEntry = new ComboData();
+            newEntry.Id = newEntry.Tooltip = newEntry.Value = theText;
+
+            _domainSourceValues.Add(newEntry);
+            _domainTargetValues.Add(newEntry);
+        }
     }
 }

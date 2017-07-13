@@ -487,13 +487,6 @@ namespace DataAssistant
         }
 
 
-        private void Method11Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-
-
 
 
 

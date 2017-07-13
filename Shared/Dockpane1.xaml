@@ -79,7 +79,7 @@
             <Button DockPanel.Dock="Right" x:Name="Refresh_Button" VerticalAlignment="Center" Style="{StaticResource Button16}" Click="MethodPanelrefreshXML_Click" ToolTip="Refresh the Source-Target Configuration File">
                 <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericRefresh16.png"></Image>
             </Button>
-            <ListBox DockPanel.Dock="Left" x:Name="MainTabs" Style="{DynamicResource PanelIndicator}" SelectedIndex="0" >
+            <ListBox DockPanel.Dock="Left" x:Name="MainTabs" Style="{DynamicResource PanelIndicator}" SelectedIndex="0">
                 <ListBox.Items>
                     <frameworkControls:PanelHeader Text="File"/>
                     <frameworkControls:PanelHeader Text="Fields"/>
@@ -402,13 +402,13 @@
                                 <Label DockPanel.Dock="Left" Padding="0" Content="Domain Mapping" Foreground="{DynamicResource Esri_Gray155}"/>
                             </DockPanel>
                             <DataGrid x:Name="Method11Grid" MaxHeight="150" HorizontalAlignment="Stretch" Margin="0,4,0,0" AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
-                                ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionChanged="Method11Grid_SelectionChanged" >
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn x:Name="Method11Sources" Header="Source Domain Values" Width="*" CanUserResize="True" CanUserSort="True" >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Grid>
-                                                    <ComboBox x:Name="Method11Source" Background="Transparent" BorderThickness="0" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
+                                                    <ComboBox x:Name="Method11Source" IsEditable="True" Background="Transparent" BorderThickness="0" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
                                                     </ComboBox>
                                                 </Grid>
                                             </DataTemplate>
@@ -427,6 +427,16 @@
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CustomValueField" Grid.ColumnSpan="3" Margin="0,4,0,0" Grid.Column="0"></TextBox>
+                                <Button x:Name="SourceTargetAdder" Grid.ColumnSpan="1" Margin="0,4,0,0" Content="Add" Grid.Column="4" HorizontalAlignment="Center" ToolTip="Add custom value to column options" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="AddCustomValueMap"></Button>
+                            </Grid>
                             <Button x:Name="LoadDomains" Margin="0,4,0,0" Content="Load Domains..." HorizontalAlignment="Right" ToolTip="Import Domains from both datasets" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="LoadDomains_Click"/>
                         </StackPanel>
                     </Grid>

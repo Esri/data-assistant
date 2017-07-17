@@ -408,7 +408,7 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Grid>
-                                                    <ComboBox x:Name="Method11Source" IsEditable="True" Background="Transparent" BorderThickness="0" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
+                                                    <ComboBox x:Name="Method11Source" Background="Transparent" BorderThickness="0" ItemsSource="{Binding Path=Source}" DisplayMemberPath="Tooltip" SelectedValuePath="Id" ToolTip="{Binding Path=SourceTooltip}" SelectedIndex="{Binding Path=SourceSelectedItem}"  SelectionChanged="Method11Source_SelectionChanged">
                                                     </ComboBox>
                                                 </Grid>
                                             </DataTemplate>
@@ -434,7 +434,7 @@
                                     <ColumnDefinition />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="CustomValueField" Grid.ColumnSpan="3" Margin="0,4,0,0" Grid.Column="0"></TextBox>
+                                <TextBox x:Name="CustomValueField" Uid="CustomValueField" Grid.ColumnSpan="3" Margin="0,4,0,0" Grid.Column="0"></TextBox>
                                 <Button x:Name="SourceTargetAdder" Grid.ColumnSpan="1" Margin="0,4,0,0" Content="Add" Grid.Column="4" HorizontalAlignment="Center" ToolTip="Add custom value to column options" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="AddCustomValueMap"></Button>
                             </Grid>
                             <Button x:Name="LoadDomains" Margin="0,4,0,0" Content="Load Domains..." HorizontalAlignment="Right" ToolTip="Import Domains from both datasets" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="LoadDomains_Click"/>

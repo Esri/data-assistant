@@ -293,7 +293,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
 
 
 def getSplit(sourceValue,splitter,part):
-
+    #if sourceValue is None, the try will fail and the function will return None
     strVal = None
     try:
         strVal = sourceValue.split(str(splitter))[int(part)]
@@ -303,16 +303,20 @@ def getSplit(sourceValue,splitter,part):
     return strVal
 
 def getSubstring(sourceValue,start,chars):
+    if sourceValue is None:
+        return None
     strVal = None
     try:
         start = int(start)
         chars = int(chars)
-        strVal = str(sourceValue)[start:chars]
+        strVal = str(sourceValue)[start:chars+start]
     except:
         pass
     return strVal
 
 def getChangeCase(sourceValue,case):
+    if sourceValue is None: # Need to check that the value isn't none 
+        return None         # Otherwise the script will not complete
     expression = None
     lcase = case.lower()
     if lcase.startswith("upper"):
@@ -442,7 +446,8 @@ def getDomainMap(row,sourceValue,field):
     return newValue
 
 def getExpression(row,names,expression):
-
+    if expression is None: # If ChangeCase runs into a null sourceValue,
+        return None        # this expression will be None and therefore the result should be None as well
     calcNew = None
     try:
         calcNew = calcValue(row,names,expression)

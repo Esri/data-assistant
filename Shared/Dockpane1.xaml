@@ -427,16 +427,6 @@
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="CustomValueField" Uid="CustomValueField" Grid.ColumnSpan="3" Margin="0,4,0,0" Grid.Column="0"></TextBox>
-                                <Button x:Name="SourceTargetAdder" Grid.ColumnSpan="1" Margin="0,4,0,0" Content="Add" Grid.Column="4" HorizontalAlignment="Center" ToolTip="Add custom value to column options" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="AddCustomValueMap"></Button>
-                            </Grid>
                             <Button x:Name="LoadDomains" Margin="0,4,0,0" Content="Load Domains..." HorizontalAlignment="Right" ToolTip="Import Domains from both datasets" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="LoadDomains_Click"/>
                         </StackPanel>
                     </Grid>

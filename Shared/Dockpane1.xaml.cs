@@ -1260,6 +1260,5 @@ namespace DataAssistant
             }
 
         }
-
     }
 }

@@ -34,7 +34,6 @@ namespace DataAssistant
     /// </summary>
     public partial class Dockpane1View : UserControl
     {
-
         private void setDomainMapValues(int combonum, string nodename)
         {
             if (FieldGrid.SelectedIndex == -1)
@@ -486,6 +485,14 @@ namespace DataAssistant
             if (Method11Grid.SelectedIndex > -1 && Method11Grid.Items.Count > 0)
                 Method11Grid.Items.RemoveAt(Method11Grid.SelectedIndex);
         }
+
+
+        private void Method11Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+
 
 
 

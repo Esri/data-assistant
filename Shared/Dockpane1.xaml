@@ -115,7 +115,7 @@
                     <Button DockPanel.Dock="Right" Margin="4,4,0,4" x:Name="SelectButton" VerticalAlignment="Center" Style="{StaticResource Button16}" Click="SelectButton_Click" ToolTip="Open a configuration file (.xml)">
                         <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png" />
                     </Button>
-                    <TextBox DockPanel.Dock="Left" x:Name="FileName" VerticalAlignment="Center" IsEnabled="False" TextWrapping="NoWrap" Text="" TextChanged="FileName_TextChanged" />
+                    <TextBox DockPanel.Dock="Left" x:Name="FileName" VerticalAlignment="Center"  TextWrapping="NoWrap" Text="" TextChanged="FileName_TextChanged" />
                 </DockPanel>
                 <Button Grid.Row="2" Margin="0" x:Name="RevertButton" VerticalAlignment="Center" HorizontalAlignment="Left" Width="Auto" Content="Revert..." Style="{DynamicResource Esri_SimpleButton}" Visibility="Collapsed" ToolTip="Discard changes and re-open the original file" Click="RevertButton_Click"/>
             </Grid>
@@ -129,7 +129,7 @@
                     <Button DockPanel.Dock="Right" Margin="4,4,0,4" x:Name="SourceButton" Style="{StaticResource Button16}" VerticalAlignment="Center" Click="SourceButton_Click" ToolTip="Replace the Source">
                         <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png" />
                     </Button>
-                    <TextBox DockPanel.Dock="Left" IsEnabled="False" Grid.Column="0" x:Name="SourceLayer" VerticalAlignment="Center" TextWrapping="NoWrap" IsReadOnly="True" Text="" TextChanged="SourceLayer_TextChanged" />
+                    <TextBox DockPanel.Dock="Left" Grid.Column="0" x:Name="SourceLayer" VerticalAlignment="Center" TextWrapping="NoWrap" IsReadOnly="True" Text="" TextChanged="SourceLayer_TextChanged" />
                 </DockPanel>
             </Grid>
             <Grid x:Name="ReplaceStack" Grid.Row="2" IsEnabled="False" Visibility="Collapsed" Margin="0,16,0,0">
@@ -162,7 +162,7 @@
                     <Button DockPanel.Dock="Right" Margin="4,4,0,4" x:Name="TargetButton" Style="{StaticResource Button16}" VerticalAlignment="Center" Click="TargetButton_Click" ToolTip="Replace the Target">
                         <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png" />
                     </Button>
-                    <TextBox DockPanel.Dock="Left" x:Name="TargetLayer" VerticalAlignment="Center" IsEnabled="False" TextWrapping="NoWrap" IsReadOnly="True" Text="" TextChanged="TargetLayer_TextChanged" />
+                    <TextBox DockPanel.Dock="Left" x:Name="TargetLayer" VerticalAlignment="Center" TextWrapping="NoWrap" IsReadOnly="True" Text="" TextChanged="TargetLayer_TextChanged" />
                 </DockPanel>
             </Grid>
         </Grid>

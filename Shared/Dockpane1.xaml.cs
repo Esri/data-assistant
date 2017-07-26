@@ -975,40 +975,20 @@ namespace DataAssistant
 
         private void SelectButton_Click(object sender, RoutedEventArgs e)
         {
-            string thePath = "";
-            var dlg = new ArcGIS.Desktop.Catalog.OpenItemDialog();
+            using (var dlg = new System.Windows.Forms.OpenFileDialog())
             {
-                dlg.Title = "Select Source-Configuration File";
-                dlg.MultiSelect = false;
-                bool? result = dlg.ShowDialog();
-                if (result == true)
+                dlg.Filter = "Data Loading Assistant Xml files|*.xml";//.Description = "Browse for a Source-Target File (.xml)";
+                dlg.Multiselect = false;
+                System.Windows.Forms.DialogResult result = dlg.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
                 {
-                    IEnumerable<Item> items = dlg.Items;
-                    foreach (Item selectedItem in items)
-                        thePath = selectedItem.Path;
+                    //this.FileName.Text = dlg.FileName;
+                    if (checkXmlFileName(dlg.FileName))
+                    {
+                        loadFile(dlg.FileName);
+                    }
                 }
             }
-            if (checkXmlFileName(thePath))
-            {
-                loadFile(thePath);
-            }
-            //Previous implementation is commented below in case of any stability issues
-
-            //using (var dlg = new System.Windows.Forms.OpenFileDialog())
-            //{
-            //    dlg.Filter = "Data Loading Assistant Xml files|*.xml";//.Description = "Browse for a Source-Target File (.xml)";
-            //    dlg.Multiselect = false;
-            //    System.Windows.Forms.DialogResult result = dlg.ShowDialog();
-            //    if (result == System.Windows.Forms.DialogResult.OK)
-            //    {
-            //        //this.FileName.Text = dlg.FileName;
-            //        if (checkXmlFileName(dlg.FileName))
-            //        {
-            //            loadFile(dlg.FileName);
-            //        }
-            //    }
-            //}
-
         }
         private void FileName_TextChanged(object sender, TextChangedEventArgs e)
         {

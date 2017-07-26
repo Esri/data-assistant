@@ -115,7 +115,7 @@
                     <Button DockPanel.Dock="Right" Margin="4,4,0,4" x:Name="SelectButton" VerticalAlignment="Center" Style="{StaticResource Button16}" Click="SelectButton_Click" ToolTip="Open a configuration file (.xml)">
                         <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png" />
                     </Button>
-                    <TextBox DockPanel.Dock="Left" x:Name="FileName" VerticalAlignment="Center"  TextWrapping="NoWrap" Text="" TextChanged="FileName_TextChanged" />
+                    <TextBox DockPanel.Dock="Left" x:Name="FileName" VerticalAlignment="Center" TextWrapping="NoWrap" Text="" TextChanged="FileName_TextChanged" />
                 </DockPanel>
                 <Button Grid.Row="2" Margin="0" x:Name="RevertButton" VerticalAlignment="Center" HorizontalAlignment="Left" Width="Auto" Content="Revert..." Style="{DynamicResource Esri_SimpleButton}" Visibility="Collapsed" ToolTip="Discard changes and re-open the original file" Click="RevertButton_Click"/>
             </Grid>

@@ -61,9 +61,10 @@ namespace DataAssistant
             // set to default/current value if null
             if(fname != null)
                 _filename = fname;
-            if (this.FileName.Text != _filename)
+            if ((String)this.FileName.ToolTip != _filename)
             {
-                this.FileName.Text = _filename;
+                this.FileName.ToolTip = _filename;
+                this.FileName.Text = _filename.Split('\\').Last();
                 copyXml(_filename,_revertname);
             }
         }
@@ -175,13 +176,19 @@ namespace DataAssistant
             if (node == null)
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
             else
-                SourceLayer.Text = node.InnerText;
+            {
+                SourceLayer.ToolTip = node.InnerText;
+                SourceLayer.Text = node.InnerText.Split('\\').Last();
+            }
 
             node = _xml.SelectSingleNode("//Datasets/Target");
             if (node == null)
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
             else
-                TargetLayer.Text = node.InnerText;
+            {
+                TargetLayer.ToolTip = node.InnerText;
+                TargetLayer.Text = node.InnerText.Split('\\').Last();
+            }
 
             setXmlDataProvider(ReplaceField, "//TargetField/@Name");
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
@@ -981,10 +988,10 @@ namespace DataAssistant
                         thePath = selectedItem.Path;
                 }
             }
-                    if (checkXmlFileName(thePath))
-                    {
-                        loadFile(thePath);
-                    }
+            if (checkXmlFileName(thePath))
+            {
+                loadFile(thePath);
+            }
             //Previous implementation is commented below in case of any stability issues
 
             //using (var dlg = new System.Windows.Forms.OpenFileDialog())
@@ -1006,12 +1013,29 @@ namespace DataAssistant
         private void FileName_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
-            if (getXmlFileName() != txt.Text)
+            if (txt.ToolTip == null)
             {
                 if (checkXmlFileName(txt.Text))
                 {
-                    setXmlFileName(txt.Text);
+                    //setXmlFileName(txt.Text); REMOVED 7/25/2017. Seems redundant as it is immediatley called within loadFile
                     loadFile(txt.Text);
+                }
+            }
+            else
+            {
+                if (txt.ToolTip.ToString() != txt.Text)
+                {
+                    if (!txt.ToolTip.ToString().Split('\\').Contains(txt.Text))
+                    {
+                        if (getXmlFileName() != txt.Text)
+                        {
+                            if (checkXmlFileName(txt.Text))
+                            {
+                                //setXmlFileName(txt.Text); REMOVED 7/25/2017. Seems redundant as it is immediatley called within loadFile
+                                loadFile(txt.Text);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1123,9 +1147,9 @@ namespace DataAssistant
         {
             TextBox txt = sender as TextBox;
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
-            if (node != null && node.InnerText != txt.Text)
+            if (node != null && node.InnerText != txt.ToolTip.ToString())
             {
-                node.InnerText = txt.Text;
+                node.InnerText = txt.ToolTip.ToString();
                 saveFieldGrid();
             }
         }
@@ -1136,11 +1160,17 @@ namespace DataAssistant
             if (txt != null)
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
-                if (node != null && node.InnerText != txt.Text)
+                if (txt.Text != txt.ToolTip.ToString())
                 {
-                    node.InnerText = txt.Text;
-                    saveFieldGrid();
-                }
+                    if(!txt.ToolTip.ToString().Split('\\').Contains(txt.Text))
+                    {
+                        if (node != null && node.InnerText != txt.Text) // this is checking if you added a different source to then write to the xml
+                        {
+                            node.InnerText = txt.Text;
+                            saveFieldGrid();
+                        }
+                    }
+                } 
             }
         }
 

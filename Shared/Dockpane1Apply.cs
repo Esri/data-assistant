@@ -469,7 +469,10 @@ namespace DataAssistant
             if (fileloc != null)
             {
                 if (System.Windows.Forms.MessageBox.Show("You should only Change the source dataset if the schemas match", "Update Source Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                    SourceLayer.Text = fileloc;
+                {
+                    SourceLayer.ToolTip = fileloc;
+                    SourceLayer.Text = fileloc.Split('\\').Last();
+                }
             }
         }
         private void TargetButton_Click(object sender, RoutedEventArgs e)
@@ -479,7 +482,10 @@ namespace DataAssistant
             if (fileloc != null)
             {
                 if (System.Windows.Forms.MessageBox.Show("You should only Change the target dataset if the schemas match", "Update Target Layer?", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                    TargetLayer.Text = fileloc;
+                {
+                    TargetLayer.ToolTip = fileloc;
+                    TargetLayer.Text = fileloc.Split('\\').Last();
+                }
             }
         }
         private string getSourceTargetLocation(string initialLocation, string title)

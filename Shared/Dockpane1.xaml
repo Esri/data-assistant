@@ -182,7 +182,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" >
+            <Grid Grid.Row="0">
                 <DataGrid x:Name="FieldGrid" ItemsSource="{Binding XPath=/SourceTargetMatrix/Fields/Field}" 
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                   AutoGenerateColumns="False" CanUserResizeColumns="True" SelectedCellsChanged="FieldGrid_Selected"  
@@ -194,23 +194,30 @@
                     </DataGrid.DataContext>
                     <DataGrid.Columns>
                         <DataGridTemplateColumn x:Name="aSourceFieldName" Header="Source" Width="*">
+                            <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="ToolTip" Value="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}"/>
+                            </Style>
+                                </DataGridTemplateColumn.CellStyle>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <ComboBox x:Name="SourceField" Background="Transparent" BorderThickness="0" ItemsSource="{Binding XPath=//SourceField/@Name}" IsEnabled="{Binding XPath=@IsEnabled}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged" 
-                                                ToolTip="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}">
+                                        <ComboBox x:Name="SourceField" Background="Transparent" BorderThickness="0" ItemsSource="{Binding XPath=//SourceField/@Name}" IsEnabled="{Binding XPath=@IsEnabled}" SelectedValue="{Binding XPath=SourceName}" SelectionChanged="SourceField_SelectionChanged">
                                         </ComboBox>
                                     </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                         <DataGridTemplateColumn x:Name="aTargetFieldName" Header="Target" Width="*">
+                            <DataGridTemplateColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding XPath=TargetName,Converter={StaticResource gridTooltipCreator}}"/>
+                                </Style>
+                            </DataGridTemplateColumn.CellStyle>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock x:Name="TargetFieldName" Text="{Binding XPath=TargetName}" VerticalAlignment="Center" HorizontalAlignment="Left"
-                                                ToolTip="{Binding XPath=TargetName,Converter={StaticResource gridTooltipCreator}}">
-                                        </TextBlock>
+                                        <TextBlock x:Name="TargetFieldName" Text="{Binding XPath=TargetName}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                     </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

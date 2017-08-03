@@ -326,8 +326,11 @@ def writeDataSample(xmlDoc,root,sourceFields,sourcePath,rowLimit):
     #    desc = arcpy.Describe(sourcePath) # dataset path/source as parameter
     #    fields = desc.fields
     #    sourceFields = [field.name for field in fields]
-
-    cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
+    if sourcePath.endswith('.lyrx'):
+        layer = arcpy.mp.LayerFile(sourcePath).listLayers()[0]
+        cursor = arcpy.da.SearchCursor(layer, sourceFields)
+    else:
+        cursor = arcpy.da.SearchCursor(sourcePath,sourceFields)
 
     i = 0
     prefixes = []

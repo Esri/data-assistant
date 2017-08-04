@@ -23,7 +23,7 @@
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:local="clr-namespace:DataAssistant"                                             
              xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="DataAssistant.Dockpane1View"                                             
-             mc:Ignorable="d" d:DesignHeight="500" d:DesignWidth="300">
+             mc:Ignorable="d" d:DesignHeight="500" d:DesignWidth="500">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -194,7 +194,7 @@
                     </DataGrid.DataContext>
                     <DataGrid.Columns>
                         <DataGridTemplateColumn x:Name="aSourceFieldName" Header="Source" Width="*">
-                            <DataGridTemplateColumn.CellStyle>
+                           <DataGridTemplateColumn.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="ToolTip" Value="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}"/>
                             </Style>

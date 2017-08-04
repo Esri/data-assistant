@@ -434,6 +434,17 @@ def baseName(name):
     else:
         return name.upper()
 
+    #Below is a better immplementation of this function, but it is untested.
+
+    # def baseName(name):
+    # """ trim any database prefixes from table names """
+    # Check that it's a file on disk (rare chance there is a feature class in EGDB called "lyrx")
+    # if os.path.exists(name):
+    #     if name.lower().endswith(_lyrx) or name.lower().endswith('.shp'):
+    #         return os.path.splitext(os.path.basename(name))[0]
+    #
+    # return os.path.basename(name).split('.')[-1]
+
 def getFieldValues(mode,fields,datasets):
     # get a list of field values, returns all values and the unique values.
     theValues = [] # unique list of values

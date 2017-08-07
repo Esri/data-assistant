@@ -18,7 +18,7 @@
 # dlaFieldCalculator.py
 # ---------------------------------------------------------------------------
 
-import os, sys, traceback, time, arcpy,  dla
+import os, sys, traceback, time, arcpy,  dla, re
 import collections
 
 xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
@@ -262,27 +262,37 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     if dla.debug == True:
                         dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
             try:
+                # printRow(row,names)
                 updateCursor.updateRow(row)
-                #printRow(row,names)
             except:
+                error = traceback.format_exc()
+                error_field = re.findall(r"\[(.+)\]", error)
+                # Pulls the field name from the arcpy error message from updateCursor
+                if error_field:
+                    error_value = row[names.index(error_field[0])]
+                    error = "{} Value: {}".format(error, error_value)
+                dla.addError(error)
+                if True:  # Potentially worth adding a GP parameter to let you continue on error as opposed to quitting early
+                    sys.exit(1)
+
                 dla._errCount += 1
                 success = False
                 err = "Exception caught: unable to update row"
                 if dla._errCount<200 :
-                    printRow(row,names)
+                    # printRow(row,names)
                     dla.showTraceback()
                 else:
-                    if dla._errCount < 2000:
+                    if dla._errCount < 200:
                         dla.addMessage('More than 200 errors encountered... debug output suppressed')
                 dla.addError(err)
     except:
         dla._errCount += 1
         success = False
         err = "Exception caught: unable to update dataset"
-        if row != None:
-            printRow(row,names)
-        dla.showTraceback()
-        dla.addError(err)
+        # if row != None:
+        #     printRow(row,names)
+        # dla.showTraceback()
+        # dla.addError(traceback.format_exc())
 
     finally:
         del updateCursor
@@ -315,7 +325,7 @@ def getSubstring(sourceValue,start,chars):
     return strVal
 
 def getChangeCase(sourceValue,case):
-    if sourceValue is None: # Need to check that the value isn't none 
+    if sourceValue is None: # Need to check that the value isn't none
         return None         # Otherwise the script will not complete
     expression = None
     lcase = case.lower()

@@ -443,7 +443,8 @@ def getDomainMap(row,sourceValue,field):
             if sourceValue == sourceTest or sourceValue == sValue: # this will check numeric and non-numeric equivalency for current values in maps
                 found = True
                 try:
-                    newValue = dla.getTextValue(targetValues[i])
+                    if dla.getTextValue(targetValues[i]) != "(None)":
+                        newValue = dla.getTextValue(targetValues[i])
                 except:
                     dla._errCount += 1
                     success = False

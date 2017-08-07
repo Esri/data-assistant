@@ -994,7 +994,39 @@ namespace DataAssistant
             }
 
         }
-        private void FileName_TextChanged(object sender, TextChangedEventArgs e)
+        private void FileName_GotFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if ((String)txt.ToolTip != "")
+            {
+                txt.Text = (String)txt.ToolTip;
+            }
+        }
+
+        private void FileName_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            FileName_TextChanged(sender);
+            if(txt.Text == (String)txt.ToolTip)
+            {
+                //If a user engages the textbox but does not make changes, this will revert text to shortened version
+                txt.Text = txt.Text.Split('\\').Last();
+            }
+        }
+
+        private void FileName_Drop(object sender, DragEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            txt.Text = files[0];
+            FileName_TextChanged(sender);
+            if (txt.Text == (String)txt.ToolTip)
+            {
+                //Sometimes does not shorten after dragging in file
+                txt.Text = txt.Text.Split('\\').Last();
+            }
+        }
+        private void FileName_TextChanged(object sender)
         {
             TextBox txt = sender as TextBox;
             if (txt.ToolTip == null)
@@ -1003,6 +1035,11 @@ namespace DataAssistant
                 {
                     //setXmlFileName(txt.Text); REMOVED 7/25/2017. Seems redundant as it is immediatley called within loadFile
                     loadFile(txt.Text);
+                }
+                else
+                {
+                    txt.Background = Brushes.Maroon;
+                    txt.ToolTip = "Invalid File Path";
                 }
             }
             else
@@ -1292,6 +1329,5 @@ namespace DataAssistant
             }
 
         }
-
     }
 }

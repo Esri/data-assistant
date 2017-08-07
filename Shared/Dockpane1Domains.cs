@@ -64,7 +64,6 @@ namespace DataAssistant
         private void LoadDomains_Click(object sender, RoutedEventArgs e)
         {
             // Need to get the domain values from the target dataset - NB do domain but could also be based on values if no domain
-
             if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 setDomainValues(getDatasetPath(this.TargetLayer.Text), getTargetFieldName(), _target, true);
@@ -201,8 +200,11 @@ namespace DataAssistant
                     tTooltip = targetnode.InnerText;
                 for (int t = 0; t < _domainTargetValues.Count; t++)
                 {
-                    if (Equals(_domainTargetValues[t].Id, tVal))
+                    if (Equals(_domainTargetValues[t].Tooltip, tTooltip))
+                    {
                         selectedT = t;
+                        break;
+                    }
                 }
                 grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selectedS, SourceTooltip = sTooltip, TargetTooltip = tTooltip, Target = _domainTargetValues, TargetSelectedItem = selectedT });
             }
@@ -223,22 +225,22 @@ namespace DataAssistant
             else if (sourceTarget == _target)
                 _domainTargetValues = domainValues;
 
-            if (_domainTargetValues != null && _domainTargetValues.Count > 0)
+            //Following code loads the source side of the domains first, leaving target None until selected otherwise
+            if (_domainSourceValues != null && _domainSourceValues.Count > 0)
             {
                 Method11Grid.Items.Clear();
-                for (int i = 0; i < _domainTargetValues.Count; i++)
+                for (int i = 0; i < _domainSourceValues.Count; i++)
                 {
-                    ComboData domainValue = _domainTargetValues[i];
+                    ComboData domainValue = _domainSourceValues[i];
                     if (domainValue.Id != _noneField) // don't want to create a row for None by default
                     {
                         int selected = 0; // use the default None here...
-                        for (int s = 0; s < _domainSourceValues.Count; s++)
+                        for (int s = 0; s < _domainTargetValues.Count; s++)
                         {
-                            if (Equals(_domainSourceValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
+                            if (Equals(_domainTargetValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
                                 selected = s;
                         }
-                        // used to always set source selected to 0 - None
-                        Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = "None", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
+                        Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = i, SourceTooltip = getDomainTooltip(domainValue.Id, domainValue.Value), Target = _domainTargetValues, TargetSelectedItem = selected, TargetTooltip = "None" });
                     }
                 }
             }

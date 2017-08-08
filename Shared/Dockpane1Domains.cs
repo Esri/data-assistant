@@ -63,12 +63,14 @@ namespace DataAssistant
 
         private void LoadDomains_Click(object sender, RoutedEventArgs e)
         {
+            DomainSettings settingsWindow = new DomainSettings();
+            settingsWindow.Show();
             // Need to get the domain values from the target dataset - NB do domain but could also be based on values if no domain
-            if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
+            //if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            //{
                 setDomainValues(getDatasetPath(this.TargetLayer.Text), getTargetFieldName(), _target, true);
                 setDomainValues(getDatasetPath(this.SourceLayer.Text), getSourceFieldName(), _source, true);
-            }
+            //}
         }
 
         public void setDomainValues(string dataset, string fieldName, string sourceTarget, bool resetUI)

@@ -13,7 +13,6 @@
 | See the License for the specific language governing permissions and
 | limitations under the License.
 -->
-
 <UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -68,7 +67,6 @@
             <Style TargetType="DataGrid" BasedOn="{StaticResource Esri_DataGridStyle}" />
         </ResourceDictionary>
     </UserControl.Resources>
-
     <Grid Margin="6,4,6,4">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -194,11 +192,11 @@
                     </DataGrid.DataContext>
                     <DataGrid.Columns>
                         <DataGridTemplateColumn x:Name="aSourceFieldName" Header="Source" Width="*">
-                           <DataGridTemplateColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="ToolTip" Value="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}"/>
-                            </Style>
-                                </DataGridTemplateColumn.CellStyle>
+                            <DataGridTemplateColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding XPath=SourceName,Converter={StaticResource gridTooltipCreator}}"/>
+                                </Style>
+                            </DataGridTemplateColumn.CellStyle>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid>

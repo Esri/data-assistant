@@ -246,8 +246,8 @@
                     <StackPanel Grid.Row="0" x:Name="Methods" VerticalAlignment="Center" Visibility="Visible" IsEnabled="False">
                         <Label x:Name="lbl1" Content="Method" Padding="0" Foreground="{StaticResource Esri_Gray155}" HorizontalAlignment="Left" />
                         <DockPanel Margin="0,4,0,0" LastChildFill="True" >
-                            <Button DockPanel.Dock="Right" x:Name="MethodPanelApply" Margin="4,0,0,0" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" VerticalAlignment="Center" Click="MethodPanelApply_Click" ToolTip="Save Changes to your Configuration File" IsEnabled="False"/>
-                            <ComboBox DockPanel.Dock="Left" x:Name="comboMethod" SelectedIndex="0" Height="24" SelectionChanged="comboMethod_SelectionChanged" VerticalAlignment="Stretch" >
+                            <Button DockPanel.Dock="Right" x:Name="MethodPanelApply" Margin="4,0,0,0" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" VerticalAlignment="Center" Click="MethodPanelApply_Click" Visibility="Collapsed" ToolTip="Save Changes to your Configuration File" IsEnabled="False"/>
+                            <ComboBox DockPanel.Dock="Left" x:Name="comboMethod" SelectedIndex="0" Height="24" SelectionChanged="comboMethod_SelectionChanged" VerticalAlignment="Stretch">
                                 <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
                                 <ComboBoxItem Content="Copy" ToolTip="Copy Source Field values to Target Fields."/>
                                 <ComboBoxItem Content="SetValue" ToolTip="Target Field values will be set to a constant value."/>
@@ -275,7 +275,7 @@
                         </StackPanel>
                         <StackPanel x:Name="Method2" Visibility="Collapsed" >
                             <Label Content="Set Value" Padding="0" Foreground="{DynamicResource Esri_Gray155}"/>
-                            <TextBox x:Name="Method2Value" Margin="0,4,0,0" Text="" ToolTip="Set a Constant Value" HorizontalAlignment="Stretch" />
+                            <TextBox x:Name="Method2Value" Margin="0,4,0,0" Text="" ToolTip="Set a Constant Value" HorizontalAlignment="Stretch" TextChanged="MethodPanelApply_Click"/>
                         </StackPanel>
                         <StackPanel x:Name="Method3" Visibility="Collapsed" >
                             <DockPanel>
@@ -310,12 +310,12 @@
                             </DataGrid>
                             <DockPanel Margin="0,4,0,0" LastChildFill="True">
                                 <Label DockPanel.Dock="Left" Content="Otherwise:"  Padding="0" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Center"/>
-                                <TextBox DockPanel.Dock="Right" x:Name="Method3Otherwise" Margin="4,0,0,0" ToolTip="Otherwise set to value" VerticalAlignment="Center"/>
+                                <TextBox DockPanel.Dock="Right" x:Name="Method3Otherwise" Margin="4,0,0,0" ToolTip="Otherwise set to value" VerticalAlignment="Center" TextChanged="MethodPanelApply_Click"/>
                             </DockPanel>
                         </StackPanel>
                         <StackPanel x:Name="Method4" Visibility="Collapsed" >
                             <Label Content="String Function" Padding="0" Foreground="{DynamicResource Esri_Gray155}"/>
-                            <ComboBox x:Name="Method4Combo" Margin="0,4,0,0" Height="24" SelectedIndex="0" HorizontalAlignment="Stretch" >
+                            <ComboBox x:Name="Method4Combo" Margin="0,4,0,0" Height="24" SelectedIndex="0" SelectionChanged="Method4Combo_SelectionChanged"  HorizontalAlignment="Stretch" >
                                 <ComboBoxItem Content="Uppercase"/>
                                 <ComboBoxItem Content="Lowercase"/>
                                 <ComboBoxItem Content="Title"/>
@@ -342,7 +342,7 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Grid>
-                                                    <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                                    <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                                 </Grid>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -355,22 +355,22 @@
                             </DockPanel>
                         </StackPanel>
                         <StackPanel x:Name="Method6" Visibility="Collapsed" >
-                            <TextBox Text="{Binding ElementName=Method6Slider, Path=Value}" TextAlignment="Right" Width="40" />
+                            <TextBox Text="{Binding ElementName=Method6Slider, Path=Value}" TextAlignment="Right" Width="40" TextChanged="MethodPanelApply_Click"/>
                             <Slider x:Name="Method6Slider" Minimum="0" Maximum="20" Margin="0,4,0,0" Value="2" SmallChange="1" Ticks="{x:Null}" ToolTip="Number of Left Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft" />
                         </StackPanel>
                         <StackPanel x:Name="Method7" Visibility="Collapsed" >
-                            <TextBox Text="{Binding ElementName=Method7Slider, Path=Value}" TextAlignment="Right" Width="40" />
+                            <TextBox Text="{Binding ElementName=Method7Slider, Path=Value}" TextAlignment="Right" Width="40" TextChanged="MethodPanelApply_Click"/>
                             <Slider x:Name="Method7Slider" IsDirectionReversed="True" Maximum="20" Minimum="0" Margin="0,4,0,0" Value="18" SmallChange="1" ToolTip="Number of Right Characters" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" TickPlacement="TopLeft" />
                         </StackPanel>
                         <StackPanel x:Name="Method8" Visibility="Collapsed" >
                             <DockPanel LastChildFill="True" >
                                 <Label DockPanel.Dock="Left" Padding="0" Content="Start at position" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Center"/>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ElementName=Method81Slider, Path=Value}" Margin="4,0,0,0" TextAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox DockPanel.Dock="Right" Text="{Binding ElementName=Method81Slider, Path=Value}" Margin="4,0,0,0" TextAlignment="Right" VerticalAlignment="Center" TextChanged="MethodPanelApply_Click"/>
                             </DockPanel>
                             <Slider x:Name="Method81Slider" Margin="0,4,0,0" Value="0" SmallChange="1" Ticks="{x:Null}" ToolTip="Position to start at" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
                             <DockPanel LastChildFill="True" Margin="0,8,0,0" >
                                 <Label DockPanel.Dock="Left" Padding="0" Content="Number of characters" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Center"/>
-                                <TextBox DockPanel.Dock="Right" Text="{Binding ElementName=Method82Slider, Path=Value}" Margin="4,0,0,0" TextAlignment="Right" VerticalAlignment="Center" />
+                                <TextBox DockPanel.Dock="Right" Text="{Binding ElementName=Method82Slider, Path=Value}" Margin="4,0,0,0" TextAlignment="Right" VerticalAlignment="Center" TextChanged="MethodPanelApply_Click"/>
                             </DockPanel>
                             <Slider x:Name="Method82Slider" Margin="0,4,0,0" Value="9" SmallChange="1" Ticks="{x:Null}" ToolTip="Number of Characters to extract" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
                         </StackPanel>
@@ -378,26 +378,26 @@
                             <Label Content="Character to split with" Padding="0" Foreground="{DynamicResource Esri_Gray155}"/>
                             <TextBox x:Name="Method91Value" Margin="0,4,0,0" Text="' '" ToolTip="String value to split the string with" TextChanged="Method91Value_TextChanged" />
                             <Label Content="Part Number to use (0 or higher)" Padding="0" Margin="0,4,0,0" Foreground="{DynamicResource Esri_Gray155}"/>
-                            <TextBox x:Name="Method92Value" Margin="0,4,0,0" Text="0" ToolTip="Each part will have a number starting with 0" />
+                            <TextBox x:Name="Method92Value" Margin="0,4,0,0" Text="0" ToolTip="Each part will have a number starting with 0" TextChanged="Method92Value_TextChanged" />
                         </StackPanel>
                         <StackPanel x:Name="Method10" Visibility="Collapsed" >
                             <DockPanel LastChildFill="True">
                                 <Label DockPanel.Dock="Left" x:Name="Method10Label" Content="If value is:" Padding="0" VerticalAlignment="Center" Foreground="{DynamicResource Esri_Gray155}"/>
-                                <ComboBox DockPanel.Dock="Left" x:Name="Method10Value" Margin="4,0"  VerticalAlignment="Center" Width="50" >
+                                <ComboBox DockPanel.Dock="Left" x:Name="Method10Value" Margin="4,0"  VerticalAlignment="Center" Width="50" SelectionChanged="MethodPanelApply_Click">
                                     <ComboBoxItem Content="==" ToolTip="Equal To"/>
                                     <ComboBoxItem Content="!=" ToolTip="Not Equal To"/>
                                     <ComboBoxItem Content="&lt;" ToolTip="Less Than"/>
                                     <ComboBoxItem Content="&gt;" ToolTip="Greater Than"/>
                                 </ComboBox>
-                                <TextBox DockPanel.Dock="Right" x:Name="Method101Value"  Text="" ToolTip="Condition to test" VerticalAlignment="Center"/>
+                                <TextBox DockPanel.Dock="Right" x:Name="Method101Value"  Text="" ToolTip="Condition to test" VerticalAlignment="Center" TextChanged="MethodPanelApply_Click"/>
                             </DockPanel>
                             <DockPanel LastChildFill="True" Margin="0,4,0,0">
                                 <Label DockPanel.Dock="Left" Content="Then set value to:" Padding="0" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Center"/>
-                                <TextBox DockPanel.Dock="Right" x:Name="Method102Value" Margin="4,0,0,0" Text="" ToolTip="Value to set" VerticalAlignment="Center"/>
+                                <TextBox DockPanel.Dock="Right" x:Name="Method102Value" Margin="4,0,0,0" Text="" ToolTip="Value to set" VerticalAlignment="Center" TextChanged="MethodPanelApply_Click"/>
                             </DockPanel>
                             <DockPanel LastChildFill="True" Margin="0,4,0,0">
                                 <Label DockPanel.Dock="Left" Content="Else:" Padding="0" Foreground="{DynamicResource Esri_Gray155}" VerticalAlignment="Center"/>
-                                <TextBox DockPanel.Dock="Right" x:Name="Method103Value" Margin="4,0,0,0" Text="" ToolTip="Else set to" VerticalAlignment="Center" />
+                                <TextBox DockPanel.Dock="Right" x:Name="Method103Value" Margin="4,0,0,0" Text="" ToolTip="Else set to" VerticalAlignment="Center" TextChanged="MethodPanelApply_Click"/>
                             </DockPanel>
                         </StackPanel>
                         <StackPanel x:Name="Method11" Visibility="Collapsed" >
@@ -419,7 +419,6 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-
                                     <DataGridTemplateColumn x:Name="Method11Targets" Header="Target Domain Values" Width="*" CanUserResize="True" CanUserSort="True">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -432,16 +431,6 @@
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="CustomValueField" Uid="CustomValueField" Grid.ColumnSpan="3" Margin="0,4,0,0" Grid.Column="0"></TextBox>
-                                <Button x:Name="SourceTargetAdder" Grid.ColumnSpan="1" Margin="0,4,0,0" Content="Add" Grid.Column="4" HorizontalAlignment="Center" ToolTip="Add custom value to column options" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="AddCustomValueMap"></Button>
-                            </Grid>
                             <Button x:Name="LoadDomains" Margin="0,4,0,0" Content="Load Domains..." HorizontalAlignment="Right" ToolTip="Import Domains from both datasets" Style="{DynamicResource Esri_SimpleButton}" IsEnabled="True" Click="LoadDomains_Click"/>
                         </StackPanel>
                     </Grid>

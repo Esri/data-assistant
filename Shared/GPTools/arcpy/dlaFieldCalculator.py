@@ -41,7 +41,7 @@ def main(argv = None):
         dla.addError("Errors occurred during field calculation")
     arcpy.SetParameter(SUCCESS, success)
 
-def calculate(xmlFileName,workspace,name,ignore):
+def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
 
     dla.workspace = workspace
     success = True
@@ -124,7 +124,7 @@ def calculate(xmlFileName,workspace,name,ignore):
                 #leng = field.getAttributeNode("Length").nodeValue
                 #ftypes.append(typ)
                 #lengths.append(leng)
-    retVal = setFieldValues(table,fields,names,ftypes,lengths)
+    retVal = setFieldValues(table,fields,names,ftypes,lengths, xmlFileName, continue_on_error)
     if retVal == False:
         success = False
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -164,7 +164,7 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
-def setFieldValues(table,fields,names,ftypes,lengths):
+def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_error):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
     row = None
@@ -176,7 +176,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
         dla.addMessage(table + ", " + str(numFeat) + " features")
         i = 0
         arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
-
+        targetfields_dict = dla.getTargetFieldsNode(xmlLocation)
         for row in updateCursor:
             success = True
             if dla._errCount > dla.maxErrorCount:
@@ -196,6 +196,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
+
                 try:
                     fnum = dla.getFieldIndexList(names,targetName)
                 except:
@@ -204,7 +205,12 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                 if fnum != None:
                     if method == "None" or (method == "Copy" and sourceName == '(None)'):
                         method = "None"
-                        val = None
+                        if targetfields_dict[targetName]['defaultValue'] == "" and targetfields_dict[targetName]['Nullable'] == "False":
+                            nullableErrorMessage = "ERROR: "+targetName + " does not allow for null values and does not have a default value. Please map this field or give it a default value in the target dataset."
+                            dla.addError(nullableErrorMessage)
+                            sys.exit(-1)
+                        else:
+                            val = None
                     elif method == "Copy":
                         val = sourceValue
                     elif method == "DefaultValue":
@@ -272,8 +278,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     error_value = row[names.index(error_field[0])]
                     error = "{} Value: {}".format(error, error_value)
                 dla.addError(error)
-                updateError = True
-                if True:  # Potentially worth adding a GP parameter to let you continue on error as opposed to quitting early
+                if not continue_on_error:
                     sys.exit(1)
 
                 dla._errCount += 1
@@ -292,9 +297,8 @@ def setFieldValues(table,fields,names,ftypes,lengths):
         err = "Exception caught: unable to update dataset"
         # if row != None:
         #     printRow(row,names)
-        #dla.showTraceback()
-        if updateError is None:
-            dla.addError(traceback.format_exc())
+        #dla.showTraceback():
+        dla.addError(traceback.format_exc())
 
     finally:
         del updateCursor

@@ -361,7 +361,7 @@ namespace DataAssistant
                                         textval = targName + "=" + att.InnerText.Substring(start, length);
                                     }
                                 }
-                                catch { textval = targName + "=" + "None"; }
+                                catch { textval = targName + "=" + att.InnerText.Substring(start); }
                             }
                         }
                     }

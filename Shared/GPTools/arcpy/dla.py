@@ -30,6 +30,7 @@ import json, urllib
 import urllib.parse as parse
 import urllib.request as request
 from xml.dom.minidom import Document
+import xml.etree.cElementTree as ET;
 
 debug = False # print field calculator messages.
 startTime = time.localtime() # start time for a script
@@ -152,6 +153,18 @@ def getIgnoreFieldNames(desc, include_globalID):
             val = val[val.rfind('.')+1:]
             ignore.append(val)
     return ignore
+
+def getTargetFieldsNode(xmlLocation):
+    tree = ET.parse(xmlLocation)
+    root = tree.getroot()
+    tfields = root.find('TargetFields')
+    fields = tfields.getchildren()
+    retfields = dict()
+    for field in fields:
+        attributes = field.attrib
+        retfields[attributes['Name']] = dict()
+        retfields[attributes['Name']] = attributes
+    return retfields
 
 def getFieldByName(desc,name):
     val = None
@@ -326,7 +339,7 @@ def deleteRows(table,expr):
 
     return retcode
 
-def appendRows(sourceTable,targetTable,expr):
+def appendRows(sourceTable,targetTable,expr, continue_on_error = True):
     # append rows in dataset with a where clause
     retcode = False
 
@@ -340,6 +353,7 @@ def appendRows(sourceTable,targetTable,expr):
     view = makeView(deType,workspace,sourceTable,view,expr,[])
 
     numSourceFeat = arcpy.GetCount_management(view).getOutput(0)
+    numOriginalTarFeat = arcpy.GetCount_management(targetTable).getOutput(0)
     addMessage("Appending " + sTable + " TO " + getDatasetName(targetTable))
 
     if targetTable.lower().endswith(_lyrx):
@@ -360,8 +374,10 @@ def appendRows(sourceTable,targetTable,expr):
     arcpy.AddMessage(msgs)
     retcode = True
 
-    if int(numTargetFeat) != int(numSourceFeat):
-        arcpy.AddMessage("WARNING: Different number of rows in target dataset, " + numTargetFeat )
+    if int(numTargetFeat) != int(numSourceFeat) + int(numOriginalTarFeat):
+        addError("WARNING: Different number of rows in target dataset, " + numTargetFeat )
+        if not continue_on_error:
+            sys.exit(-1)  # Option to stop all xml scripts if
     if int(numTargetFeat) == 0:
         addError("ERROR: 0 Features in target dataset")
         retcode = False

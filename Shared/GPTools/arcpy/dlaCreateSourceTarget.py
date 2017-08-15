@@ -298,6 +298,10 @@ def setTargetFields(root,xmlDoc,fields):
             fNode.setAttribute("Nullable","True")
         else:
             fNode.setAttribute("Nullable","False")
+        if field.defaultValue is None:
+            fNode.setAttribute("defaultValue","")
+        else:
+            fNode.setAttribute("defaultValue",str(field.defaultValue))
         #if field.length != None:
         fNode.setAttribute("Length",str(field.length))
 

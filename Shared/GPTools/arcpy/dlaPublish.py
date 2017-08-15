@@ -32,6 +32,7 @@ import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dlaService,dla,dlaService,x
 arcpy.AddMessage("Data Assistant")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
+continue_on_error = arcpy.GetParameterAsText(2) # boolean check to see if xml should continue or not on error
 _outParam = 1
 _useReplaceSettings = False # change this from a calling script to make this script replace data.
 
@@ -39,13 +40,13 @@ _chunkSize = 100
 
 def main(argv = None):
     # this approach makes it easier to call publish from other python scripts with using GP tool method
-    publish(xmlFileNames)
+    publish(xmlFileNames, continue_on_error)
 
-def publish(xmlFileNames):
+def publish(xmlFileNames, continue_on_error):
     # function called from main or from another script, performs the data update processing
     global _useReplaceSettings
     dla._errCount = 0
-
+    dla.addMessage("CONTINUE ON ERROR SET TO: "+ str(continue_on_error))
     arcpy.SetProgressor("default","Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")
     xmlFiles = xmlFileNames.split(";")
@@ -65,7 +66,6 @@ def publish(xmlFileNames):
         source = dla.getDatasetPath(xmlDoc,"Source")
         target = dla.getDatasetPath(xmlDoc,"Target")
         targetName = dla.getDatasetName(target)
-        targetName = arcpy.ValidateTableName(targetName)
         dla.addMessage(source)
         dla.addMessage(target)
 
@@ -115,9 +115,12 @@ def publish(xmlFileNames):
                     msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
                 dla.addError(msg)
                 print(msg)
-                return
+                if continue_on_error:
+                    continue
+                else:
+                    return
             else:
-                res = dlaFieldCalculator.calculate(xmlFile,dla.workspace,targetName,False)
+                res = dlaFieldCalculator.calculate(xmlFile,dla.workspace,targetName,False, continue_on_error)
                 if res == True:
                     dlaTable = dla.getTempTable(targetName)
                     res = doPublish(xmlDoc,dlaTable,target,_useReplaceSettings)
@@ -162,11 +165,11 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
         # logic change - if not replace field settings then only append
         if expr != '' and useReplaceSettings == True:
             if dla.deleteRows(target,expr) == True:
-                success = dla.appendRows(dlaTable,target,expr)
+                success = dla.appendRows(dlaTable,target,expr,continue_on_error)
             else:
                 success = False
         else:
-            success = dla.appendRows(dlaTable,target,'')
+            success = dla.appendRows(dlaTable,target,'',continue_on_error)
 
     if currGlobalIDs != arcpy.env.preserveGlobalIds:
         arcpy.env.preserveGlobalIds = currGlobalIDs

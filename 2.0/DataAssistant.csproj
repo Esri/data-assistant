@@ -106,10 +106,6 @@
     <Compile Include="..\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="DomainSettings.xaml.cs">
-      <DependentUpon>DomainSettings.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="DomainSettingsVM.cs" />
     <Compile Include="Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -261,10 +257,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="..\Shared\Dockpane2Settings.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="DomainSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

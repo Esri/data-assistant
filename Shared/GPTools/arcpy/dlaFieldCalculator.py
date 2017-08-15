@@ -272,7 +272,6 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                     error_value = row[names.index(error_field[0])]
                     error = "{} Value: {}".format(error, error_value)
                 dla.addError(error)
-                updateError = True
                 if True:  # Potentially worth adding a GP parameter to let you continue on error as opposed to quitting early
                     sys.exit(1)
 
@@ -293,8 +292,7 @@ def setFieldValues(table,fields,names,ftypes,lengths):
         # if row != None:
         #     printRow(row,names)
         #dla.showTraceback()
-        if updateError is None:
-            dla.addError(traceback.format_exc())
+        dla.addError(traceback.format_exc())
 
     finally:
         del updateCursor

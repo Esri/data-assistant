@@ -58,7 +58,7 @@ namespace DataAssistant
             grid.Items.Clear();
             object obj = Method4Combo;
             ComboBox combo = obj as ComboBox;
-            string val = combo.SelectionBoxItem as string;
+            string val = Method4Combo.Items[Method4Combo.SelectedIndex].ToString().Split(':').Last().Trim();
             string targName = getTargetFieldName();
             string attrName = getSourceFieldName();
             if (_datarows != null)
@@ -213,9 +213,7 @@ namespace DataAssistant
 
         private void Method10Preview_Click()
         {
-            string fname = getSourceFieldName();
-            string val = "'" + Method102Value.Text + "' if '" + fname + "' " + Method10Value.Text + " '" + Method101Value.Text + "' else '" + Method103Value.Text + "'";
-            setPreviewRows(val);
+            setConditionalVal(getSourceFieldName());
         }
 
         private void Method11Preview_Click()
@@ -429,6 +427,104 @@ namespace DataAssistant
                 }
             }
         }
+        private void setConditionalVal(string attrName)
+        {
+            DataGrid grid = PreviewGrid;
+            grid.Items.Clear();
+            string targName = getTargetFieldName();
+            if (_datarows != null)
+            {
+
+                for (int i = 0; i < _datarows.Count; i++)
+                {
+                    string textval = "";
+                    try
+                    {
+                        if (attrName == null)
+                            textval = targName + "=None";
+                        else
+                        {
+                            System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName];
+                            if (att != null)
+                            {
+                                try
+                                {
+                                    textval = att.InnerText;
+                                    var ifValue = Method101Value.Text;
+                                    var thenValue = Method102Value.Text;
+                                    string oper = Method10Value.Items[Method10Value.SelectedIndex].ToString().Split(':').Last().Trim();
+                                    var elseValue = Method103Value.Text;
+
+                                    bool found = false;
+                                    decimal numSource, numTarget;
+                                    bool canConvert1 = decimal.TryParse(att.InnerText, out numSource);
+                                    bool canConvert2 = decimal.TryParse(ifValue, out numTarget);
+                                    switch (oper)
+                                    {
+                                        case "==":
+                                            if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            else if (att.InnerText == ifValue)
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            break;
+                                        case "!=":
+                                            if ((canConvert1 && canConvert2) && !numSource.Equals(numTarget))
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            else if (att.InnerText != ifValue)
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            break;
+                                        case "<":
+                                            if ((canConvert1 && canConvert2) && numSource < numTarget)
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            else if (String.Compare(textval,ifValue) < 0)
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            break;
+                                        case ">":
+                                            if ((canConvert1 && canConvert2) && numSource > numTarget)
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            else if (String.Compare(textval, ifValue) > 0)
+                                            {
+                                                textval = thenValue;
+                                                found = true;
+                                            }
+                                            break;
+                                    }
+                                    if (elseValue != "" && elseValue != null && !found)
+                                    {
+                                        textval = elseValue;
+                                    }
+                                    textval = targName + "=" + textval;
+                                }
+                                catch { textval = targName + "=" + "None"; }
+                            }
+                        }
+                    }
+                    catch { textval = targName + "=" + "None"; }
+                    grid.Items.Add(new PreviewRow() { Value = textval });
+                }
+            }
+        }
 
         private void setPreviewDomainMapRows(string attrName)
         {
@@ -464,10 +560,14 @@ namespace DataAssistant
                                         if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
                                         {
                                             textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                            if (textval == "(None)")
+                                                textval = att.InnerText.ToString(); // presents a more honest display of how the mapping would be.
                                         }
                                         else if (att.InnerText == row.Source[row.SourceSelectedItem].Id)
                                         {
                                             textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
+                                            if (textval == "(None)")
+                                                textval = att.InnerText.ToString(); // presents a more honest display of how the mapping would be.
                                         }
                                     }
                                     textval = targName + "=" + textval;

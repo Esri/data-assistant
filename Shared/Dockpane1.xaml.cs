@@ -490,23 +490,11 @@ namespace DataAssistant
 
             return num;
         }
-        private void setApplyEnabled()
-        {
-            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
-            {
-                if (getFieldIsEnabled() == "true")
-                    MethodPanelApply.IsEnabled = true;
-                else
-                    MethodPanelApply.IsEnabled = false;
-
-            }
-        }
         private int setFieldSelectionValues(int methodnum)
         {
             comboMethod.SelectedIndex = methodnum;
-            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
+            if (FieldGrid != null && FieldGrid.IsInitialized)
             {
-                setApplyEnabled();
                 PreviewGrid.Visibility = Visibility.Collapsed;
             }
 
@@ -783,7 +771,7 @@ namespace DataAssistant
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this._skipSelectionChanged || MethodPanelApply == null || !MethodPanelApply.IsInitialized)
+            if (this._skipSelectionChanged || FieldGrid == null || !FieldGrid.IsInitialized)
             {
                 return;
             }
@@ -794,9 +782,9 @@ namespace DataAssistant
                 //setPreviewValues(false);
                 PreviewGrid.Visibility = Visibility.Collapsed;
                 _methodnum = comboMethod.SelectedIndex;
-                if (MethodPanelApply != null)
-                    setApplyEnabled();
-                    //MethodPanelApply.IsEnabled = true;
+                //MethodPanelApply.IsEnabled = true;
+                if(Method0 != null)
+                    MethodPanelApply_Click(sender, e);
             }
         }
 
@@ -861,6 +849,7 @@ namespace DataAssistant
         private void Method5ClearAll_Click(object sender, RoutedEventArgs e)
         {
             setAllConcat(false,5);
+            MethodPanelApply_Click(sender, e);
         }
 
         private void ConcatAll_Click(object sender, RoutedEventArgs e)
@@ -900,8 +889,7 @@ namespace DataAssistant
             CheckBox check = sender as CheckBox;
             if (Method5Grid.SelectedIndex == -1)
                 return;
-
-            if(check != null)
+            if (check != null)
             {
                 for (int i = 0; i < Method5Grid.Items.Count; i++)
                 {
@@ -932,23 +920,24 @@ namespace DataAssistant
                         }
                     }
                 }
-
+                MethodPanelApply_Click(sender, e);
             }
         }
 
         private void Method3Target_TextChanged(object sender, TextChangedEventArgs e)
         {
             Method3TextChanged(sender, "Target");
+            MethodPanelApply_Click(sender, e);
         }
         private void Method3Source_TextChanged(object sender, TextChangedEventArgs e)
         {
             Method3TextChanged(sender,"Source");
+            MethodPanelApply_Click(sender, e);
         }
         private void Method3TextChanged(object sender,string sourcetarget)
         {
             TextBox txt = sender as TextBox;
-
-            if(Method3Grid.SelectedIndex == -1)
+            if (Method3Grid.SelectedIndex == -1)
                 return;
 
             if (txt != null)
@@ -980,7 +969,9 @@ namespace DataAssistant
             {
                 dlg.Title = "Select Source-Configuration File";
                 dlg.MultiSelect = false;
-                bool? result = dlg.ShowDialog();
+                //ideally would like to filter only XML filess here, however
+                //dlg.Filter only accepts ArcGIS.Dekstop.Catalog.ItemFilters objects which do not specify an xml filter
+                bool ? result = dlg.ShowDialog();
                 if (result == true)
                 {
                     IEnumerable<Item> items = dlg.Items;
@@ -1036,11 +1027,6 @@ namespace DataAssistant
                     //setXmlFileName(txt.Text); REMOVED 7/25/2017. Seems redundant as it is immediatley called within loadFile
                     loadFile(txt.Text);
                 }
-                else
-                {
-                    txt.Background = Brushes.Maroon;
-                    txt.ToolTip = "Invalid File Path";
-                }
             }
             else
             {
@@ -1071,21 +1057,30 @@ namespace DataAssistant
         private void ValueMapRemove_Click(object sender, RoutedEventArgs e)
         {
             if (Method3Grid.SelectedIndex > -1 && Method3Grid.Items.Count > 0)
+            {
                 Method3Grid.Items.RemoveAt(Method3Grid.SelectedIndex);
+            }
         }
-
+        
         private void Method5Value_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
             if (txt.Text.IndexOf(" ") > -1)
+            {
                 txt.Text = txt.Text.Replace(" ", _spaceVal);
-
+            }
+            if(Method6 != null)
+                MethodPanelApply_Click(sender, e);
         }
         private void Method91Value_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
             if (txt.Text.IndexOf(" ") > -1)
+            {
                 txt.Text = txt.Text.Replace(" ", _spaceVal);
+            }
+            if (Method10 != null)
+                MethodPanelApply_Click(sender, e);
         }
 
         private void SourceField_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1328,6 +1323,18 @@ namespace DataAssistant
                 loadFile(_filename);
             }
 
+        }
+
+        private void Method4Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (Method5 != null)
+                MethodPanelApply_Click(sender, e);
+        }
+
+        private void Method92Value_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Method10 != null)
+                MethodPanelApply_Click(sender, e);
         }
     }
 }

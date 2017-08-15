@@ -205,9 +205,9 @@ namespace DataAssistant
                     System.Xml.XmlNode node = nodes[0].LastChild.SelectSingleNode("ChangeCase");
                     trimNodes(nodes, 3);
                     if (node != null)
-                        node.InnerText = Method4Combo.Text;
+                        node.InnerText = Method4Combo.Items[Method4Combo.SelectedIndex].ToString().Split(':').Last().Trim(); //Gets the upcoming text value if called from the repsective SelectionChanged Event
                     else
-                        addNode(nodes, getMethodVal(), Method4Combo.Text);
+                        addNode(nodes, getMethodVal(), Method4Combo.Items[Method4Combo.SelectedIndex].ToString().Split(':').Last().Trim());  //Gets the upcoming text value if called from the repsective SelectionChanged Event
                     saveFieldGrid();
                 }
                 catch { }
@@ -362,6 +362,12 @@ namespace DataAssistant
         {
             // ConditionalValue
             System.Xml.XmlNodeList nodes = getFieldNodes(this.FieldGrid.SelectedIndex + 1);
+            int i;
+            if (Method10Value.SelectedIndex == -1)
+                i = 0;
+            else
+                i = Method10Value.SelectedIndex;
+            var oper = Method10Value.Items[i].ToString().Split(':').Last().Trim();  //Gets the upcoming text value if called from the repsective SelectionChanged Event
             if (nodes != null)
             {
                 try
@@ -372,7 +378,7 @@ namespace DataAssistant
                     if (node != null)
                         node.InnerText = Method10Value.Text;
                     else
-                        addNode(nodes, "Oper", Method10Value.Text);
+                        addNode(nodes, "Oper", oper);
 
                     node = nodes[0].LastChild.SelectSingleNode("If");
                     if (node != null)

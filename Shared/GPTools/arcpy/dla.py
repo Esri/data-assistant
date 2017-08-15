@@ -517,7 +517,7 @@ def addDlaField(table,targetName,field,attrs,ftype,flength):
             tupper = targetName.upper()
             for nm in attrs:
                 nupper = nm.upper()
-                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName and nupper != 'GLOBALID': # if case insensitive match, note GlobalID and others cannot be renamed
+                if tupper == nupper and nupper not in _ignoreFields and nm != _noneFieldName and ftype.upper() != 'GLOBALID': # if case insensitive match, note GlobalID and others cannot be renamed
                     nm2 = nm + "_1"
                     retcode = arcpy.AlterField_management(table,nm,nm2)
                     retcode = arcpy.AlterField_management(table,nm2,targetName)
@@ -539,6 +539,8 @@ def addField(table,fieldName,fieldType,fieldLength):
     retcode = False
     if fieldLength == None:
         fieldLength = ""
+    if fieldType.lower() == 'globalid':
+        fieldType = 'GUID'
     arcpy.AddField_management(table, fieldName, fieldType,fieldLength)
     retcode = True
 
@@ -757,7 +759,7 @@ def getDatasetName(path):
         fullname = path[path.rfind(os.sep)+1:]
     trimname = baseName(fullname)
     name = repairName(trimname)
-
+    name = arcpy.ValidateTableName(name)
     return name
 
 def setProject(xmlfile,projectFilePath):

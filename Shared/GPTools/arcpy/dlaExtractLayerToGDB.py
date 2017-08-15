@@ -97,6 +97,7 @@ def extract(xmlFileName, rowLimit, workspace, source, target, datasetType):
     except:
         dla.addError("A Fatal Error occurred")
         dla.showTraceback()
+        dla.addError(traceback.format_exc())
         success = False
     finally:
         arcpy.ResetProgressor()
@@ -144,13 +145,14 @@ def exportDataset(xmlDoc, source, workspace, targetName, rowLimit, datasetType):
         dla.addError("Failed to extract " + sourceName + ", Nothing to export")
     else:
         arcpy.env.overwriteOutput = True
+        arcpy.env.maintainAttachments = False
         ds = workspace + os.sep + targetName
         currentPreserveGlobalIDs = arcpy.env.preserveGlobalIds
         if dla.processGlobalIds(xmlDoc):  # both datasets have globalids in the correct workspace types
             arcpy.env.preserveGlobalIds = True  # try to preserve
             dla.addMessage("Attempting to preserve GlobalIDs")
         else:
-            arcpy.env.preserveGlobalIds = True  # don't try to preserve
+            arcpy.env.preserveGlobalIds = False  # don't try to preserve
             dla.addMessage("Unable to copy Global ID to Global ID")
         if isTable:
             arcpy.TableToTable_conversion(in_rows=view, out_path=workspace, out_name=targetName)
@@ -164,6 +166,7 @@ def exportDataset(xmlDoc, source, workspace, targetName, rowLimit, datasetType):
                 transformations = arcpy.ListTransformations(sourceRef, targetRef)
                 transformations = ";".join(transformations)  # concat the values - format change for setting the values.
                 arcpy.env.geographicTransformations = transformations
+
 
             arcpy.FeatureClassToFeatureClass_conversion(in_features=view, out_path=workspace,
                                                         out_name=targetName)

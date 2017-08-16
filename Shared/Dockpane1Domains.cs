@@ -34,7 +34,6 @@ namespace DataAssistant
     /// </summary>
     public partial class Dockpane1View : UserControl
     {
-
         private void setDomainMapValues(int combonum, string nodename)
         {
             if (FieldGrid.SelectedIndex == -1)

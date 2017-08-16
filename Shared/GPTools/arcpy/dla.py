@@ -27,6 +27,7 @@ Generally functions return data or a True/False result depending on the situatio
 import sys,os,traceback,xml.dom.minidom,time,datetime,re,gc,arcpy
 
 import json, urllib
+import pathlib
 import urllib.parse as parse
 import urllib.request as request
 from xml.dom.minidom import Document
@@ -870,7 +871,7 @@ def getMapLayer(layerName):
 
     return layer
 
-def getLayerPath(layer):
+def getLayerPath(layer, xmlFileName):
     # get the source data path for a layer
     pth = ''
 
@@ -883,7 +884,9 @@ def getLayerPath(layer):
             #pth = layer.dataSource
             #addMessage("Used data source property")
         try:
-            layer_path = arcpy.SaveToLayerFile_management(layer.name,str(layer.name + ".lyrx")).getOutput(0)
+            xmlpath = str(pathlib.Path(xmlFileName).parent.absolute())
+            layer_path = arcpy.SaveToLayerFile_management(layer.name,
+                                                          str(xmlpath + "\\"+ layer.name + ".lyrx")).getOutput(0)
             pth = layer_path
         except:
             addError(traceback.format_exc)

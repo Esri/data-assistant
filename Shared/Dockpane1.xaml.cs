@@ -61,9 +61,10 @@ namespace DataAssistant
             // set to default/current value if null
             if(fname != null)
                 _filename = fname;
-            if (this.FileName.Text != _filename)
+            if ((String)this.FileName.ToolTip != _filename)
             {
-                this.FileName.Text = _filename;
+                this.FileName.ToolTip = _filename;
+                this.FileName.Text = _filename.Split('\\').Last();
                 copyXml(_filename,_revertname);
             }
         }
@@ -175,13 +176,19 @@ namespace DataAssistant
             if (node == null)
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Source is missing from the document.");
             else
-                SourceLayer.Text = node.InnerText;
+            {
+                SourceLayer.ToolTip = node.InnerText;
+                SourceLayer.Text = node.InnerText.Split('\\').Last();
+            }
 
             node = _xml.SelectSingleNode("//Datasets/Target");
             if (node == null)
                 ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("There appears to be an issue in your Xml document, required element Datasets/Target is missing from the document.");
             else
-                TargetLayer.Text = node.InnerText;
+            {
+                TargetLayer.ToolTip = node.InnerText;
+                TargetLayer.Text = node.InnerText.Split('\\').Last();
+            }
 
             setXmlDataProvider(ReplaceField, "//TargetField/@Name");
             System.Xml.XmlNodeList nodes = _xml.SelectNodes("//Datasets/ReplaceBy");
@@ -483,23 +490,11 @@ namespace DataAssistant
 
             return num;
         }
-        private void setApplyEnabled()
-        {
-            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
-            {
-                if (getFieldIsEnabled() == "true")
-                    MethodPanelApply.IsEnabled = true;
-                else
-                    MethodPanelApply.IsEnabled = false;
-
-            }
-        }
         private int setFieldSelectionValues(int methodnum)
         {
             comboMethod.SelectedIndex = methodnum;
-            if (MethodPanelApply != null && MethodPanelApply.IsInitialized)
+            if (FieldGrid != null && FieldGrid.IsInitialized)
             {
-                setApplyEnabled();
                 PreviewGrid.Visibility = Visibility.Collapsed;
             }
 
@@ -776,7 +771,7 @@ namespace DataAssistant
         
         private void comboMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this._skipSelectionChanged || MethodPanelApply == null || !MethodPanelApply.IsInitialized)
+            if (this._skipSelectionChanged || FieldGrid == null || !FieldGrid.IsInitialized)
             {
                 return;
             }
@@ -787,9 +782,9 @@ namespace DataAssistant
                 //setPreviewValues(false);
                 PreviewGrid.Visibility = Visibility.Collapsed;
                 _methodnum = comboMethod.SelectedIndex;
-                if (MethodPanelApply != null)
-                    setApplyEnabled();
-                    //MethodPanelApply.IsEnabled = true;
+                //MethodPanelApply.IsEnabled = true;
+                if(Method0 != null)
+                    MethodPanelApply_Click(sender, e);
             }
         }
 
@@ -854,6 +849,7 @@ namespace DataAssistant
         private void Method5ClearAll_Click(object sender, RoutedEventArgs e)
         {
             setAllConcat(false,5);
+            MethodPanelApply_Click(sender, e);
         }
 
         private void ConcatAll_Click(object sender, RoutedEventArgs e)
@@ -893,8 +889,7 @@ namespace DataAssistant
             CheckBox check = sender as CheckBox;
             if (Method5Grid.SelectedIndex == -1)
                 return;
-
-            if(check != null)
+            if (check != null)
             {
                 for (int i = 0; i < Method5Grid.Items.Count; i++)
                 {
@@ -925,23 +920,24 @@ namespace DataAssistant
                         }
                     }
                 }
-
+                MethodPanelApply_Click(sender, e);
             }
         }
 
         private void Method3Target_TextChanged(object sender, TextChangedEventArgs e)
         {
             Method3TextChanged(sender, "Target");
+            MethodPanelApply_Click(sender, e);
         }
         private void Method3Source_TextChanged(object sender, TextChangedEventArgs e)
         {
             Method3TextChanged(sender,"Source");
+            MethodPanelApply_Click(sender, e);
         }
         private void Method3TextChanged(object sender,string sourcetarget)
         {
             TextBox txt = sender as TextBox;
-
-            if(Method3Grid.SelectedIndex == -1)
+            if (Method3Grid.SelectedIndex == -1)
                 return;
 
             if (txt != null)
@@ -970,7 +966,7 @@ namespace DataAssistant
         {
             using (var dlg = new System.Windows.Forms.OpenFileDialog())
             {
-                dlg.Filter = "Data Loading Assistant Xml files|*.xml";//.Description = "Browse for a Source-Target File (.xml)";
+                dlg.Filter = "Data Assistant XML files|*.xml";//.Description = "Browse for a Source-Target File (.xml)";
                 dlg.Multiselect = false;
                 System.Windows.Forms.DialogResult result = dlg.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
@@ -984,16 +980,64 @@ namespace DataAssistant
             }
 
         }
-
-        private void FileName_TextChanged(object sender, TextChangedEventArgs e)
+        private void FileName_GotFocus(object sender, RoutedEventArgs e)
         {
             TextBox txt = sender as TextBox;
-            if (getXmlFileName() != txt.Text)
+            if ((String)txt.ToolTip != "")
+            {
+                txt.Text = (String)txt.ToolTip;
+            }
+        }
+
+        private void FileName_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            FileName_TextChanged(sender);
+            if(txt.Text == (String)txt.ToolTip)
+            {
+                //If a user engages the textbox but does not make changes, this will revert text to shortened version
+                txt.Text = txt.Text.Split('\\').Last();
+            }
+        }
+
+        private void FileName_Drop(object sender, DragEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            txt.Text = files[0];
+            FileName_TextChanged(sender);
+            if (txt.Text == (String)txt.ToolTip)
+            {
+                //Sometimes does not shorten after dragging in file
+                txt.Text = txt.Text.Split('\\').Last();
+            }
+        }
+        private void FileName_TextChanged(object sender)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt.ToolTip == null)
             {
                 if (checkXmlFileName(txt.Text))
                 {
-                    setXmlFileName(txt.Text);
+                    //setXmlFileName(txt.Text); REMOVED 7/25/2017. Seems redundant as it is immediatley called within loadFile
                     loadFile(txt.Text);
+                }
+            }
+            else
+            {
+                if (txt.ToolTip.ToString() != txt.Text)
+                {
+                    if (!txt.ToolTip.ToString().Split('\\').Contains(txt.Text))
+                    {
+                        if (getXmlFileName() != txt.Text)
+                        {
+                            if (checkXmlFileName(txt.Text))
+                            {
+                                //setXmlFileName(txt.Text); REMOVED 7/25/2017. Seems redundant as it is immediatley called within loadFile
+                                loadFile(txt.Text);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1008,21 +1052,30 @@ namespace DataAssistant
         private void ValueMapRemove_Click(object sender, RoutedEventArgs e)
         {
             if (Method3Grid.SelectedIndex > -1 && Method3Grid.Items.Count > 0)
+            {
                 Method3Grid.Items.RemoveAt(Method3Grid.SelectedIndex);
+            }
         }
-
+        
         private void Method5Value_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
             if (txt.Text.IndexOf(" ") > -1)
+            {
                 txt.Text = txt.Text.Replace(" ", _spaceVal);
-
+            }
+            if(Method6 != null)
+                MethodPanelApply_Click(sender, e);
         }
         private void Method91Value_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txt = sender as TextBox;
             if (txt.Text.IndexOf(" ") > -1)
+            {
                 txt.Text = txt.Text.Replace(" ", _spaceVal);
+            }
+            if (Method10 != null)
+                MethodPanelApply_Click(sender, e);
         }
 
         private void SourceField_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1105,9 +1158,9 @@ namespace DataAssistant
         {
             TextBox txt = sender as TextBox;
             System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Target");
-            if (node != null && node.InnerText != txt.Text)
+            if (node != null && node.InnerText != txt.ToolTip.ToString())
             {
-                node.InnerText = txt.Text;
+                node.InnerText = txt.ToolTip.ToString();
                 saveFieldGrid();
             }
         }
@@ -1118,11 +1171,17 @@ namespace DataAssistant
             if (txt != null)
             {
                 System.Xml.XmlNode node = _xml.SelectSingleNode("//Datasets/Source");
-                if (node != null && node.InnerText != txt.Text)
+                if (txt.Text != txt.ToolTip.ToString())
                 {
-                    node.InnerText = txt.Text;
-                    saveFieldGrid();
-                }
+                    if(!txt.ToolTip.ToString().Split('\\').Contains(txt.Text))
+                    {
+                        if (node != null && node.InnerText != txt.Text) // this is checking if you added a different source to then write to the xml
+                        {
+                            node.InnerText = txt.Text;
+                            saveFieldGrid();
+                        }
+                    }
+                } 
             }
         }
 
@@ -1259,6 +1318,17 @@ namespace DataAssistant
                 loadFile(_filename);
             }
 
+        }
+        private void Method4Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (Method5 != null)
+                MethodPanelApply_Click(sender, e);
+        }
+
+        private void Method92Value_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Method10 != null)
+                MethodPanelApply_Click(sender, e);
         }
     }
 }

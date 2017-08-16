@@ -54,8 +54,8 @@ namespace DataAssistant
             if (tValueNodes.Count > 0)
             {
                 // only need to set this now if something present in config file, false for resetUI will call method to load from config.
-                setDomainValues(getDatasetPath(SourceLayer.Text), getSourceFieldName(), _source, false);
-                setDomainValues(getDatasetPath(TargetLayer.Text), getTargetFieldName(), _target, false);
+                setDomainValues(getDatasetPath(SourceLayer.ToolTip.ToString()), getSourceFieldName(), _source, false);
+                setDomainValues(getDatasetPath(TargetLayer.ToolTip.ToString()), getTargetFieldName(), _target, false);
             }
 
         }
@@ -63,12 +63,11 @@ namespace DataAssistant
         private void LoadDomains_Click(object sender, RoutedEventArgs e)
         {
             // Need to get the domain values from the target dataset - NB do domain but could also be based on values if no domain
-
-            if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                setDomainValues(getDatasetPath(this.TargetLayer.Text), getTargetFieldName(), _target, true);
-                setDomainValues(getDatasetPath(this.SourceLayer.Text), getSourceFieldName(), _source, true);
-            }
+            //if (ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show("Load Domains from source datasets and replace current values?", "Replace Domains", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            //{
+                setDomainValues(getDatasetPath(this.TargetLayer.ToolTip.ToString()), getTargetFieldName(), _target, true);
+                setDomainValues(getDatasetPath(this.SourceLayer.ToolTip.ToString()), getSourceFieldName(), _source, true);
+            //}
         }
 
         public void setDomainValues(string dataset, string fieldName, string sourceTarget, bool resetUI)
@@ -200,8 +199,11 @@ namespace DataAssistant
                     tTooltip = targetnode.InnerText;
                 for (int t = 0; t < _domainTargetValues.Count; t++)
                 {
-                    if (Equals(_domainTargetValues[t].Id, tVal))
+                    if (Equals(_domainTargetValues[t].Tooltip, tTooltip))
+                    {
                         selectedT = t;
+                        break;
+                    }
                 }
                 grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selectedS, SourceTooltip = sTooltip, TargetTooltip = tTooltip, Target = _domainTargetValues, TargetSelectedItem = selectedT });
             }
@@ -222,22 +224,22 @@ namespace DataAssistant
             else if (sourceTarget == _target)
                 _domainTargetValues = domainValues;
 
-            if (_domainTargetValues != null && _domainTargetValues.Count > 0)
+            //Following code loads the source side of the domains first, leaving target None until selected otherwise
+            if (_domainSourceValues != null && _domainSourceValues.Count > 0)
             {
                 Method11Grid.Items.Clear();
-                for (int i = 0; i < _domainTargetValues.Count; i++)
+                for (int i = 0; i < _domainSourceValues.Count; i++)
                 {
-                    ComboData domainValue = _domainTargetValues[i];
+                    ComboData domainValue = _domainSourceValues[i];
                     if (domainValue.Id != _noneField) // don't want to create a row for None by default
                     {
                         int selected = 0; // use the default None here...
-                        for (int s = 0; s < _domainSourceValues.Count; s++)
+                        for (int s = 0; s < _domainTargetValues.Count; s++)
                         {
-                            if (Equals(_domainSourceValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
+                            if (Equals(_domainTargetValues[s].Tooltip, domainValue.Tooltip)) // tooltip includes both coded value and description, only do initial match if identical values
                                 selected = s;
                         }
-                        // used to always set source selected to 0 - None
-                        Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = selected, SourceTooltip = "None", Target = _domainTargetValues, TargetSelectedItem = i, TargetTooltip = getDomainTooltip(domainValue.Id, domainValue.Value) });
+                        Method11Grid.Items.Add(new DomainMapRow() { Source = _domainSourceValues, SourceSelectedItem = i, SourceTooltip = getDomainTooltip(domainValue.Id, domainValue.Value), Target = _domainTargetValues, TargetSelectedItem = selected, TargetTooltip = "None" });
                     }
                 }
             }
@@ -312,6 +314,28 @@ namespace DataAssistant
                                     }
                                     if (!found)
                                         domainValues.Add(item);
+                                }
+                            }
+                        }
+                    }
+                    if (domainValues.Count == 1)
+                    {
+                        Domain field_domain = thefield.GetDomain(); //this tests that if the domain wasn't tied to a subtype, there still might be one on the field itself
+                        if (field_domain != null)
+                        {
+                            string fdname = field_domain.GetName();
+                            if (field_domain is CodedValueDomain && !domainNames.Contains(fdname))
+                            {
+                                domainNames.Add(fdname);
+                                var cvd = field_domain as CodedValueDomain;
+                                SortedList<object, string> cvp = cvd.GetCodedValuePairs();
+                                for (int i = 0; i < cvp.Count; i++)
+                                {
+                                    item = new ComboData();
+                                    item.Id = cvp.ElementAt(i).Key.ToString();
+                                    item.Value = cvp.ElementAt(i).Value.ToString();
+                                    item.Tooltip = getDomainTooltip(item.Id, item.Value) + "-" + fdname;
+                                    domainValues.Add(item);
                                 }
                             }
                         }
@@ -442,6 +466,7 @@ namespace DataAssistant
                         row.SourceSelectedItem = cb.SelectedIndex;
                         row.SourceTooltip = rowSource.Tooltip;
                         cb.ToolTip = rowSource.Tooltip;
+                        MethodPanelApply_Click(sender, e);
                     }
                 }
             }
@@ -468,6 +493,7 @@ namespace DataAssistant
                         row.TargetSelectedItem = cb.SelectedIndex;
                         row.TargetTooltip = rowSource.Tooltip;
                         cb.ToolTip = rowSource.Tooltip;
+                        MethodPanelApply_Click(sender, e);
                     }
                 }
             }
@@ -485,18 +511,6 @@ namespace DataAssistant
             if (Method11Grid.SelectedIndex > -1 && Method11Grid.Items.Count > 0)
                 Method11Grid.Items.RemoveAt(Method11Grid.SelectedIndex);
         }
-
-
-        private void Method11Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-
-
-
-
-
     }
 }
 

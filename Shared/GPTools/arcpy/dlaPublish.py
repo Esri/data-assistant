@@ -65,6 +65,7 @@ def publish(xmlFileNames):
         source = dla.getDatasetPath(xmlDoc,"Source")
         target = dla.getDatasetPath(xmlDoc,"Target")
         targetName = dla.getDatasetName(target)
+        targetName = arcpy.ValidateTableName(targetName)
         dla.addMessage(source)
         dla.addMessage(target)
 

@@ -879,11 +879,17 @@ def getLayerPath(layer):
         addMessage("Used .lyrx filePath as source")
 
     elif isinstance(layer, arcpy._mp.Layer): # map layer as parameter
-        if layer.supports('dataSource'):
-            pth = layer.dataSource
-            addMessage("Used data source property")
-        else:
-            addError("Layer does not support the datasource property.  Please ensure you selected a layer and not a group layer")
+        #if layer.supports('dataSource'):
+            #pth = layer.dataSource
+            #addMessage("Used data source property")
+        try:
+            layer_path = arcpy.SaveToLayerFile_management(layer.name,str(layer.name + ".lyrx")).getOutput(0)
+            pth = layer_path
+        except:
+            addError(traceback.format_exc)
+            addError("Unable to create layer file for " + layer.name)
+        #else:
+        #    addError("Layer does not support the datasource property.  Please ensure you selected a layer and not a group layer")
 
     elif isinstance(layer, str) and layer.lower().endswith(_lyrx):
         layer = arcpy.mp.LayerFile(layer)

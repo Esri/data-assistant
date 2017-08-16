@@ -158,7 +158,7 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
     currGlobalIDs = arcpy.env.preserveGlobalIds
     if dla.processGlobalIds(xmlDoc) and currGlobalIDs == False: # both datasets have globalids in the correct workspace types
         arcpy.env.preserveGlobalIds = True
-    target = dla.getLayerPath(target)
+    target = dla.getNodeValue(xmlDoc,"Target")
     if target.startswith("http") == True:
         success = dlaService.doPublishHttp(dlaTable,target,expr,useReplaceSettings)
     else:

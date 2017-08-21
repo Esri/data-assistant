@@ -407,7 +407,7 @@
                                 <Label DockPanel.Dock="Left" Padding="0" Content="Domain Mapping" Foreground="{DynamicResource Esri_Gray155}"/>
                             </DockPanel>
                             <DataGrid x:Name="Method11Grid" MaxHeight="150" HorizontalAlignment="Stretch" Margin="0,4,0,0" AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
-                                ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionChanged="Method11Grid_SelectionChanged" >
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" >
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn x:Name="Method11Sources" Header="Source Domain Values" Width="*" CanUserResize="True" CanUserSort="True" >
                                         <DataGridTemplateColumn.CellTemplate>

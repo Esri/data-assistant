@@ -18,31 +18,17 @@
 # dlaFieldCalculator.py
 # ---------------------------------------------------------------------------
 
-import os, sys, traceback, time, arcpy,  dla, re
 import collections
+import re
+import sys
+import traceback
 
-xmlFileName = arcpy.GetParameterAsText(0) # xml file name as a parameter
-try:
-    dla.workspace = arcpy.GetParameterAsText(1) # scratch Geodatabase
-except:
-    dla.workspace = arcpy.env.scratchGDB
-SUCCESS = 2 # parameter number for output success value
+import arcpy
 
-if dla.workspace == "" or dla.workspace == "#":
-    dla.workspace = arcpy.env.scratchGDB
+from . import dla
 
-dla._errCount = 0
 
-def main(argv = None):
-    xmlDoc = dla.getXmlDoc(xmlFileName)
-    targetName = dla.getTargetName(xmlDoc)
-    success = calculate(xmlFileName,dla.workspace,targetName,False)
-    if success == False:
-        dla.addError("Errors occurred during field calculation")
-    arcpy.SetParameter(SUCCESS, success)
-
-def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
-
+def calculate(xmlFileName, workspace, name, ignore, continue_on_error=True):
     dla.workspace = workspace
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -53,32 +39,29 @@ def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
 
     if not arcpy.Exists(table):
         dla.addError("Feature Class " + table + " does not exist, exiting")
-        arcpy.SetParameter(SUCCESS, False)
-        return
+        return False
     if not arcpy.TestSchemaLock(table):
         dla.addError("Unable to obtain a schema lock for " + table + ", exiting")
-        arcpy.SetParameter(SUCCESS, False)
-        return -1
+        return False
 
     desc = arcpy.Describe(table)
-    fields = dla.getXmlElements(xmlFileName,"Field")
-    sourceFields = dla.getXmlElements(xmlFileName,"SourceField")
-    targetFields = dla.getXmlElements(xmlFileName,"TargetField")
+    fields = dla.getXmlElements(xmlFileName, "Field")
+    sourceFields = dla.getXmlElements(xmlFileName, "SourceField")
+    targetFields = dla.getXmlElements(xmlFileName, "TargetField")
     attrs = [f.name for f in arcpy.ListFields(table)]
     target_values = CaseInsensitiveDict()
 
-    #Fix read into dict, using NM as key
+    # Fix read into dict, using NM as key
     # at this point just getting the list of all target field names/types/lengths
     for target in targetFields:
         nm = target.getAttributeNode("Name").nodeValue
-        target_values[nm] = dict(ftype = target.getAttributeNode("Type").nodeValue,
-                                 flength = target.getAttributeNode("Length").nodeValue)
-
+        target_values[nm] = dict(ftype=target.getAttributeNode("Type").nodeValue,
+                                 flength=target.getAttributeNode("Length").nodeValue)
 
     for field in fields:
         arcpy.env.Workspace = dla.workspace
-        targetName = dla.getNodeValue(field,"TargetName")
-        sourceName = dla.getNodeValue(field,"SourceName")
+        targetName = dla.getNodeValue(field, "TargetName")
+        sourceName = dla.getNodeValue(field, "SourceName")
 
         ftype = "String"
         flength = "50"
@@ -87,44 +70,45 @@ def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
             flength = target_values[targetName]['flength']
 
         # make sure the field exists in the field calculator dataset, this will include all source and target fields.
-        retcode = dla.addDlaField(table,targetName,field,attrs,ftype,flength)
+        retcode = dla.addDlaField(table, targetName, field, attrs, ftype, flength)
         if retcode == False:
             dla.addError("Unable to add field " + targetName + " to database to calculate values, exiting")
 
-    allFields = sourceFields + targetFields # this should be the same as the dataset fields at this point
+    allFields = sourceFields + targetFields  # this should be the same as the dataset fields at this point
     desc = arcpy.Describe(table)
     layerNames = []
     names = []
     ftypes = []
     lengths = []
-    ignore = dla.getIgnoreFieldNames(desc, True) # gdb system fields that will be handled automatically and cannot be calculated
+    ignore = dla.getIgnoreFieldNames(desc,
+                                     True)  # gdb system fields that will be handled automatically and cannot be calculated
     ignore = [nm.upper() for nm in ignore]
 
-    for field in desc.fields: # get the uppercase names for everything that exists in the dataset
+    for field in desc.fields:  # get the uppercase names for everything that exists in the dataset
         if field.name.upper() not in ignore:
             layerNames.append(field.name.upper())
 
-    for field in allFields: # loop through everything that might exist
-        nm = field.getAttributeNode("Name").nodeValue.replace('.','_') #  handle joins and remaining . in field names
+    for field in allFields:  # loop through everything that might exist
+        nm = field.getAttributeNode("Name").nodeValue.replace('.', '_')  # handle joins and remaining . in field names
         if nm != dla._noneFieldName and nm.upper() not in ignore and nm.upper() in layerNames:  # ignore the None and ignore fields and names not in the dataset
             idx = dla.getFieldIndexList(names, nm)
-            if idx is None: # if the name is not already in the list
+            if idx is None:  # if the name is not already in the list
                 names.append(nm)
                 typ = field.getAttributeNode("Type").nodeValue
                 leng = field.getAttributeNode("Length").nodeValue
                 ftypes.append(typ)
                 lengths.append(leng)
 
-            #FIXME : Steve, was not sure why you were capturing an error here, and then doing something # from Steve - was looking for names that actually exist in the dataset and are not gdb system fields. No guarantee Xml matches dataset
-            #try:
-                #names.index(nm)
-            #except:
-                #names.append(nm)
-                #typ = field.getAttributeNode("Type").nodeValue
-                #leng = field.getAttributeNode("Length").nodeValue
-                #ftypes.append(typ)
-                #lengths.append(leng)
-    retVal = setFieldValues(table,fields,names,ftypes,lengths, xmlFileName, continue_on_error)
+                # FIXME : Steve, was not sure why you were capturing an error here, and then doing something # from Steve - was looking for names that actually exist in the dataset and are not gdb system fields. No guarantee Xml matches dataset
+                # try:
+                # names.index(nm)
+                # except:
+                # names.append(nm)
+                # typ = field.getAttributeNode("Type").nodeValue
+                # leng = field.getAttributeNode("Length").nodeValue
+                # ftypes.append(typ)
+                # lengths.append(leng)
+    retVal = setFieldValues(table, fields, names, ftypes, lengths, xmlFileName, continue_on_error)
     if retVal == False:
         success = False
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -135,14 +119,15 @@ def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
         success = True
     return success
 
-def calcValue(row,names,calcString):
+
+def calcValue(row, names, calcString):
     # calculate a value based on source fields and/or other expressions
     outVal = ""
     calcList = calcString.split("|")
     for strVal in calcList:
         if strVal in names:
             try:
-                fidx = dla.getFieldIndexList(names,strVal)
+                fidx = dla.getFieldIndexList(names, strVal)
                 if str(row[fidx]) != row[fidx]:
                     outVal += str(row[fidx])
                 else:
@@ -155,7 +140,7 @@ def calcValue(row,names,calcString):
     if len(calcList) == 1 and outVal == '':
         outVal = calcList[0]
     try:
-        if(outVal != "" and outVal != None):
+        if (outVal != "" and outVal != None):
             outVal = eval(outVal)
     except:
         dla.addMessage("Error evaluating:" + outVal)
@@ -164,18 +149,19 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
-def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_error):
+
+def setFieldValues(table, fields, names, ftypes, lengths, xmlLocation, continue_on_error):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
     row = None
     try:
-        updateCursor = arcpy.da.UpdateCursor(table,names)
+        updateCursor = arcpy.da.UpdateCursor(table, names)
 
         result = arcpy.GetCount_management(table)
         numFeat = int(result.getOutput(0))
         dla.addMessage(table + ", " + str(numFeat) + " features")
         i = 0
-        arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
+        arcpy.SetProgressor("Step", "Calculating " + table + "...", 0, numFeat, getProgressUpdate(numFeat))
         targetfields_dict = dla.getTargetFieldsNode(xmlLocation)
         for row in updateCursor:
             success = True
@@ -186,88 +172,94 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
                 dla.addError("Exceeded max number of rows supported in dla.maxrows: " + str(dla.maxrows))
                 return True
             i = i + 1
-            setProgressor(i,numFeat)
+            setProgressor(i, numFeat)
 
             for field in fields:
                 method = "None"
-                sourceName = dla.getNodeValue(field,"SourceName").replace('.','_')
-                targetName = dla.getNodeValue(field,"TargetName").replace('.','_')
+                sourceName = dla.getNodeValue(field, "SourceName").replace('.', '_')
+                targetName = dla.getNodeValue(field, "TargetName").replace('.', '_')
 
-                targetValue = getTargetValue(row,field,names,sourceName,targetName)
-                sourceValue = getSourceValue(row,names,sourceName,targetName)
-                method = dla.getNodeValue(field,"Method").replace(" ","")
+                targetValue = getTargetValue(row, field, names, sourceName, targetName)
+                sourceValue = getSourceValue(row, names, sourceName, targetName)
+                method = dla.getNodeValue(field, "Method").replace(" ", "")
 
                 try:
-                    fnum = dla.getFieldIndexList(names,targetName)
+                    fnum = dla.getFieldIndexList(names, targetName)
                 except:
-                    fnum = None # defensive check to skip fields that do not exist even though they are listed in Xml
+                    fnum = None  # defensive check to skip fields that do not exist even though they are listed in Xml
 
                 if fnum != None:
                     if method == "None" or (method == "Copy" and sourceName == '(None)'):
                         method = "None"
-                        if targetfields_dict.get(targetName, False).get('defaultValue', False) and targetfields_dict.get(targetName,False).get('Nullable', False):
-                            if targetfields_dict[targetName]['defaultValue'] == "" and targetfields_dict[targetName]['Nullable'] == "False":
-                                nullableErrorMessage = "ERROR: "+targetName + " does not allow for null values and does not have a default value. Please map this field or give it a default value in the target dataset."
-                                dla.addError(nullableErrorMessage)
-                                sys.exit(-1)
-                            else:
-                                val = None
+                        val = None
+                        if targetName in targetfields_dict:
+                            if "Nullable" in targetfields_dict[targetName] and "defaultValue" in targetfields_dict[targetName]:
+                                if targetfields_dict[targetName]['defaultValue'] == "" and \
+                                                targetfields_dict[targetName][
+                                                    'Nullable'] == "False":
+                                    nullable_error_message = "ERROR: " + targetName + " does not allow for null values and\
+                                     does not have a default value. Please map this field or give it a default value in \
+                                     the target dataset."
+                                    dla.addError(nullable_error_message)
+                                    sys.exit(-1)
+                                else:
+                                    val = None
                     elif method == "Copy":
                         val = sourceValue
                     elif method == "DefaultValue":
-                        val = dla.getNodeValue(field,"DefaultValue")
+                        val = dla.getNodeValue(field, "DefaultValue")
                     elif method == "SetValue":
-                        val = dla.getNodeValue(field,"SetValue")
+                        val = dla.getNodeValue(field, "SetValue")
                     elif method == "ValueMap":
-                        val = getValueMap(targetName,sourceValue,field)
+                        val = getValueMap(targetName, sourceValue, field)
                     elif method == "DomainMap":
-                        val = getDomainMap(row,sourceValue,field)
+                        val = getDomainMap(row, sourceValue, field)
                     elif method == "ChangeCase":
-                        case = dla.getNodeValue(field,method)
-                        expression = getChangeCase(sourceValue,case)
-                        val = getExpression(row,names,expression)
+                        case = dla.getNodeValue(field, method)
+                        expression = getChangeCase(sourceValue, case)
+                        val = getExpression(row, names, expression)
                     elif method == "Concatenate":
-                        val = getConcatenate(row,names,field)
+                        val = getConcatenate(row, names, field)
                     elif method == "Left":
-                        chars = dla.getNodeValue(field,"Left")
-                        val = getSubstring(sourceValue,"0",chars)
+                        chars = dla.getNodeValue(field, "Left")
+                        val = getSubstring(sourceValue, "0", chars)
                     elif method == "Right":
-                        chars = dla.getNodeValue(field,"Right")
-                        val = getSubstring(sourceValue,len(str(sourceValue))-int(chars),len(str(sourceValue)))
+                        chars = dla.getNodeValue(field, "Right")
+                        val = getSubstring(sourceValue, len(str(sourceValue)) - int(chars), len(str(sourceValue)))
                     elif method == "Substring":
-                        start = dla.getNodeValue(field,"Start")
-                        length = dla.getNodeValue(field,"Length")
-                        val = getSubstring(sourceValue,start,length)
+                        start = dla.getNodeValue(field, "Start")
+                        length = dla.getNodeValue(field, "Length")
+                        val = getSubstring(sourceValue, start, length)
                     elif method == "Split":
-                        splitter = dla.getNodeValue(field,"SplitAt")
-                        splitter = splitter.replace("(space)"," ")
-                        part = dla.getNodeValue(field,"Part")
-                        val = getSplit(sourceValue,splitter,part)
+                        splitter = dla.getNodeValue(field, "SplitAt")
+                        splitter = splitter.replace("(space)", " ")
+                        part = dla.getNodeValue(field, "Part")
+                        val = getSplit(sourceValue, splitter, part)
                     elif method == "ConditionalValue":
-                        sname = dla.getNodeValue(field,"SourceName")
-                        oper = dla.getNodeValue(field,"Oper")
-                        iif = dla.getNodeValue(field,"If")
+                        sname = dla.getNodeValue(field, "SourceName")
+                        oper = dla.getNodeValue(field, "Oper")
+                        iif = dla.getNodeValue(field, "If")
                         if iif != " " and type(iif) == 'str':
                             for name in names:
                                 if name in iif:
-                                    iif = iif.replace(name,"|"+name+"|")
-                        tthen = dla.getNodeValue(field,"Then")
-                        eelse = dla.getNodeValue(field,"Else")
+                                    iif = iif.replace(name, "|" + name + "|")
+                        tthen = dla.getNodeValue(field, "Then")
+                        eelse = dla.getNodeValue(field, "Else")
                         for name in names:
                             if name in eelse:
-                                eelse = eelse.replace(name,"|"+name+"|")
+                                eelse = eelse.replace(name, "|" + name + "|")
                         expression = "|" + tthen + "| " + " if |" + sname + "| " + oper + " |" + iif + "| else " + eelse
-                        val = getExpression(row,names,expression)
+                        val = getExpression(row, names, expression)
                     elif method == "Expression":
-                        expression = dla.getNodeValue(field,method)
+                        expression = dla.getNodeValue(field, method)
                         for name in names:
-                            expression = expression.replace(name,"|" + name + "|")
-                        val = getExpression(row,names,expression)
+                            expression = expression.replace(name, "|" + name + "|")
+                        val = getExpression(row, names, expression)
                     # set field value
-                    newVal = getValue(ftypes[fnum],lengths[fnum],targetName,targetValue,val)
+                    newVal = getValue(ftypes[fnum], lengths[fnum], targetName, targetValue, val)
                     row[fnum] = newVal
                     if dla.debug == True:
-                        dla.addMessage(targetName + ':' + str(newVal)  + ':' + str(targetValue))
+                        dla.addMessage(targetName + ':' + str(newVal) + ':' + str(targetValue))
             try:
                 # printRow(row,names)
                 updateCursor.updateRow(row)
@@ -285,7 +277,7 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
                 dla._errCount += 1
                 success = False
                 err = "Exception caught: unable to update row"
-                if dla._errCount<200 :
+                if dla._errCount < 200:
                     # printRow(row,names)
                     dla.showTraceback()
                 else:
@@ -298,7 +290,7 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
         err = "Exception caught: unable to update dataset"
         # if row != None:
         #     printRow(row,names)
-        #dla.showTraceback():
+        # dla.showTraceback():
         dla.addError(traceback.format_exc())
 
     finally:
@@ -309,8 +301,8 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
     return success
 
 
-def getSplit(sourceValue,splitter,part):
-    #if sourceValue is None, the try will fail and the function will return None
+def getSplit(sourceValue, splitter, part):
+    # if sourceValue is None, the try will fail and the function will return None
     strVal = None
     try:
         strVal = sourceValue.split(str(splitter))[int(part)]
@@ -319,21 +311,23 @@ def getSplit(sourceValue,splitter,part):
 
     return strVal
 
-def getSubstring(sourceValue,start,chars):
+
+def getSubstring(sourceValue, start, chars):
     if sourceValue is None:
         return None
     strVal = None
     try:
         start = int(start)
         chars = int(chars)
-        strVal = str(sourceValue)[start:chars+start]
+        strVal = str(sourceValue)[start:chars + start]
     except:
         pass
     return strVal
 
-def getChangeCase(sourceValue,case):
-    if sourceValue is None: # Need to check that the value isn't none
-        return None         # Otherwise the script will not complete
+
+def getChangeCase(sourceValue, case):
+    if sourceValue is None:  # Need to check that the value isn't none
+        return None  # Otherwise the script will not complete
     expression = None
     lcase = case.lower()
     if lcase.startswith("upper"):
@@ -348,25 +342,26 @@ def getChangeCase(sourceValue,case):
     return expression
 
 
-def getConcatenate(row,names,field):
+def getConcatenate(row, names, field):
     concatFields = field.getElementsByTagName("cField")
     sep = field.getElementsByTagName("Separator")[0]
     sep = dla.getTextValue(sep)
-    sep = sep.replace("(space)"," ")
+    sep = sep.replace("(space)", " ")
     concat = []
     for cfield in concatFields:
         node = cfield.getElementsByTagName("Name")
         nm = dla.getTextValue(node[0])
-        nameidx = dla.getFieldIndexList(names,nm)
+        nameidx = dla.getFieldIndexList(names, nm)
         if row[nameidx] != None:
             concat.append(str(row[nameidx]))
-    concatStr = concatRepair(concat,sep)
+    concatStr = concatRepair(concat, sep)
     if concatStr == "":
         concatStr = None
     return concatStr
 
-def concatRepair(concat,sep):
-    stripvals = [None,""," "]
+
+def concatRepair(concat, sep):
+    stripvals = [None, "", " "]
     nothing = False
     items = []
     for item in concat:
@@ -376,8 +371,8 @@ def concatRepair(concat,sep):
     concatStr = sep.join(items)
     return concatStr
 
-def getValueMap(targetName,sourceValue,field):
 
+def getValueMap(targetName, sourceValue, field):
     # run value map function for a row
     valueMaps = field.getElementsByTagName("ValueMap")
     newValue = None
@@ -402,7 +397,7 @@ def getValueMap(targetName,sourceValue,field):
                 sourceTest = str(sValue)
                 if sourceTest == '' or sourceTest == 'None':
                     sourceTest = None
-            if sourceValue == sourceTest or sourceValue == sValue: # this will check numeric and non-numeric equivalency for current values in value maps
+            if sourceValue == sourceTest or sourceValue == sValue:  # this will check numeric and non-numeric equivalency for current values in value maps
                 found = True
                 try:
                     newValue = dla.getTextValue(targetValues[i])
@@ -426,8 +421,8 @@ def getValueMap(targetName,sourceValue,field):
             dla.addError(err)
     return newValue
 
-def getDomainMap(row,sourceValue,field):
 
+def getDomainMap(row, sourceValue, field):
     # run domain map function for a row
     valueMaps = field.getElementsByTagName("DomainMap")
     newValue = sourceValue
@@ -447,7 +442,7 @@ def getDomainMap(row,sourceValue,field):
                 sourceTest = str(sValue)
                 if sourceTest == '' or sourceTest == 'None':
                     sourceTest = None
-            if sourceValue == sourceTest or sourceValue == sValue: # this will check numeric and non-numeric equivalency for current values in maps
+            if sourceValue == sourceTest or sourceValue == sValue:  # this will check numeric and non-numeric equivalency for current values in maps
                 found = True
                 try:
                     if dla.getTextValue(targetValues[i]) != "(None)":
@@ -463,13 +458,14 @@ def getDomainMap(row,sourceValue,field):
 
     return newValue
 
-def getExpression(row,names,expression):
-    if expression is None: # If ChangeCase runs into a null sourceValue,
-        return None        # this expression will be None and therefore the result should be None as well
+
+def getExpression(row, names, expression):
+    if expression is None:  # If ChangeCase runs into a null sourceValue,
+        return None  # this expression will be None and therefore the result should be None as well
     calcNew = None
     try:
-        calcNew = calcValue(row,names,expression)
-        #setValue(row,targetName,sourceValue,calcNew,idx)
+        calcNew = calcValue(row, names, expression)
+        # setValue(row,targetName,sourceValue,calcNew,idx)
     except:
         err = "Exception caught: unable to set value for expression=" + expression
         dla.showTraceback()
@@ -478,20 +474,23 @@ def getExpression(row,names,expression):
         dla._errCount += 1
     return calcNew
 
-def setProgressor(i,numFeat):
+
+def setProgressor(i, numFeat):
     if i % getProgressUpdate(numFeat) == 0:
         dla.addMessage(str(i) + " processed")
     if i % getProgressUpdate(numFeat) == 0:
         arcpy.SetProgressorPosition(i)
 
+
 def getProgressUpdate(numFeat):
     if numFeat > 1000:
-        progressUpdate = 1000 #int(numFeat/500)
+        progressUpdate = 1000  # int(numFeat/500)
     else:
         progressUpdate = 100
     return progressUpdate
 
-def printRow(row,names):
+
+def printRow(row, names):
     r = 0
     for item in row:
         msg = str(names[r]) + ":" + str(item) + ' #' + str(r)
@@ -499,33 +498,36 @@ def printRow(row,names):
         arcpy.AddMessage(msg)
         r += 1
 
-def getTargetValue(row,field,names,sourceName,targetName):
+
+def getTargetValue(row, field, names, sourceName, targetName):
     # get the current value for the row/field
     targetValue = None
     if sourceName != "" and not sourceName.startswith("*") and sourceName != "(None)":
         try:
             if sourceName != targetName and sourceName.upper() == targetName.upper():
                 # special case for same name but different case - should already have the target name from extract functions
-                targetValue = row[dla.getFieldIndexList(names,sourceName)]
+                targetValue = row[dla.getFieldIndexList(names, sourceName)]
             else:
-                targetValue = row[dla.getFieldIndexList(names,targetName)]
+                targetValue = row[dla.getFieldIndexList(names, targetName)]
         except:
-            targetValue = None # handle the case where the source field does not exist or is blank
+            targetValue = None  # handle the case where the source field does not exist or is blank
 
     return targetValue
 
-def getSourceValue(row,names,sourceName,targetName):
+
+def getSourceValue(row, names, sourceName, targetName):
     try:
-        sourceValue = row[dla.getFieldIndexList(names,sourceName)]
+        sourceValue = row[dla.getFieldIndexList(names, sourceName)]
     except:
         if sourceName != targetName and sourceName.upper() == targetName.upper():
-            sourceValue = row[dla.getFieldIndexList(names,targetName)]
+            sourceValue = row[dla.getFieldIndexList(names, targetName)]
         else:
             sourceValue = None
     return sourceValue
 
-def getValue(ftype,flength,targetName,targetValue,val):
-    retVal = val # init to the value calculated so far. This function will alter as needed for field type
+
+def getValue(ftype, flength, targetName, targetValue, val):
+    retVal = val  # init to the value calculated so far. This function will alter as needed for field type
     try:
         if retVal == 'None':
             retVal = None
@@ -539,18 +541,21 @@ def getValue(ftype,flength,targetName,targetValue,val):
                         valTest = float(val)
                         retVal = val
                     except:
-                        err = "Exception caught: unable to cast " + targetName + " to " + ftype + "  : '" + str(val) + "'"
+                        err = "Exception caught: unable to cast " + targetName + " to " + ftype + "  : '" + str(
+                            val) + "'"
                         dla.addError(err)
                         dla._errCount += 1
             elif ftype == 'String':
                 # if a string then cast to string or encode utf-8
                 if type(val) == 'str':
-                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',errors='backslashreplace') # handle unicode
+                    retVal = val.encode('utf-8', errors='replace').decode('utf-8',
+                                                                          errors='backslashreplace')  # handle unicode
                 else:
                     retVal = str(val)
                 # check length to make sure it is not too long.
                 if len(retVal) > int(flength):
-                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(flength) + ") : '" + str(retVal) + "'"
+                    err = "Exception caught: value length > field length for " + targetName + "(Length " + str(
+                        flength) + ") : '" + str(retVal) + "'"
                     dla.addError(err)
                     dla._errCount += 1
 
@@ -563,6 +568,7 @@ def getValue(ftype,flength,targetName,targetValue,val):
         dla._errCount += 1
 
     return retVal
+
 
 class CaseInsensitiveDict(collections.MutableMapping):
     """
@@ -592,6 +598,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
     behavior is undefined.
 
     """
+
     def __init__(self, data=None, **kwargs):
         self._store = dict()
         if data is None:
@@ -602,8 +609,10 @@ class CaseInsensitiveDict(collections.MutableMapping):
         # Use the lowercased key for lookups, but store the actual
         # key alongside the value.
         self._store[self.__keystring(key).lower()] = (key, value)
+
     def __keystring(self, key):
         return str(key)
+
     def __getitem__(self, key):
 
         return self._store[self.__keystring(key).lower()][1]
@@ -623,7 +632,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
             (lowerkey, keyval[1])
             for (lowerkey, keyval)
             in self._store.items()
-        )
+            )
 
     def __eq__(self, other):
         if isinstance(other, collections.Mapping):
@@ -639,7 +648,3 @@ class CaseInsensitiveDict(collections.MutableMapping):
 
     def __repr__(self):
         return str(dict(self.items()))
-
-
-if __name__ == "__main__":
-    main()

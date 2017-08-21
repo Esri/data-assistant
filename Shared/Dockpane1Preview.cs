@@ -527,58 +527,59 @@ namespace DataAssistant
         }
 
         private void setPreviewDomainMapRows(string attrName)
+            ///<summary>
+            ///Sets the preview rows to display what the first several rows the domain mapping will look like.
+            ///It does so by creating a dictionary of all mappings so far and setting the preview rows to their respective values.
+            ///If the source has not been mapped yet, the source value will persist in the preview.
+            ///</summary>
         {
             DataGrid grid = PreviewGrid;
             grid.Items.Clear();
             string targName = getTargetFieldName();
-            if (_datarows != null)
-            {
 
-                for (int i = 0; i < _datarows.Count; i++)
+            Dictionary<string, string> mappings = new Dictionary<string, string>();
+            //First we create a dictionary containing the mappings made so far
+            for(int i = 0; i < Method11Grid.Items.Count; i++)
+            {
+                DomainMapRow row = Method11Grid.Items.GetItemAt(i) as DomainMapRow;
+                string sourceValue = row.Source[row.SourceSelectedItem].Id;
+                string targetValue = row.Target[row.TargetSelectedItem].Id;
+                //if this source wasn't mapped to anything, we move on
+                if (targetValue == "(None)")
+                    continue;
+
+                //This if statement is to keep DA from crashing if the same source value is assigned twice at the same time
+                //It can only happen with a subytpe field and it should not happen in the first place
+                if (mappings.ContainsKey(sourceValue))
+                    mappings[sourceValue] = targetValue;
+                else
+                    mappings.Add(sourceValue, targetValue);
+            }
+            //Now we go through the preview rows and generate the mappings
+            for (int j = 0; j < _datarows.Count; j++)
+            {
+                string textval = "";
+                //On the fringe case this function is somehow passed with a null SourceField
+                if (attrName == null)
                 {
-                    string textval = "";
-                    try
-                    {
-                        if (attrName == null)
-                            textval = targName + "=None";
-                        else
-                        {
-                            System.Xml.XmlAttribute att = _datarows[i].Attributes[attrName]; // the data rows from source dataset
-                            if (att != null)
-                            {
-                                try
-                                {
-                                    textval = att.InnerText.ToString();
-                                    for (int r = 0; r < Method11Grid.Items.Count; r++)
-                                    {
-                                        // domain map replace function
-                                        // match source code to target code
-                                        DomainMapRow row = Method11Grid.Items.GetItemAt(r) as DomainMapRow;
-                                        decimal numSource, numTarget;
-                                        bool canConvert1 = decimal.TryParse(att.InnerText, out numSource);
-                                        bool canConvert2 = decimal.TryParse(row.Source[row.SourceSelectedItem].Id, out numTarget);
-                                        if ((canConvert1 && canConvert2) && numSource.Equals(numTarget))
-                                        {
-                                            textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
-                                            if (textval == "(None)")
-                                                textval = att.InnerText.ToString(); // presents a more honest display of how the mapping would be.
-                                        }
-                                        else if (att.InnerText == row.Source[row.SourceSelectedItem].Id)
-                                        {
-                                            textval = row.Target[row.TargetSelectedItem].Id;//textval.Replace(row.Source[row.SourceSelectedItem].Id, row.Target[row.TargetSelectedItem].Id);
-                                            if (textval == "(None)")
-                                                textval = att.InnerText.ToString(); // presents a more honest display of how the mapping would be.
-                                        }
-                                    }
-                                    textval = targName + "=" + textval;
-                                }
-                                catch { textval = targName + "=" + "None"; }
-                            }
-                        }
-                    }
-                    catch { textval = targName + "=" + "None"; }
-                    grid.Items.Add(new PreviewRow() { Value = textval });
+                    grid.Items.Add(new PreviewRow() { Value = targName + "=None" });
+                    continue;
                 }
+                try
+                {
+                    System.Xml.XmlAttribute att = _datarows[j].Attributes[attrName];
+                    if (att != null)
+                    {
+                        textval = att.InnerText.ToString();
+                        if(mappings.ContainsKey(textval))
+                            textval = targName + "=" + mappings[textval];
+                        else
+                            textval = targName + "=" + textval;
+                    }
+                }
+                catch { textval = targName + "=" + textval; }
+
+                grid.Items.Add(new PreviewRow() { Value = textval });    
             }
         }
 

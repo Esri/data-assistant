@@ -216,6 +216,7 @@
     <AddInContent Include="..\Shared\Images\StageData32.png">
       <Link>Images\StageData32.png</Link>
     </AddInContent>
+    <Content Include="GPTools\pyt\DataAssistant.pyt.xml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
@@ -261,7 +262,11 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="GPTools\pyt\DataAssistant.pyt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.PackageAddIn" />
   <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.CleanAddIn" />

@@ -80,7 +80,7 @@ namespace DataAssistant
 
             var param_values = Geoprocessing.MakeValueArray(source,target,file);
 
-            Geoprocessing.OpenToolDialog(setupGP.getToolbox("SourceTargetMapping"), param_values);
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("NewFile"), param_values);
         }
     }
     
@@ -118,7 +118,7 @@ namespace DataAssistant
             setupGP.init();
             var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
 
-            Geoprocessing.OpenToolDialog(setupGP.getToolbox("AppendData"), param_values);
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("Append"), param_values);
         }
     }
     internal class Dockpane1_StageDataButton : Button
@@ -128,7 +128,7 @@ namespace DataAssistant
             setupGP.init();
             var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
 
-            Geoprocessing.OpenToolDialog(setupGP.getToolbox("StageData"), param_values);
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("Stage"), param_values);
         }
     }
     internal class Dockpane1_ReplaceDataButton : Button
@@ -138,7 +138,7 @@ namespace DataAssistant
             setupGP.init();
             var param_values = Geoprocessing.MakeValueArray(DataAssistant.Dockpane1View.getXmlFileName());
 
-            Geoprocessing.OpenToolDialog(setupGP.getToolbox("ReplaceData"), param_values);
+            Geoprocessing.OpenToolDialog(setupGP.getToolbox("Replace"), param_values);
         }
     }
     internal class setupGP : Button
@@ -169,7 +169,7 @@ namespace DataAssistant
         }
         public static string getToolbox(string toolname)
         {
-            string gpref = System.IO.Path.Combine(setupGP._gpFolder, "DataLoadingAssistant.tbx", toolname);
+            string gpref = System.IO.Path.Combine(setupGP._gpFolder, "pyt", "DataAssistant.pyt", toolname);
             return gpref;
         }
         public static string getConfigFileName() 

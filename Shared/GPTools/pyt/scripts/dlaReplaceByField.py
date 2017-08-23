@@ -15,26 +15,24 @@
  | limitations under the License.
  ------------------------------------------------------------------------------
  """
-# dlaAppendData.py - Append Data to a database or service.
+# dlaReplaceByField.py - use Replace field settings to replace content in a database or service.
 # --------------------------------------------------------------------------------------------------------------
 '''
-Tool to append data to a target dataset. The script calls dlaPublish.publish with one or more
+Tool to replace data by field value or where clause. The script calls dlaPublish.publish with one or more
 xml file names separated by semi colons - the way that a multiple file parameter is passed from Geoprocessing tools.
 
-No data will be deleted in the target dataset, and all data from the source will be appended.
+Data will be deleted in the target dataset using the Replace By Settings, and all data from the source will be appended.
 '''
-
 import dlaPublish, arcpy, dla
 
-dlaPublish._useReplaceSettings = False # setting this to False will Append data
+dlaPublish._useReplaceSettings = True # setting this to True will use ReplaceByField logic
 
-arcpy.AddMessage("Appending Data")
+arcpy.AddMessage("Replacing by Field Value")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
-contine_on_error = arcpy.GetParameter(2)  # Boolean check to continue after error
 dla._errCount = 0
 
-dlaPublish.publish(xmlFileNames, contine_on_error) # perform the processing
+dlaPublish.publish(xmlFileNames) # perform the processing
 
-dla.writeFinalMessage("Data Assistant - Append Data")
+dla.writeFinalMessage("Data Assistant - Replace Data")
 

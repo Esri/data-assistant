@@ -113,33 +113,33 @@ def publish(xmlFileNames, continue_on_error, _useReplaceSettings):
         else:
             datasetType = 'FeatureClass'
 
-        if not dla.isStaged(xmlDoc):
-            res = dlaExtractLayerToGDB.extract(xmlFile, None, dla.workspace, source, target, datasetType)
-            if res != True:
-                table = dla.getTempTable(targetName)
-                msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
-                if arcpy.TestSchemaLock(table) != True and arcpy.Exists(table) == True:
-                    msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
-                dla.addError(msg)
-                print(msg)
-                if continue_on_error:
-                    continue
-                else:
-                    return
+        # if not dla.isStaged(xmlDoc):
+        res = dlaExtractLayerToGDB.extract(xmlFile, None, dla.workspace, source, target, datasetType)
+        if res != True:
+            table = dla.getTempTable(targetName)
+            msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
+            if arcpy.TestSchemaLock(table) != True and arcpy.Exists(table) == True:
+                msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
+            dla.addError(msg)
+            print(msg)
+            if continue_on_error:
+                continue
             else:
-                res = dlaFieldCalculator.calculate(xmlFile, dla.workspace, targetName, False,
-                                                   continue_on_error)
-                if res == True:
-                    dlaTable = dla.getTempTable(targetName)
-                    res = doPublish(xmlDoc, dlaTable, target, _useReplaceSettings, continue_on_error)
+                return
         else:
-            dla.addMessage('Data previously staged, will proceed using intermediate dataset')
-            dlaTable = dla.workspace + os.sep + dla.getStagingName(source, target)
-            res = doPublish(xmlDoc, dlaTable, target, _useReplaceSettings, continue_on_error)
+            res = dlaFieldCalculator.calculate(xmlFile, dla.workspace, targetName, False,
+                                               continue_on_error)
             if res == True:
-                dla.removeStagingElement(xmlDoc)
-                xmlDoc.writexml(open(xmlFile, 'wt', encoding='utf-8'))
-                dla.addMessage('Staging element removed from config file')
+                dlaTable = dla.getTempTable(targetName)
+                res = doPublish(xmlDoc, dlaTable, target, _useReplaceSettings, continue_on_error)
+        # else:
+        #     dla.addMessage('Data previously staged, will proceed using intermediate dataset')
+        #     dlaTable = dla.workspace + os.sep + dla.getStagingName(source, target)
+        #     res = doPublish(xmlDoc, dlaTable, target, _useReplaceSettings, continue_on_error)
+        #     if res == True:
+        #         dla.removeStagingElement(xmlDoc)
+        #         xmlDoc.writexml(open(xmlFile, 'wt', encoding='utf-8'))
+        #         dla.addMessage('Staging element removed from config file')
 
         arcpy.ResetProgressor()
         if res == False:

@@ -1,7 +1,7 @@
 import scripts
 from base import DAbase, ParamWrapper
 import arcpy
-
+from validate import Validator
 
 class Append(DAbase):
     """
@@ -47,6 +47,51 @@ class Append(DAbase):
     def run(xml: list, continue_on_error: bool):
         """Calls the dla script"""
         return scripts.dlaPublish.publish(xml, continue_on_error, False)
+
+class Replace(DAbase):
+    """
+    Tool calling the Append tool in Data Assistant
+    """
+
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Replace Data"
+        self.description = "Replace rows in target data set based on a certain field"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        xml_parameter = self.get_xml_parameter(multiValue=True)
+        continue_on_error = self.get_continue()
+        output_layer = self.get_output_layer()
+        return [xml_parameter, continue_on_error, output_layer]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        params = [ParamWrapper(p).getValues() for p in parameters[:-1]]
+        xml, continue_on_error = params
+        results = self.run(xml, continue_on_error)
+        arcpy.SetParameter(len(params)-1, results)
+
+    @staticmethod
+    def run(xml: list, continue_on_error: bool):
+        """Calls the dla script"""
+        return scripts.dlaPublish.publish(xml, continue_on_error, True)
 
 
 class NewFile(DAbase):
@@ -106,8 +151,9 @@ class Stage(DAbase):
     def getParameterInfo(self):
         """Define parameter definitions"""
         xml_parameter = self.get_xml_parameter(multiValue=True)
+        continue_on_error = self.get_continue()
         output_layer = self.get_output_layer()
-        parameters = [xml_parameter, output_layer]
+        parameters = [xml_parameter, continue_on_error, output_layer]
         return parameters
 
     def isLicensed(self):
@@ -128,11 +174,58 @@ class Stage(DAbase):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         params = [ParamWrapper(p).getValues() for p in parameters[:-1]]
-        xml_param = params[0]  # Need to index here since there will only be one parameter
-        results = self.run(xml_param)
+        xml_param, continue_on_error = params
+        results = self.run(xml_param, continue_on_error)
         arcpy.SetParameter(len(parameters)-1, results)
 
     @staticmethod
-    def run(xml: list):
+    def run(xml: list, continue_on_error: bool):
         """Calls the dla script"""
-        return scripts.dlaStage.stage(xml)
+        return scripts.dlaStage.stage(xml, continue_on_error)
+
+
+class Preview(DAbase):
+    """Tool calling the Stage tool in Data Assitant"""
+
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Preview Data"
+        self.description = "Previews a set number of rows of data to intermediate dataset"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        xml_parameter = self.get_xml_parameter(multiValue=True)
+        continue_on_error = self.get_continue()
+        row_parameter = self.get_row_limit()
+        output_layer = self.get_output_layer()
+        parameters = [xml_parameter, continue_on_error, row_parameter, output_layer]
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        params = [ParamWrapper(p).getValues() for p in parameters[:-1]]
+        xml_param, continue_on_error, row_param = params
+        results = self.run(xml_param, continue_on_error, row_param)
+        if results:
+            arcpy.SetParameter(len(parameters)-1, results)
+
+    @staticmethod
+    def run(xml: list, continue_on_error: bool, rlimit: int):
+        """Calls the dla script"""
+        return scripts.dlaPreview.preview(xml, continue_on_error, rlimit)

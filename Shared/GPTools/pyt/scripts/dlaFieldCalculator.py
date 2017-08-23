@@ -28,7 +28,7 @@ import arcpy
 from . import dla
 
 
-def calculate(xmlFileName, workspace, name, ignore, continue_on_error=True):
+def calculate(xmlFileName, workspace, name, ignore, continue_on_error=False):
     dla.workspace = workspace
     success = True
     arcpy.ClearWorkspaceCache_management(dla.workspace)

@@ -75,7 +75,7 @@ def exportDataset(xmlDoc, source, workspace, targetName, rowLimit, datasetType):
     result = True
     xmlFields = xmlDoc.getElementsByTagName("Field")
     dla.addMessage("Exporting Data from " + source)
-    whereClause = ""
+    whereClause = None
     if rowLimit is not None:
         whereClause = getObjectIdWhereClause(source, rowLimit)
 
@@ -102,11 +102,13 @@ def exportDataset(xmlDoc, source, workspace, targetName, rowLimit, datasetType):
         view = dla.makeFeatureView(dla.workspace, source, viewName, whereClause, xmlFields)
 
     dla.addMessage("View Created")
-    srcCount = arcpy.GetCount_management(view).getOutput(0)
+    srcCount = arcpy.GetCount_management(source).getOutput(0)
+    viewCount = arcpy.GetCount_management(view).getOutput(0)
     dla.addMessage(str(srcCount) + " source rows")
+    dla.addMessage(str(viewCount) + " source rows exported to intermediate dataset")
     if str(srcCount) == '0':
         result = False
-        dla.addError("Failed to extract " + sourceName + ", Nothing to export")
+        arcpy.AddWarning("Failed to extract " + sourceName + ", no rows to export")
     else:
         arcpy.env.overwriteOutput = True
         arcpy.env.maintainAttachments = False

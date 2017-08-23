@@ -26,7 +26,7 @@ from . import dla, dlaExtractLayerToGDB, dlaFieldCalculator
 # dlaPreview.py - Preview one source to a target with a limited number of rows
 # ------------------------------------------------------------------------------------
 
-def stage(xmlFileNames):
+def stage(xmlFileNames, continue_on_error):
     arcpy.AddMessage("Data Assistant - Stage")
 
     dla.setWorkspace()
@@ -37,7 +37,7 @@ def stage(xmlFileNames):
         xmlFileName = dla.getXmlDocName(xmlFileName)
         xmlDoc = dla.getXmlDoc(xmlFileName)
         prj = dla.setProject(xmlFileName, dla.getNodeValue(xmlDoc, "Project"))
-        if prj == None:
+        if prj is None:
             dla.addError(
                 "Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
 
@@ -81,9 +81,18 @@ def stage(xmlFileNames):
                 except:
                     dla.addMessage("Unable to write data to xml file")
                 xmlDoc.unlink()
+            else:
+                if continue_on_error:
+                    continue
+                else:
+                    return
         else:
             dla.addError("Failed to Extract data")
             print("Failed to Extract data")
+            if continue_on_error:
+                continue
+            else:
+                return
     if outlayers != []:
         return outlayers
     dla.writeFinalMessage("Data Assistant - Stage")

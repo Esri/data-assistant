@@ -1,10 +1,13 @@
 import arcpy
 
+from validate import Validator
+
 
 class DAbase(object):
     """
     Contains methods used across all scripts
     """
+
     @staticmethod
     def get_xml_parameter(**kwargs):
         """Returns xml parameter object based on specifications in argument"""
@@ -33,9 +36,10 @@ class DAbase(object):
     @staticmethod
     def get_output_layer(**kwargs):
         """Returns a parameter specifying an output layer"""
-        l = arcpy.Parameter(name="Output_Layers",
+        l = arcpy.Parameter(name="output_layers",
                             displayName="Output Layers",
-                            datatype="Layer",
+                            datatype=["GPLayer", "DETable", "DELayer"],
+                            multiValue=True,
                             direction="Output",
                             parameterType="Derived")
         for k, v in kwargs.items():
@@ -45,7 +49,7 @@ class DAbase(object):
     @staticmethod
     def get_input_layer(**kwargs):
         """Return an input layer for New File"""
-        p = arcpy.Parameter(name="Input_Layer",
+        p = arcpy.Parameter(name="input_layer",
                             displayName="Input Layer",
                             datatype=["GPLayer", "DELayer", "DETable", "DEFeatureClass"],
                             direction="Input",
@@ -53,6 +57,77 @@ class DAbase(object):
         for k, v in kwargs.items():
             setattr(p, k, v)
         return p
+
+    @staticmethod
+    def get_row_limit(**kwargs):
+        """Returns a row limit field for dlaPreview"""
+        p = arcpy.Parameter(name="row_limit",
+                            displayName="Row Limit",
+                            datatype="GPLong",
+                            direction="Input",
+                            parameterType="Optional")
+        p.value = 100
+        for k, v in kwargs.items():
+            setattr(p, k, v)
+        return p
+
+    @staticmethod
+    def create_layers(source, target):
+        """Creates layer objects out of the source and target parameters"""
+        sDescribe = arcpy.Describe(source)
+        tDescribe = arcpy.Describe(target)
+
+        if sDescribe.dataType in ['FeatureLayer', 'Table']:
+            source_layer = source
+        elif sDescribe.dataType == 'Layer':
+            source_layer = arcpy.mp.LayerFile(source).listLayers()[0]
+        else:
+            source_layer = arcpy.MakeFeatureLayer_management(source, "source")[0]
+
+        if tDescribe.dataType in ['FeatureLayer', 'Table']:
+            target_layer = target
+        elif tDescribe.dataType == 'Layer':
+            target_layer = arcpy.mp.LayerFile(target).listLayers()[0]
+        else:
+            target_layer = arcpy.MakeFeatureLayer_management(target, "target")[0]
+
+        return [source_layer, target_layer]
+
+    def run_validation(self, parameters, new_file=False):
+        """Runs the validation for most GPTool parameters"""
+        if not new_file:
+            xmls = ParamWrapper(parameters[0]).getValues()
+            for i in range(len(xmls)):
+                validator = Validator.from_xml(xmls[i])
+                validator.validate()
+                if validator.source_error is not None:
+                    if validator.source_error.severity == "ERROR":
+                        parameters[0].setErrorMessage("xml " + str(i+1)+":"+validator.source_error.message)
+                    else:
+                        parameters[0].setWarningMessage("xml " + str(i+1)+":"+validator.source_error.message)
+                elif validator.target_error is not None:
+                    if validator.target_error.severity == "ERROR":
+                        parameters[0].setErrorMessage("xml " + str(i+1)+":"+validator.target_error.message)
+                    else:
+                        parameters[0].setWarningMessage("xml " + str(i+1)+":"+validator.target_error.message)
+        else:
+            params = [ParamWrapper(p).getValues() for p in parameters]
+            source, target, xml = params
+            if source is None or target is None:
+                return  # Don't want to run validation until both a source and target are chosen
+            # slayer, tlayer = self.create_layers(source, target)
+            validator = Validator(source=source, target=target)
+            validator.validate()
+            if validator.source_error is not None:
+                if validator.source_error.severity == "ERROR":
+                    parameters[0].setErrorMessage(validator.source_error.message)
+                else:
+                    parameters[0].setWarningMessage(validator.source_error.message)
+            if validator.target_error is not None:
+                if validator.target_error.severity == "ERROR":
+                    parameters[1].setErrorMessage(validator.target_error.message)
+                else:
+                    parameters[1].setWarningMessage(validator.target_error.message)
 
 
 class ParamWrapper(object):
@@ -99,4 +174,3 @@ class ParamWrapper(object):
 
     def getValues(self):
         return self._values
-

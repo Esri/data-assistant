@@ -1,4 +1,10 @@
-﻿"""
+﻿import os
+
+import arcpy
+
+from . import dlaExtractLayerToGDB, dlaFieldCalculator, dla, dlaService
+
+"""
 -------------------------------------------------------------------------------
  | Copyright 2016 Esri
  |
@@ -27,57 +33,43 @@ parameters. By default this will use the Append approach, to use replace by sett
 useReplaceSettings variable to change the behavior (see example at the end of this script).
 '''
 
-import arcpy,dlaExtractLayerToGDB,dlaFieldCalculator,dlaService,dla,dlaService,xml.dom.minidom,os
 
-arcpy.AddMessage("Data Assistant")
-
-xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
-continue_on_error = arcpy.GetParameterAsText(2) # boolean check to see if xml should continue or not on error
-_outParam = 1
-_useReplaceSettings = False # change this from a calling script to make this script replace data.
-
-_chunkSize = 100
-
-def main(argv = None):
-    # this approach makes it easier to call publish from other python scripts with using GP tool method
-    publish(xmlFileNames, continue_on_error)
-
-def publish(xmlFileNames, continue_on_error):
+def publish(xmlFileNames, continue_on_error, _useReplaceSettings):
+    arcpy.AddMessage("Data Assistant")
     # function called from main or from another script, performs the data update processing
-    global _useReplaceSettings
     dla._errCount = 0
-    dla.addMessage("CONTINUE ON ERROR SET TO: "+ str(continue_on_error))
-    arcpy.SetProgressor("default","Data Assistant")
+    dla.addMessage("CONTINUE ON ERROR SET TO: " + str(continue_on_error))
+    arcpy.SetProgressor("default", "Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")
-    xmlFiles = xmlFileNames.split(";")
     layers = []
 
-    for xmlFile in xmlFiles: # multi value parameter, loop for each file
+    for xmlFile in xmlFileNames:  # multi value parameter, loop for each file
         xmlFile = dla.getXmlDocName(xmlFile)
         dla.addMessage("Configuration file: " + xmlFile)
-        xmlDoc = dla.getXmlDoc(xmlFile) # parse the xml document
+        xmlDoc = dla.getXmlDoc(xmlFile)  # parse the xml document
         if xmlDoc == None:
             dla.addError("No XML document could be parsed. Please ensure the path to the xml document is correct")
             if continue_on_error:
                 continue
             else:
                 return
-        prj = dla.setProject(xmlFile,dla.getNodeValue(xmlDoc,"Project"))
+        prj = dla.setProject(xmlFile, dla.getNodeValue(xmlDoc, "Project"))
         if prj == None:
-            dla.addError("Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
+            dla.addError(
+                "Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
             if continue_on_error:
                 continue
             else:
                 return False
 
-        source = dla.getDatasetPath(xmlDoc,"Source")
-        target = dla.getDatasetPath(xmlDoc,"Target")
+        source = dla.getDatasetPath(xmlDoc, "Source")
+        target = dla.getDatasetPath(xmlDoc, "Target")
         targetName = dla.getDatasetName(target)
         dla.addMessage(source)
         dla.addMessage(target)
 
         if dlaService.checkLayerIsService(source) or dlaService.checkLayerIsService(target):
-            token = dlaService.getSigninToken() # when signed in get the token and use this. Will be requested many times during the publish
+            token = dlaService.getSigninToken()  # when signed in get the token and use this. Will be requested many times during the publish
             # exit here before doing other things if not signed in
             if token == None:
                 dla.addError("User must be signed in for this tool to work with services")
@@ -114,7 +106,6 @@ def publish(xmlFileNames, continue_on_error):
             else:
                 return False
 
-
         dla.setWorkspace()
 
         if dla.isTable(source) or dla.isTable(target):
@@ -122,32 +113,33 @@ def publish(xmlFileNames, continue_on_error):
         else:
             datasetType = 'FeatureClass'
 
-        if not dla.isStaged(xmlDoc):
-            res = dlaExtractLayerToGDB.extract(xmlFile,None,dla.workspace,source,target,datasetType)
-            if res != True:
-                table = dla.getTempTable(targetName)
-                msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
-                if arcpy.TestSchemaLock(table) != True and arcpy.Exists(table) == True:
-                    msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
-                dla.addError(msg)
-                print(msg)
-                if continue_on_error:
-                    continue
-                else:
-                    return
+        # if not dla.isStaged(xmlDoc):
+        res = dlaExtractLayerToGDB.extract(xmlFile, None, dla.workspace, source, target, datasetType)
+        if res != True:
+            table = dla.getTempTable(targetName)
+            msg = "Unable to export data, there is a lock on existing datasets or another unknown error"
+            if arcpy.TestSchemaLock(table) != True and arcpy.Exists(table) == True:
+                msg = "Unable to export data, there is a lock on the intermediate feature class: " + table
+            dla.addError(msg)
+            print(msg)
+            if continue_on_error:
+                continue
             else:
-                res = dlaFieldCalculator.calculate(xmlFile,dla.workspace,targetName,False, continue_on_error)
-                if res == True:
-                    dlaTable = dla.getTempTable(targetName)
-                    res = doPublish(xmlDoc,dlaTable,target,_useReplaceSettings)
+                return
         else:
-            dla.addMessage('Data previously staged, will proceed using intermediate dataset')
-            dlaTable = dla.workspace + os.sep + dla.getStagingName(source,target)
-            res = doPublish(xmlDoc,dlaTable,target,_useReplaceSettings)
+            res = dlaFieldCalculator.calculate(xmlFile, dla.workspace, targetName, False,
+                                               continue_on_error)
             if res == True:
-                dla.removeStagingElement(xmlDoc)
-                xmlDoc.writexml(open(xmlFile, 'wt', encoding='utf-8'))
-                dla.addMessage('Staging element removed from config file')
+                dlaTable = dla.getTempTable(targetName)
+                res = doPublish(xmlDoc, dlaTable, target, _useReplaceSettings, continue_on_error)
+        # else:
+        #     dla.addMessage('Data previously staged, will proceed using intermediate dataset')
+        #     dlaTable = dla.workspace + os.sep + dla.getStagingName(source, target)
+        #     res = doPublish(xmlDoc, dlaTable, target, _useReplaceSettings, continue_on_error)
+        #     if res == True:
+        #         dla.removeStagingElement(xmlDoc)
+        #         xmlDoc.writexml(open(xmlFile, 'wt', encoding='utf-8'))
+        #         dla.addMessage('Staging element removed from config file')
 
         arcpy.ResetProgressor()
         if res == False:
@@ -157,14 +149,15 @@ def publish(xmlFileNames, continue_on_error):
         else:
             layers.append(target)
 
-    arcpy.SetParameter(_outParam,';'.join(layers))
+    return layers
 
-def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
+
+def doPublish(xmlDoc, dlaTable, target, useReplaceSettings, continue_on_error):
     # either truncate and replace or replace by field value
     # run locally or update agol
     success = False
     expr = ''
-    dlaTable = handleGeometryChanges(dlaTable,target)
+    dlaTable = handleGeometryChanges(dlaTable, target)
 
     if useReplaceSettings == True:
         expr = getWhereClause(xmlDoc)
@@ -172,33 +165,35 @@ def doPublish(xmlDoc,dlaTable,target,useReplaceSettings):
         dla.addError("There must be an expression for replacing by field value, current value = '" + str(expr) + "'")
         return False
     currGlobalIDs = arcpy.env.preserveGlobalIds
-    if dla.processGlobalIds(xmlDoc) and currGlobalIDs == False: # both datasets have globalids in the correct workspace types
+    if dla.processGlobalIds(
+            xmlDoc) and currGlobalIDs == False:  # both datasets have globalids in the correct workspace types
         arcpy.env.preserveGlobalIds = True
-    target = dla.getNodeValue(xmlDoc,"Target")
+    target = dla.getNodeValue(xmlDoc, "Target")
     if target.startswith("http") == True:
-        success = dlaService.doPublishHttp(dlaTable,target,expr,useReplaceSettings)
+        success = dlaService.doPublishHttp(dlaTable, target, expr, useReplaceSettings)
     else:
         # logic change - if not replace field settings then only append
         if expr != '' and useReplaceSettings == True:
-            if dla.deleteRows(target,expr) == True:
-                success = dla.appendRows(dlaTable,target,expr,continue_on_error)
+            if dla.deleteRows(target, expr) == True:
+                success = dla.appendRows(dlaTable, target, expr, continue_on_error)
             else:
                 success = False
         else:
-            success = dla.appendRows(dlaTable,target,'',continue_on_error)
+            success = dla.appendRows(dlaTable, target, '', continue_on_error)
 
     if currGlobalIDs != arcpy.env.preserveGlobalIds:
         arcpy.env.preserveGlobalIds = currGlobalIDs
     return success
 
+
 def getWhereClause(xmlDoc):
     # get the where clause using the xml document or return ''
     repl = xmlDoc.getElementsByTagName("ReplaceBy")[0]
-    fieldName = dla.getNodeValue(repl,"FieldName")
-    operator = dla.getNodeValue(repl,"Operator")
-    value = dla.getNodeValue(repl,"Value")
+    fieldName = dla.getNodeValue(repl, "FieldName")
+    operator = dla.getNodeValue(repl, "Operator")
+    value = dla.getNodeValue(repl, "Value")
     expr = ''
-    type = getTargetType(xmlDoc,fieldName)
+    type = getTargetType(xmlDoc, fieldName)
     if fieldName != '' and fieldName != '(None)' and operator != "Where":
         if type == 'String':
             value = "'" + value + "'"
@@ -207,29 +202,33 @@ def getWhereClause(xmlDoc):
     elif operator == 'Where':
         expr = value
     else:
-        expr = '' # empty string by default
+        expr = ''  # empty string by default
 
     return expr
 
-def getTargetType(xmlDoc,fname):
+
+def getTargetType(xmlDoc, fname):
     # get the target field type
     for tfield in xmlDoc.getElementsByTagName('TargetField'):
         nm = tfield.getAttribute("Name")
         if nm == fname:
             return tfield.getAttribute("Type")
 
-def handleGeometryChanges(sourceDataset,target):
+
+def handleGeometryChanges(sourceDataset, target):
     # simplfiy polygons
     if dla.isTable(sourceDataset):
         return sourceDataset
-    desc = arcpy.Describe(sourceDataset) # assuming local file gdb
+    desc = arcpy.Describe(sourceDataset)  # assuming local file gdb
     dataset = sourceDataset
-    if desc.ShapeType == "Polygon" and (target.lower().startswith("http://") == True or target.lower().startswith("https://") == True):
+    if desc.ShapeType == "Polygon" and (
+                    target.lower().startswith("http://") == True or target.lower().startswith("https://") == True):
         dataset = simplifyPolygons(sourceDataset)
     else:
         dataset = sourceDataset
 
     return dataset
+
 
 def simplifyPolygons(sourceDataset):
     # simplify polygons using approach developed by Chris Bus.
@@ -243,8 +242,3 @@ def simplifyPolygons(sourceDataset):
 
     arcpy.SimplifyPolygon_cartography(sourceDataset, simplify, "POINT_REMOVE", "1 Meters")
     return simplify
-
-if __name__ == "__main__":
-    main()
-
-

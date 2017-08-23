@@ -25,61 +25,20 @@ from xml.dom.minidom import Document, parseString
 
 import arcpy
 
-import dla
-import dlaService
-
-# Local variables...
-debug = False
-# Parameters
-source = arcpy.GetParameter(0)  # source dataset to analyze
-sourceStr = arcpy.GetParameterAsText(0)  # source dataset to analyze
-target = arcpy.GetParameter(1)  # target dataset to analyze
-targetStr = arcpy.GetParameterAsText(1)  # target dataset to analyze
-
-xmlFileName = arcpy.GetParameterAsText(2)  # output file name argument
-matchLibrary = 'true'  # arcpy.GetParameterAsText(3) always use automatch now. When starting the match library is blank anyway
-#  so this will have no effect until the user starts working with it.
-
-if not xmlFileName.lower().endswith(".xml") and str(xmlFileName) != '':
-    xmlFileName = xmlFileName + ".xml"
-
-if matchLibrary.lower() == 'true':
-    matchLibrary = True
-else:
-    matchLibrary = False
-
-prj_dir = os.path.dirname(os.path.realpath(__file__))
-
-matchxslt = os.path.join(prj_dir, "FieldMatcher.xsl")
-matchfile = os.path.join(prj_dir, "MatchLocal.xml")
-
-
-def main(argv=None):
-    global source, target, xmlFileName
-
-    source = dla.checkIsLayerFile(source, sourceStr)
-    target = dla.checkIsLayerFile(target, targetStr)
-
-    dla.addMessage("Source: " + str(source))
-    dla.addMessage("Target: " + str(target))
-
-    dla.addMessage("File: " + xmlFileName)
-    if not os.path.exists(matchxslt):
-        msg = matchxslt + " does not exist, exiting"
-        arcpy.AddError(msg)
-        print(msg)
-        return
-    if not os.path.exists(matchfile):
-        msg = matchfile + " does not exist, exiting"
-        arcpy.AddError(msg)
-        print(msg)
-        return
-    createDlaFile(source, target, xmlFileName)
+from . import dla
+from . import dlaService
 
 
 def createDlaFile(source, target, xmlFileName):
     # entry point for calling this tool from another python script
+    debug = False
+    prj_dir = os.path.dirname(os.path.realpath(__file__))
+
+    matchxslt = os.path.join(prj_dir, "FieldMatcher.xsl")
+    matchfile = os.path.join(prj_dir, "MatchLocal.xml")
+    matchLibrary = True
     res = False
+
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
     elif str(source) == str(target):
@@ -96,11 +55,11 @@ def createDlaFile(source, target, xmlFileName):
                 dla.addError("Invalid Path/Type for Target layer, exiting: " + str(target))
             return res
         else:
-            res = writeDocument(sourcePath, targetPath, xmlFileName)
+            res = writeDocument(sourcePath, targetPath, xmlFileName, matchLibrary, matchfile)
     return res
 
 
-def writeDocument(sourcePath, targetPath, xmlFileName):
+def writeDocument(sourcePath, targetPath, xmlFileName, matchLibrary, matchfile):
     if sourcePath == None or targetPath == None:
         return False
     ## Warn user if capabilities are not correct, exit if not valid layers
@@ -162,7 +121,7 @@ def writeDocument(sourcePath, targetPath, xmlFileName):
         fNode = xmlDoc.createElement("Field")
         fieldroot.appendChild(fNode)
         fieldName = field.name  # [field.name.rfind(".")+1:] ***
-        matchSourceFields(xmlDoc, fNode, field, fieldName, sourceNames, upperNames)
+        matchSourceFields(xmlDoc, fNode, field, fieldName, sourceNames, upperNames, matchLibrary, matchfile)
 
     # write the source field values
     setSourceFields(root, xmlDoc, sourceFields)
@@ -174,7 +133,7 @@ def writeDocument(sourcePath, targetPath, xmlFileName):
     # write it out
     xmlDoc.writexml(open(xmlFileName, 'wt', encoding='utf-8'), indent="  ", addindent="  ", newl='\n')
     xmlDoc.unlink()
-    return True
+    return xmlFileName
 
 
 def setSpatialReference(dataset, xmlDoc, desc, lyrtype):
@@ -194,14 +153,14 @@ def setSpatialReference(dataset, xmlDoc, desc, lyrtype):
             arcpy.AddError("Could not set Spatial Reference for " + lyrtype + " Layer")
 
 
-def matchSourceFields(xmlDoc, fNode, field, fieldName, sourceNames, upperNames):
+def matchSourceFields(xmlDoc, fNode, field, fieldName, sourceNames, upperNames, matchLibrary, matchfile):
     # match source field names - with and without automap
     enode = None
     count = 0
     nmupper = fieldName.upper()
     strippedNames = [name[name.rfind('.') + 1:].upper() for name in
                      sourceNames]  # look for first match if there are prefixes
-    if matchLibrary == True:  # only do this if matchLibrary parameter is True
+    if matchLibrary:  # only do this if matchLibrary parameter is True
         doc = etree.parse(matchfile)
         nodes = doc.findall(".//Field[TargetName='" + fieldName + "']")
         for node in nodes:
@@ -379,7 +338,3 @@ def writeDataSample(xmlDoc, root, sourceFields, sourcePath, rowLimit):
         i += 1
 
     del cursor
-
-
-if __name__ == "__main__":
-    main()

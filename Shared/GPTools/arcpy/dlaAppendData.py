@@ -31,9 +31,10 @@ dlaPublish._useReplaceSettings = False # setting this to False will Append data
 arcpy.AddMessage("Appending Data")
 
 xmlFileNames = arcpy.GetParameterAsText(0) # xml file name as a parameter, multiple values separated by ;
+contine_on_error = arcpy.GetParameter(2)  # Boolean check to continue after error
 dla._errCount = 0
 
-dlaPublish.publish(xmlFileNames) # perform the processing
+dlaPublish.publish(xmlFileNames, contine_on_error) # perform the processing
 
 dla.writeFinalMessage("Data Assistant - Append Data")
 

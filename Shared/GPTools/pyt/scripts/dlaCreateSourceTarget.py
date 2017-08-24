@@ -46,8 +46,9 @@ def createDlaFile(source, target, xmlFileName):
             "2 string layers with the same value is not supported by this tool, please rename one of the layers, exiting.")
     else:
         prj = dla.getProject()
-        sourcePath = dla.getLayerPath(source, xmlFileName)
-        targetPath = dla.getLayerPath(target, xmlFileName)
+        xmlFileName = dla.makeprjFile(xmlFileName)
+        sourcePath = dla.getLayerPath(source, xmlFileName, "source")
+        targetPath = dla.getLayerPath(target, xmlFileName, "target")
         if sourcePath == '' or targetPath == '':
             if sourcePath == '':
                 dla.addError("Invalid Path/Type for Source layer , exiting: " + str(source))

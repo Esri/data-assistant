@@ -81,14 +81,15 @@ class Validator(object):
         if self.source_is_table or self.target_is_table:
             self.target_error = self.validate_datatype(self.target)
         else:
-            source_funcs = [self.validate_source_length]
+            source_funcs = [self.validate_featurelayer, self.validate_broken, self.validate_source_length]
             for func in source_funcs:
                 result = func(self.source)
                 if result is not None:
                     self.source_error = result
                     break
 
-            target_funcs = [self.validate_same_shape]
+            target_funcs = [self.validate_same_shape, self.validate_datatype, self.validate_target_join,
+                            self.validate_featurelayer, self.validate_broken]
             for func in target_funcs:
                 result = func(self.target)
                 if result is not None:

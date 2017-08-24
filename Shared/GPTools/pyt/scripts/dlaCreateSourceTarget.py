@@ -27,6 +27,8 @@ import arcpy
 
 from . import dla
 from . import dlaService
+import validate
+import DATools
 
 
 def createDlaFile(source, target, xmlFileName):
@@ -38,6 +40,21 @@ def createDlaFile(source, target, xmlFileName):
     matchfile = os.path.join(prj_dir, "MatchLocal.xml")
     matchLibrary = True
     res = False
+
+    s_layer, t_layer = DATools.DAbase.create_layers(source, target)
+    validator = validate.Validator(s_layer, t_layer)
+    if validator.source_error is not None:
+        if validator.source_error.severity == "ERROR":
+            dla.addError(validator.source_error.message)
+            return
+        else:
+            arcpy.addWarning(validator.source_error.message)
+    if validator.target_error is not None:
+        if validator.target_error.severity == "ERROR":
+            dla.addError(validator.target_error.message)
+            return
+        else:
+            dla.addError(validator.target_error.message)
 
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")

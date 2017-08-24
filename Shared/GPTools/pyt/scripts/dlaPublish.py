@@ -41,7 +41,12 @@ def publish(xmlFileNames, continue_on_error, _useReplaceSettings):
     dla.addMessage("CONTINUE ON ERROR SET TO: " + str(continue_on_error))
     arcpy.SetProgressor("default", "Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")
-    layers = []
+    layers = list()
+
+    if xmlFileNames is not list:  # The GPTool UI gives the xmls as a list, but anyone calling the script might use
+        xml_file = xmlFileNames  # just a string value. This converts the string to work for the rest of the script
+        xmlFileNames = list()
+        xmlFileNames.append(xml_file)
 
     for xmlFile in xmlFileNames:  # multi value parameter, loop for each file
         xmlFile = dla.getXmlDocName(xmlFile)

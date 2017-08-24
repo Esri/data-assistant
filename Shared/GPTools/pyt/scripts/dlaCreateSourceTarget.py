@@ -27,7 +27,8 @@ import arcpy
 
 from . import dla
 from . import dlaService
-
+import validate
+import DATools
 
 def createDlaFile(source, target, xmlFileName):
     # entry point for calling this tool from another python script
@@ -38,6 +39,22 @@ def createDlaFile(source, target, xmlFileName):
     matchfile = os.path.join(prj_dir, "MatchLocal.xml")
     matchLibrary = True
     res = False
+
+    s_layer, t_layer = DATools.DAbase.create_layers(source, target)
+    validator = validate.Validator(s_layer, t_layer)
+    validator.validate()
+    if validator.source_error is not None:
+        if validator.source_error.severity == "ERROR":
+            dla.addError(validator.source_error.message)
+            return
+        else:
+            arcpy.AddWarning(validator.source_error.message)
+    if validator.target_error is not None:
+        if validator.target_error.severity == "ERROR":
+            dla.addError(validator.target_error.message)
+            return
+        else:
+            arcpy.AddWarning(validator.target_error.message)
 
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
@@ -99,8 +116,8 @@ def writeDocument(sourcePath, targetPath, xmlFileName, matchLibrary, matchfile):
     else:
         prj = prj.filePath
     setSourceTarget(dataset, xmlDoc, "Project", dla.dropXmlFolder(xmlFileName, prj))
-    setSourceTarget(dataset, xmlDoc, "Source", dla.dropXmlFolder(xmlFileName, sourcePath))
-    setSourceTarget(dataset, xmlDoc, "Target", dla.dropXmlFolder(xmlFileName, targetPath))
+    setSourceTarget(dataset, xmlDoc, "Source", sourcePath)
+    setSourceTarget(dataset, xmlDoc, "Target", targetPath)
 
     setSpatialReference(dataset, xmlDoc, desc, "Source")
     setSpatialReference(dataset, xmlDoc, descT, "Target")

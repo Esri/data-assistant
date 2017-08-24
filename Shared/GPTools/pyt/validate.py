@@ -37,8 +37,7 @@ class Validator(object):
             target = arcpy.MakeFeatureLayer_management(target_path)[0]
         else:
             target = target_path
-        # source =source_path
-        # target = target_path
+
         return cls(source, target)
 
     def validate_broken(self, param):
@@ -81,14 +80,15 @@ class Validator(object):
         if self.source_is_table or self.target_is_table:
             self.target_error = self.validate_datatype(self.target)
         else:
-            source_funcs = [self.validate_source_length]
+            source_funcs = [self.validate_source_length, self.validate_featurelayer]
             for func in source_funcs:
                 result = func(self.source)
                 if result is not None:
                     self.source_error = result
                     break
 
-            target_funcs = [self.validate_same_shape]
+            target_funcs = [self.validate_same_shape, self.validate_target_join, self.validate_featurelayer,
+                            self.validate_datatype]
             for func in target_funcs:
                 result = func(self.target)
                 if result is not None:

@@ -27,6 +27,11 @@ from . import dlaExtractLayerToGDB, dlaFieldCalculator, dla
 
 def preview(xmlFileNames, continue_on_error, rowLimit):
     layers = list()
+    if xmlFileNames is not list:  # The GPTool UI gives the xmls as a list, but anyone calling the script might use
+        xml_file = xmlFileNames  # just a string value. This converts the string to work for the rest of the script
+        xmlFileNames = list()
+
+        xmlFileNames.append(xml_file)
     for xmlFileName in xmlFileNames:
         dla.setWorkspace()
         dla._errCount = 0

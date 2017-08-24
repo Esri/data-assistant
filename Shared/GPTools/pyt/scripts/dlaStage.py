@@ -32,14 +32,17 @@ def stage(xmlFileNames, continue_on_error):
     dla.setWorkspace()
     dla._errCount = 0
     outlayers = []
+    if xmlFileNames is not list:  # The GPTool UI gives the xmls as a list, but anyone calling the script might use
+        xml_file = xmlFileNames  # just a string value. This converts the string to work for the rest of the script
+        xmlFileNames = list()
+        xmlFileNames.append(xml_file)
 
     for xmlFileName in xmlFileNames:
         xmlFileName = dla.getXmlDocName(xmlFileName)
         xmlDoc = dla.getXmlDoc(xmlFileName)
         prj = dla.setProject(xmlFileName, dla.getNodeValue(xmlDoc, "Project"))
         if prj is None:
-            dla.addError(
-                "Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
+            dla.addError("Unable to open your project, please ensure it is in the same folder as your current project or your Config file")
 
         source = dla.getDatasetPath(xmlDoc, "Source")
         target = dla.getDatasetPath(xmlDoc, "Target")

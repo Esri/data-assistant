@@ -26,6 +26,7 @@ using ArcGIS.Desktop.Mapping;
 using System.Xml;
 using System.Xml.Xsl;
 using System.Xml.XPath;
+using System.IO;
 
 namespace DataAssistant
 {
@@ -1331,5 +1332,219 @@ namespace DataAssistant
             if (Method10 != null)
                 MethodPanelApply_Click(sender, e);
         }
+
+        private XElement getBaseMatchInfo()
+            ///<summary>
+            ///Returns the base information for a new match library entry
+            ///Format:
+            ///<SourceName></SourceName>
+            ///<TargetName></TargetName>
+            ///<Method></Method>
+            ///
+            ///</summary>
+        {
+            return  new XElement("Field",
+                        new XElement("SourceName","None"),
+                        new XElement("TargetName", getTargetFieldName()),
+                        new XElement("Method", getMethodVal())
+                    );
+        }
+
+        private void MatchSave_Click(object sender, RoutedEventArgs e)
+        {
+            var xmlpath = AddinAssemblyLocation() + "\\MapLibrary.xml";
+            if (!File.Exists(xmlpath))
+            {
+                XmlWriter writer = XmlWriter.Create(xmlpath);
+
+                writer.WriteStartElement("MatchLibrary");
+                writer.WriteStartElement("Fields");
+
+                writer.WriteEndDocument();
+                writer.Close();
+            }
+
+            XElement root = XElement.Load(xmlpath);
+            XElement newNode = getBaseMatchInfo();
+            XElement fields = root.Element("Fields");
+
+            IEnumerable<XElement> previous =  // Checks if there was a previous mapping between these two field names
+                from el in fields.Elements("Field")
+                where el.Element("TargetName").Value == getTargetFieldName()
+                select el;
+            foreach (XElement el in previous)
+                el.Remove();
+
+            newNode = getMethodMatchInfo(newNode);
+
+            fields.Add(newNode);
+            root.Save(xmlpath);
+        }
+
+        private XElement getMethodMatchInfo(XElement newNode)
+        {
+            var nodeMethod = newNode.Element("Method").Value;
+            switch(nodeMethod)
+            {
+                case "SetValue":
+                    try
+                    {
+                        XElement setValue = new XElement(nodeMethod, Method2Value.Text);
+                        newNode.Add(setValue);
+                    }
+                    catch { }
+                    break;
+                case "ValueMap":
+                    XElement ValueMap = new XElement(nodeMethod);
+                    DataGrid ValueMapGrid = this.Method3Grid as DataGrid;
+                    try
+                    {
+                        for(int s = 0; s < ValueMapGrid.Items.Count; s++)
+                        {
+                            ValueMapRow row = ValueMapGrid.Items.GetItemAt(s) as ValueMapRow;
+                            if (row != null)
+                            {
+                                ValueMap.Add(new XElement("sValue", row.Source));
+                                ValueMap.Add(new XElement("tValue", row.Target));
+                            }
+                        }
+                        ValueMap.Add(new XElement("Otherwise", Method3Otherwise.Text));
+                        newNode.Add(ValueMap);
+                    }
+                    catch { }
+                    break;
+                case "ChangeCase":
+                    XElement changeCase = new XElement(nodeMethod, Method4Combo.Items[Method4Combo.SelectedIndex].ToString().Split(':').Last().Trim());
+                    newNode.Add(changeCase);
+                    break;
+                case "Concatenate":
+                    XElement separator = new XElement("Separator", Method5Value.Text);
+                    XElement cFields = new XElement("cFields");
+                    try
+                    {
+                        DataGrid concatGrid = this.Method5Grid as DataGrid;
+                        for (int i = 0; i < concatGrid.Items.Count; i++)
+                        {
+                            ConcatRow row = concatGrid.Items.GetItemAt(i) as ConcatRow;
+                            if (row != null)
+                            {
+                                if (row.Checked)
+                                {
+                                    cFields.Add(new XElement("cField",
+                                                    new XElement("Name", row.Name)));
+                                }
+                            }
+                        }
+                        newNode.Add(separator);
+                        newNode.Add(cFields);
+                    }
+                    catch { }
+                    break;
+                case "Left":
+                    try
+                    {
+                        newNode.Add(new XElement("Left", Method6Slider.Value.ToString()));
+                    }
+                    catch { }
+                    break;
+                case "Right":
+                    try
+                    {
+                        newNode.Add(new XElement("Right", Method7Slider.Value.ToString()));
+                    }
+                    catch { }
+                    break;
+                case "Substring":
+                    try
+                    {
+                        newNode.Add(new XElement("Start", Method81Slider.Value.ToString()));
+                        newNode.Add(new XElement("Length", Method82Slider.Value.ToString()));
+                    }
+                    catch { }
+                    break;
+                case "Split":
+                    try
+                    {
+                        newNode.Add(new XElement("SplitAt", Method91Value.Text));
+                        newNode.Add(new XElement("Part", Method92Value.Text));
+                    }
+                    catch { }
+                    break;
+                case "ConditionalValue":
+                    try
+                    {
+                        int i;
+                        if (Method10Value.SelectedIndex == -1)
+                            i = 0;
+                        else
+                            i = Method10Value.SelectedIndex;
+                        newNode.Add(new XElement("Oper", Method10Value.Items[i].ToString().Split(':').Last().Trim()));
+                        newNode.Add(new XElement("If", Method101Value.Text));
+                        newNode.Add(new XElement("Then", Method102Value.Text));
+                        newNode.Add(new XElement("Else", Method103Value.Text));
+                    }
+                    catch { }
+                    break;
+                case "DomainMap":
+                    XElement DomainMap = new XElement(nodeMethod);
+                    try
+                    {
+                        DataGrid domainGrid = this.Method11Grid as DataGrid;
+                        for (int s = 0; s < domainGrid.Items.Count; s++)
+                        {
+                            DomainMapRow row = domainGrid.Items.GetItemAt(s) as DomainMapRow;
+                            DomainMap.Add(new XElement("sValue", row.Source[row.SourceSelectedItem].Id));
+                            DomainMap.Add(new XElement("SLabel", row.Source[row.SourceSelectedItem].Tooltip));
+                            DomainMap.Add(new XElement("tValue", row.Target[row.TargetSelectedItem].Id));
+                            DomainMap.Add(new XElement("tLabel", row.Target[row.TargetSelectedItem].Tooltip));
+                        }
+                        newNode.Add(DomainMap);
+                    }
+                    catch { }
+                    break;
+                default: // Handles the Copy case and None case
+                    break;
+            }
+            return newNode;
+        }
+
+        private void MatchLoad_Click(object sender, RoutedEventArgs e)
+        {
+            string xmlpath = AddinAssemblyLocation() + "\\MapLibrary.xml";
+
+            XElement root = XElement.Load(xmlpath);
+            XElement fields = root.Element("Fields");
+            string path = getXmlFileName();
+            XElement docRoot = XElement.Load(path);
+            XElement docFields = docRoot.Element("Fields");
+
+            IEnumerable<XElement> match =  // Searches for the corresponding match if exists
+               from el in fields.Elements("Field")
+               where el.Element("TargetName").Value == getTargetFieldName()
+               select el;
+            XElement loadField = null;
+            foreach (XElement el in match)
+            {
+                loadField = el;
+                loadField.Element("SourceName").Value = getSourceFieldName();
+            }
+            if(loadField != null)
+            {
+                //set xml file corresponding map if exists to this
+                IEnumerable<XElement> docMatch =  // Searches for the corresponding match if exists
+                    from el in docFields.Elements("Field")
+                    where el.Element("SourceName").Value == getSourceFieldName() && el.Element("TargetName").Value == getTargetFieldName()
+                    select el;
+                XElement targField = null;
+                foreach (XElement el in docMatch)
+                    targField = el;
+                if(targField != null)
+                {
+                    targField.ReplaceWith(loadField);
+                    docRoot.Save(path);
+                    MethodPanelrefreshXML_Click(null, null);
+                }
+            }
+        } 
     }
 }

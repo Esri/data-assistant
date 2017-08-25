@@ -216,7 +216,33 @@
     <AddInContent Include="..\Shared\Images\StageData32.png">
       <Link>Images\StageData32.png</Link>
     </AddInContent>
-    <Content Include="GPTools\pyt\DataAssistant.pyt.xml" />
+    <Content Include="..\Shared\GPTools\pyt\base.py">
+      <Link>GPTools\pyt\base.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.Append.pyt.xml">
+      <Link>GPTools\pyt\DataAssistant.Append.pyt.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.NewFile.pyt.xml">
+      <Link>GPTools\pyt\DataAssistant.NewFile.pyt.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.Preview.pyt.xml">
+      <Link>GPTools\pyt\DataAssistant.Preview.pyt.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.pyt.xml">
+      <Link>GPTools\pyt\DataAssistant.pyt.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.Replace.pyt.xml">
+      <Link>GPTools\pyt\DataAssistant.Replace.pyt.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.Stage.pyt.xml">
+      <Link>GPTools\pyt\DataAssistant.Stage.pyt.xml</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\DATools.py">
+      <Link>GPTools\pyt\DATools.py</Link>
+    </Content>
+    <Content Include="..\Shared\GPTools\pyt\validate.py">
+      <Link>GPTools\pyt\validate.py</Link>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
@@ -263,8 +289,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <None Include="GPTools\pyt\DataAssistant.pyt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="..\Shared\GPTools\pyt\DataAssistant.pyt">
+      <Link>GPTools\pyt\DataAssistant.pyt</Link>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

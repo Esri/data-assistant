@@ -248,6 +248,12 @@
                         <DockPanel Margin="0,4,0,0" LastChildFill="True" >
                             <Button DockPanel.Dock="Right" x:Name="MethodPanelApply" Margin="4,0,0,0" Content="Apply" Style="{DynamicResource Esri_SimpleButton}" VerticalAlignment="Center" Click="MethodPanelApply_Click" Visibility="Collapsed" ToolTip="Save Changes to your Configuration File" IsEnabled="False"/>
                             <ComboBox DockPanel.Dock="Left" x:Name="comboMethod" SelectedIndex="0" Height="24" SelectionChanged="comboMethod_SelectionChanged" VerticalAlignment="Stretch">
+                                <ComboBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Save to match library" Click="MatchSave_Click"/>
+                                        <MenuItem Header="Load from match library" Click="MatchLoad_Click"/>
+                                    </ContextMenu>
+                                </ComboBox.ContextMenu>
                                 <ComboBoxItem Content="None" ToolTip="Set Target Values to null."/>
                                 <ComboBoxItem Content="Copy" ToolTip="Copy Source Field values to Target Fields."/>
                                 <ComboBoxItem Content="SetValue" ToolTip="Target Field values will be set to a constant value."/>

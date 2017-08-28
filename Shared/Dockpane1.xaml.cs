@@ -1322,7 +1322,6 @@ namespace DataAssistant
             }
 
         }
-
         private void Method4Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (Method5 != null)

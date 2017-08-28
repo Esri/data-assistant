@@ -169,7 +169,7 @@ namespace DataAssistant
         }
         public static string getToolbox(string toolname)
         {
-            string gpref = System.IO.Path.Combine(setupGP._gpFolder, "pyt", "DataAssistant.pyt", toolname);
+            string gpref = System.IO.Path.Combine(setupGP._gpFolder,"pyt", "DataAssistant.pyt", toolname);
             return gpref;
         }
         public static string getConfigFileName() 

@@ -216,6 +216,7 @@
     <AddInContent Include="..\Shared\Images\StageData32.png">
       <Link>Images\StageData32.png</Link>
     </AddInContent>
+
     <Content Include="..\Shared\GPTools\pyt\base.py">
       <Link>GPTools\pyt\base.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -247,6 +248,7 @@
     <Content Include="..\Shared\GPTools\pyt\DATools.py">
       <Link>GPTools\pyt\DATools.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dla.py">
       <Link>GPTools\pyt\scripts\dla.py</Link>
@@ -300,9 +302,12 @@
       <Link>GPTools\pyt\scripts\testHarness.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Shared\GPTools\pyt\scripts\__init__.py">
+      <Link>GPTools\pyt\scripts\__init__.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Shared\GPTools\pyt\validate.py">
       <Link>GPTools\pyt\validate.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

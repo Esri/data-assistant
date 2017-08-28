@@ -30,7 +30,6 @@ from . import dlaService
 import validate
 import DATools
 
-
 def createDlaFile(source, target, xmlFileName):
     # entry point for calling this tool from another python script
     debug = False
@@ -43,18 +42,19 @@ def createDlaFile(source, target, xmlFileName):
 
     s_layer, t_layer = DATools.DAbase.create_layers(source, target)
     validator = validate.Validator(s_layer, t_layer)
+    validator.validate()
     if validator.source_error is not None:
         if validator.source_error.severity == "ERROR":
             dla.addError(validator.source_error.message)
             return
         else:
-            arcpy.addWarning(validator.source_error.message)
+            arcpy.AddWarning(validator.source_error.message)
     if validator.target_error is not None:
         if validator.target_error.severity == "ERROR":
             dla.addError(validator.target_error.message)
             return
         else:
-            dla.addError(validator.target_error.message)
+            arcpy.AddWarning(validator.target_error.message)
 
     if str(source) == '' or str(target) == '':
         dla.addError("This tool requires both a source and target dataset, exiting.")
@@ -63,8 +63,9 @@ def createDlaFile(source, target, xmlFileName):
             "2 string layers with the same value is not supported by this tool, please rename one of the layers, exiting.")
     else:
         prj = dla.getProject()
-        sourcePath = dla.getLayerPath(source, xmlFileName)
-        targetPath = dla.getLayerPath(target, xmlFileName)
+        xmlFileName = dla.makeprjFile(xmlFileName)
+        sourcePath = dla.getLayerPath(source, xmlFileName, "source")
+        targetPath = dla.getLayerPath(target, xmlFileName, "target")
         if sourcePath == '' or targetPath == '':
             if sourcePath == '':
                 dla.addError("Invalid Path/Type for Source layer , exiting: " + str(source))
@@ -115,8 +116,8 @@ def writeDocument(sourcePath, targetPath, xmlFileName, matchLibrary, matchfile):
     else:
         prj = prj.filePath
     setSourceTarget(dataset, xmlDoc, "Project", dla.dropXmlFolder(xmlFileName, prj))
-    setSourceTarget(dataset, xmlDoc, "Source", dla.dropXmlFolder(xmlFileName, sourcePath))
-    setSourceTarget(dataset, xmlDoc, "Target", dla.dropXmlFolder(xmlFileName, targetPath))
+    setSourceTarget(dataset, xmlDoc, "Source", sourcePath)
+    setSourceTarget(dataset, xmlDoc, "Target", targetPath)
 
     setSpatialReference(dataset, xmlDoc, desc, "Source")
     setSpatialReference(dataset, xmlDoc, descT, "Target")

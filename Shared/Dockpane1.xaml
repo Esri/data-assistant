@@ -83,6 +83,9 @@
                     <frameworkControls:PanelHeader Text="Fields"/>
                 </ListBox.Items>
             </ListBox>
+            <Button HorizontalAlignment="Right" x:Name="Load_All_MatchLibrary" Click="Load_All_MatchLibrary_Click"  VerticalAlignment="Center" Style="{StaticResource Button16}" ToolTip="Loads all mappings for target fields found in the match library">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MetadataApply16.png"/>
+            </Button>
         </DockPanel>
         <Grid Grid.Row="2" x:Name="FileGrid" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Grid.Style>

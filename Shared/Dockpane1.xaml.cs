@@ -362,8 +362,10 @@ namespace DataAssistant
         private void FieldGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Need to pull the current configuration values from the config, also need to set the correct panel as visible
-            if (this._skipSelectionChanged || (_selectedRowNum == FieldGrid.SelectedIndex))
-                return;
+
+
+            if (this._skipSelectionChanged)
+              return;
             if(FieldGrid.SelectedIndex == -1)
                 return;
             _selectedRowNum = FieldGrid.SelectedIndex;
@@ -1354,15 +1356,7 @@ namespace DataAssistant
         {
             var xmlpath = AddinAssemblyLocation() + "\\MapLibrary.xml";
             if (!File.Exists(xmlpath))
-            {
-                XmlWriter writer = XmlWriter.Create(xmlpath);
-
-                writer.WriteStartElement("MatchLibrary");
-                writer.WriteStartElement("Fields");
-
-                writer.WriteEndDocument();
-                writer.Close();
-            }
+                createMatchLibraryXML(xmlpath);
 
             XElement root = XElement.Load(xmlpath);
             XElement newNode = getBaseMatchInfo();
@@ -1545,6 +1539,54 @@ namespace DataAssistant
                     MethodPanelrefreshXML_Click(null, null);
                 }
             }
-        } 
+        }
+
+        private void Load_All_MatchLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            //create a list of match library and a list of xml target fields
+            //if target fields match and xml source field is specified,
+            //    set at temporary xelement to match library field
+            //    change source name in field
+            //    replace the xml one with the intermediate match library one
+            string xmlpath = AddinAssemblyLocation() + "\\MapLibrary.xml";
+            if (!File.Exists(xmlpath))
+                createMatchLibraryXML(xmlpath);
+            string path = getXmlFileName();
+            XElement root = XElement.Load(xmlpath);
+            XElement docRoot = XElement.Load(path);
+
+            XElement fields = root.Element("Fields");
+            XElement docFields = docRoot.Element("Fields");
+
+            Dictionary<XElement, XElement> toChange = new Dictionary<XElement, XElement>();
+
+            foreach(XElement el in docFields.Elements("Field"))
+            {
+                foreach(XElement el2 in fields.Elements("Field"))
+                {
+                    if (el.Element("TargetName").Value == el2.Element("TargetName").Value)
+                    {
+                        el2.Element("SourceName").Value = el.Element("SourceName").Value;
+                        toChange.Add(el, el2);
+                    }
+                }
+            }
+            foreach (XElement el in toChange.Keys)
+                el.ReplaceWith(toChange[el]);
+
+            docRoot.Save(path);
+            MethodPanelrefreshXML_Click(null, null);
+        }
+
+        private void createMatchLibraryXML(string xmlpath)
+        {
+            XmlWriter writer = XmlWriter.Create(xmlpath);
+
+            writer.WriteStartElement("MatchLibrary");
+            writer.WriteStartElement("Fields");
+
+            writer.WriteEndDocument();
+            writer.Close();
+        }
     }
 }

@@ -163,10 +163,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>GPTools\arcpy\dlaService.py</Link>
     </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaAppendData.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaAppendData.py</Link>
-    </Content>
     <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
@@ -254,10 +250,6 @@
       <Link>GPTools\pyt\scripts\dla.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\GPTools\pyt\scripts\dlaAppendData.py">
-      <Link>GPTools\pyt\scripts\dlaAppendData.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaCreateSourceTarget.py">
       <Link>GPTools\pyt\scripts\dlaCreateSourceTarget.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -276,10 +268,6 @@
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaPublish.py">
       <Link>GPTools\pyt\scripts\dlaPublish.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Shared\GPTools\pyt\scripts\dlaReplaceByField.py">
-      <Link>GPTools\pyt\scripts\dlaReplaceByField.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaService.py">
@@ -322,10 +310,6 @@
     <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>GPTools\arcpy\dlaPublish.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaReplaceByField.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaReplaceByField.py</Link>
     </Content>
     <Content Include="..\Shared\GPTools\arcpy\dlaStage.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

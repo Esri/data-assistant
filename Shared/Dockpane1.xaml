@@ -415,7 +415,7 @@
                                 <Button DockPanel.Dock="Right" x:Name="DomainMapAdd" Content="+" MinWidth="20" MinHeight="20" Margin="0,0,0,0" Padding="0" Style="{DynamicResource Esri_SimpleButton}" VerticalAlignment="Center" Click="DomainMapAdd_Click" ToolTip="Add a row to the grid"/>
                                 <Label DockPanel.Dock="Left" Padding="0" Content="Domain Mapping" Foreground="{DynamicResource Esri_Gray155}"/>
                             </DockPanel>
-                            <DataGrid x:Name="Method11Grid" MaxHeight="150" HorizontalAlignment="Stretch" Margin="0,4,0,0" AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="True" 
+                            <DataGrid x:Name="Method11Grid" MaxHeight="150" HorizontalAlignment="Stretch" Margin="0,4,0,0" AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True"  CanUserResizeColumns="True" CanUserSortColumns="True" ScrollViewer.CanContentScroll="False" 
                                 ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" >
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn x:Name="Method11Sources" Header="Source Domain Values" Width="*" CanUserResize="True" CanUserSort="True" >

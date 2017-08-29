@@ -354,11 +354,21 @@ namespace DataAssistant
                                     if (length == -1)
                                     {
                                         // num chars for right function
-                                        textval = targName + "=" + att.InnerText.Substring(att.InnerText.Length - start);
+                                        if (att.InnerText == "None")
+                                            textval = targName + "=None";
+                                        else
+                                            try
+                                            {
+                                                textval = targName + "=" + att.InnerText.Substring(att.InnerText.Length - start);
+                                            }
+                                            catch { textval = targName + "=" + att.InnerText; }
                                     }
                                     else
                                     {
-                                        textval = targName + "=" + att.InnerText.Substring(start, length);
+                                        if (att.InnerText == "None")
+                                            textval = targName + "=None";
+                                        else
+                                            textval = targName + "=" + att.InnerText.Substring(start, length);
                                     }
                                 }
                                 catch { textval = targName + "=" + att.InnerText.Substring(start); }

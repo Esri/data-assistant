@@ -41,7 +41,7 @@ def main(argv = None):
         dla.addError("Errors occurred during field calculation")
     arcpy.SetParameter(SUCCESS, success)
 
-def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
+def calculate(xmlFileName,workspace,name,ignore):
 
     dla.workspace = workspace
     success = True
@@ -124,7 +124,7 @@ def calculate(xmlFileName,workspace,name,ignore, continue_on_error = True):
                 #leng = field.getAttributeNode("Length").nodeValue
                 #ftypes.append(typ)
                 #lengths.append(leng)
-    retVal = setFieldValues(table,fields,names,ftypes,lengths, xmlFileName, continue_on_error)
+    retVal = setFieldValues(table,fields,names,ftypes,lengths)
     if retVal == False:
         success = False
     arcpy.ClearWorkspaceCache_management(dla.workspace)
@@ -164,7 +164,7 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
-def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_error):
+def setFieldValues(table,fields,names,ftypes,lengths):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
     row = None
@@ -176,7 +176,7 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
         dla.addMessage(table + ", " + str(numFeat) + " features")
         i = 0
         arcpy.SetProgressor("Step","Calculating " + table + "...",0,numFeat,getProgressUpdate(numFeat))
-        targetfields_dict = dla.getTargetFieldsNode(xmlLocation)
+
         for row in updateCursor:
             success = True
             if dla._errCount > dla.maxErrorCount:
@@ -196,7 +196,6 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
                 targetValue = getTargetValue(row,field,names,sourceName,targetName)
                 sourceValue = getSourceValue(row,names,sourceName,targetName)
                 method = dla.getNodeValue(field,"Method").replace(" ","")
-
                 try:
                     fnum = dla.getFieldIndexList(names,targetName)
                 except:
@@ -205,13 +204,7 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
                 if fnum != None:
                     if method == "None" or (method == "Copy" and sourceName == '(None)'):
                         method = "None"
-                        if targetfields_dict.get(targetName, False).get('defaultValue', False) and targetfields_dict.get(targetName,False).get('Nullable', False):
-                            if targetfields_dict[targetName]['defaultValue'] == "" and targetfields_dict[targetName]['Nullable'] == "False":
-                                nullableErrorMessage = "ERROR: "+targetName + " does not allow for null values and does not have a default value. Please map this field or give it a default value in the target dataset."
-                                dla.addError(nullableErrorMessage)
-                                sys.exit(-1)
-                            else:
-                                val = None
+                        val = None
                     elif method == "Copy":
                         val = sourceValue
                     elif method == "DefaultValue":
@@ -279,7 +272,7 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
                     error_value = row[names.index(error_field[0])]
                     error = "{} Value: {}".format(error, error_value)
                 dla.addError(error)
-                if not continue_on_error:
+                if True:  # Potentially worth adding a GP parameter to let you continue on error as opposed to quitting early
                     sys.exit(1)
 
                 dla._errCount += 1
@@ -298,7 +291,7 @@ def setFieldValues(table,fields,names,ftypes,lengths, xmlLocation, continue_on_e
         err = "Exception caught: unable to update dataset"
         # if row != None:
         #     printRow(row,names)
-        #dla.showTraceback():
+        #dla.showTraceback()
         dla.addError(traceback.format_exc())
 
     finally:

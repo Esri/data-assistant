@@ -410,7 +410,7 @@ def appendRows(sourceTable, targetTable, expr, continue_on_error=True):
     retcode = True
 
     if int(numTargetFeat) != int(numSourceFeat) + int(numOriginalTarFeat):
-        addError("WARNING: Different number of rows in target dataset, " + numTargetFeat)
+        arcpy.addWarningMessage("WARNING: Different number of rows in target dataset, " + numTargetFeat)
         if not continue_on_error:
             sys.exit(-1)  # Option to stop all xml scripts if
     if int(numTargetFeat) == 0:
@@ -930,54 +930,91 @@ def getMapLayer(layerName):
     return layer
 
 
-def getLayerPath(layer, xmlFileName):
+def makeprjFile(xmlFileName):
+    path = pathlib.Path(xmlFileName)
+    dir_path = str(path.parent / path.stem)
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
+    return os.path.join(dir_path, os.path.basename(xmlFileName))
+
+
+def getLayerPath(in_lyr, xmlFileName, input_type):
     # get the source data path for a layer
     pth = ''
 
-    if isinstance(layer, arcpy._mp.LayerFile):  # map layerFile as parameter
-        pth = layer.filePath
+    if isinstance(in_lyr, arcpy._mp.LayerFile):  # map layerFile as parameter
+        xmlpath = pathlib.Path(xmlFileName).parent.absolute() / os.path.basename(in_lyr.filePath)
+        if os.path.exists(str(xmlpath)):
+            os.remove(str(xmlpath))
+        layer_path = arcpy.SaveToLayerFile_management(in_lyr.filePath, str(xmlpath))[0]
+        new_name = pathlib.Path(layer_path).parent.absolute() / (input_type + ".lyrx")
+        if os.path.exists(str(new_name)):
+            os.remove(str(new_name))
+        arcpy.Rename_management(layer_path, input_type + ".lyrx")
+        pth = new_name
         addMessage("Used .lyrx filePath as source")
 
-    elif isinstance(layer, arcpy._mp.Layer):  # map layer as parameter
+    elif isinstance(in_lyr, arcpy._mp.Layer):  # map layer as parameter
         try:
-            xmlpath = pathlib.Path(xmlFileName).parent.absolute() / (layer.name + ".lyrx")
-            layer_path = arcpy.SaveToLayerFile_management(layer.name,
-                                                          str(xmlpath)).getOutput(0)
-            pth = layer_path
+            xmlpath = pathlib.Path(xmlFileName).parent.absolute() / (in_lyr.name + ".lyrx")
+            if os.path.exists(str(xmlpath)):
+                os.remove(str(xmlpath))
+            layer_path = arcpy.SaveToLayerFile_management(in_lyr.name, str(xmlpath))[0]
+            new_name = pathlib.Path(layer_path).parent.absolute() / (input_type + ".lyrx")
+            if os.path.exists(str(new_name)):
+                os.remove(str(new_name))
+            arcpy.Rename_management(layer_path, input_type + ".lyrx")
+            pth = new_name
         except:
             addError(traceback.format_exc)
-            addError("Unable to create layer file for " + layer.name)
+            addError("Unable to create layer file for " + in_lyr.name)
             # else:
             #    addError("Layer does not support the datasource property.  Please ensure you selected a layer and not a group layer")
 
-    elif isinstance(layer, str) and layer.lower().endswith(_lyrx):
-        layer = arcpy.mp.LayerFile(layer)
-        try:
-            pth = layer.filePath
-            addMessage("Used .lyrx filePath as source")
-        except:
-            addMessage("Failed to use .lyrx filePath as source")
+    elif isinstance(in_lyr, str) and in_lyr.lower().endswith(_lyrx):
+        in_lyr = arcpy.mp.LayerFile(in_lyr)
+        xmlpath = pathlib.Path(xmlFileName).parent.absolute() / os.path.basename(in_lyr.filePath)
+        if os.path.exists(str(xmlpath)):
+            os.remove(str(xmlpath))
+        layer_path = arcpy.SaveToLayerFile_management(in_lyr.filePath, str(xmlpath))[0]
+        new_name = pathlib.Path(layer_path).parent.absolute() / (input_type + ".lyrx")
+        if os.path.exists(str(new_name)):
+            os.remove(str(new_name))
+        arcpy.Rename_management(layer_path, input_type + ".lyrx")
+        pth = new_name
 
     else:  # should be a string, check if feature layer string, then try to describe
-        pth = repairLayerSourceUrl(layer, layer)
+        pth = repairLayerSourceUrl(in_lyr, in_lyr)
         if isFeatureLayerUrl(pth):
             return pth
         # else - not needed but else logic below
         try:
-            desc = arcpy.Describe(layer)  # dataset path/source as parameter
-            pth = desc.catalogPath
+            desc = arcpy.Describe(in_lyr)  # dataset path/source as parameter
+            if not desc.dataType == 'Table':
+                fl = arcpy.MakeFeatureLayer_management(in_lyr)[0]
+                xmlpath = pathlib.Path(xmlFileName).parent.absolute() / (fl.name + ".lyrx")
+                if os.path.exists(str(xmlpath)):
+                    os.remove(str(xmlpath))
+                layer_path = arcpy.SaveToLayerFile_management(fl, str(xmlpath))[0]
+                new_name = pathlib.Path(layer_path).parent.absolute() / (input_type + ".lyrx")
+                if os.path.exists(str(new_name)):
+                    os.remove(str(new_name))
+                arcpy.Rename_management(layer_path, input_type + ".lyrx")
+                pth = str(new_name)
+            else:
+                pth = desc.catalogPath
         except:
-            lyr = getMapLayer(layer)  # layer name in the project/map - if not described then could be layer name
+            lyr = getMapLayer(in_lyr)  # layer name in the project/map - if not described then could be layer name
             if lyr != None and lyr.supports("DataSource"):
                 pth = lyr.dataSource
-                layer = lyr
+                in_lyr = lyr
             else:
-                addError("Unable to get the DataSource for the layer: " + str(layer))
+                addError("Unable to get the DataSource for the layer: " + str(in_lyr))
                 return ''
     # handle special cases for layer paths (urls, CIMWKSP, layer ids with characters)
-    pth = repairLayerSourceUrl(pth, layer)
+    pth = repairLayerSourceUrl(pth, in_lyr)
     # handle special case for joined layers
-    pth = getJoinedLayer(layer, pth)
+    pth = getJoinedLayer(in_lyr, pth)
 
     addMessage(pth)
     return pth
@@ -1081,7 +1118,6 @@ def repairLayerSourceUrl(layerPath, lyr):
 
 def getTempTable(name):
     return os.path.join(workspace, name)
-
 
 
 def setWorkspace():

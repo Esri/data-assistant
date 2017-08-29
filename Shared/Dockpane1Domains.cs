@@ -34,7 +34,6 @@ namespace DataAssistant
     /// </summary>
     public partial class Dockpane1View : UserControl
     {
-
         private void setDomainMapValues(int combonum, string nodename)
         {
             if (FieldGrid.SelectedIndex == -1)
@@ -512,25 +511,6 @@ namespace DataAssistant
             if (Method11Grid.SelectedIndex > -1 && Method11Grid.Items.Count > 0)
                 Method11Grid.Items.RemoveAt(Method11Grid.SelectedIndex);
         }
-
-
-        //This function was a possible enhancement to allow for custom Values to be added to the domain map. It is currently
-        //unimplemented.
-        //private void AddCustomValueMap(object sender, RoutedEventArgs e)
-        //{
-  
-        //    string theText = CustomValueField.Text;
-        //    CustomValueField.Clear();
-
-        //    ComboData newEntry = new ComboData();
-        //    newEntry.Id = newEntry.Tooltip = newEntry.Value = theText;
-        //    _domainSourceValues.Add(newEntry);
-        //    _domainTargetValues.Add(newEntry);
-        //}
-
-
-
-
     }
 }
 

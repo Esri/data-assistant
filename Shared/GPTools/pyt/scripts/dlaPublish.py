@@ -50,8 +50,11 @@ def publish(xmlFileNames, continue_on_error, _useReplaceSettings):
 
     for xmlFile in xmlFileNames:  # multi value parameter, loop for each file
 
-        validator = validate.Validator.from_xml(xmlFile)
-        validator.validate()
+        try:
+            validator = validate.Validator.from_xml(xmlFileName)
+            validator.validate()
+        except:
+            arcpy.AddMessage("Validation unable to be completed")
 
         if validator.source_error is not None:
             if validator.source_error.severity == "ERROR":

@@ -39,10 +39,11 @@ def stage(xmlFileNames, continue_on_error):
         xmlFileNames.append(xml_file)
 
     for xmlFileName in xmlFileNames:
-
-        validator = validate.Validator.from_xml(xmlFileName)
-        validator.validate()
-
+        try:
+            validator = validate.Validator.from_xml(xmlFileName)
+            validator.validate()
+        except:
+            arcpy.AddMessage("Validation unable to be completed")
         if validator.source_error is not None:
             if validator.source_error.severity == "ERROR":
                 dla.addError(validator.source_error.message)

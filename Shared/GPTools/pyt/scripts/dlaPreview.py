@@ -36,8 +36,11 @@ def preview(xmlFileNames, continue_on_error, rowLimit):
 
     for xmlFileName in xmlFileNames:
 
-        validator = validate.Validator.from_xml(xmlFileName)
-        validator.validate()
+        try:
+            validator = validate.Validator.from_xml(xmlFileName)
+            validator.validate()
+        except:
+            arcpy.AddMessage("Validation unable to be completed")
 
         if validator.source_error is not None:
             if validator.source_error.severity == "ERROR":

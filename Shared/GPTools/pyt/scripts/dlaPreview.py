@@ -23,11 +23,44 @@ import os
 import arcpy
 
 from . import dlaExtractLayerToGDB, dlaFieldCalculator, dla
-
+import validate
+import DATools
 
 def preview(xmlFileNames, continue_on_error, rowLimit):
     layers = list()
+
+    if type(xmlFileNames) is not list:
+        xml_file = xmlFileNames
+        xmlFileNames = list()
+        xmlFileNames.append(xml_file)
+
     for xmlFileName in xmlFileNames:
+
+        try:
+            validator = validate.Validator.from_xml(xmlFileName)
+            validator.validate()
+        except:
+            arcpy.AddMessage("Validation unable to be completed")
+
+        if validator.source_error is not None:
+            if validator.source_error.severity == "ERROR":
+                dla.addError(validator.source_error.message)
+                if continue_on_error:
+                    continue
+                else:
+                    return
+            else:
+                arcpy.AddWarning(validator.source_error.message)
+        if validator.target_error is not None:
+            if validator.target_error.severity == "ERROR":
+                dla.addError(validator.target_error.message)
+                if continue_on_error:
+                    continue
+                else:
+                    return
+            else:
+                arcpy.AddWarning(validator.target_error.message)
+
         dla.setWorkspace()
         dla._errCount = 0
         arcpy.AddMessage("Data Assistant - Preview")

@@ -41,7 +41,8 @@ class Append(DAbase):
         params = [ParamWrapper(p).getValues() for p in parameters[:-1]]
         xml, continue_on_error = params
         results = self.run(xml, continue_on_error)
-        arcpy.SetParameter(len(params)-1, results)
+        if results is not None:
+            arcpy.SetParameter(len(params)-1, results)
 
     @staticmethod
     def run(xml: list, continue_on_error: bool):
@@ -86,7 +87,8 @@ class Replace(DAbase):
         params = [ParamWrapper(p).getValues() for p in parameters[:-1]]
         xml, continue_on_error = params
         results = self.run(xml, continue_on_error)
-        arcpy.SetParameter(len(params)-1, results)
+        if results is not None:
+            arcpy.SetParameter(len(params)-1, results)
 
     @staticmethod
     def run(xml: list, continue_on_error: bool):
@@ -131,7 +133,8 @@ class NewFile(DAbase):
         params = [ParamWrapper(p).getValues() for p in parameters]
         source, target, xml = params
         results = self.run(source, target, xml)
-        arcpy.SetParameter(len(params)-1, results)
+        if results is not None:
+            arcpy.SetParameter(len(params)-1, results)
 
     @staticmethod
     def run(source, target, xml):
@@ -176,7 +179,8 @@ class Stage(DAbase):
         params = [ParamWrapper(p).getValues() for p in parameters[:-1]]
         xml_param, continue_on_error = params
         results = self.run(xml_param, continue_on_error)
-        arcpy.SetParameter(len(parameters)-1, results)
+        if results is not None:
+            arcpy.SetParameter(len(parameters)-1, results)
 
     @staticmethod
     def run(xml: list, continue_on_error: bool):

@@ -151,26 +151,6 @@
     <AddInContent Include="..\Shared\DarkImages\StageData32.png">
       <Link>DarkImages\StageData32.png</Link>
     </AddInContent>
-    <Content Include="..\Shared\GPTools\arcpy\dla.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dla.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaExtractLayerToGDB.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaExtractLayerToGDB.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaService.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaService.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaAppendData.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaAppendData.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
-    </Content>
     <AddInContent Include="..\Shared\Images\AppendData16.png">
       <Link>Images\AppendData16.png</Link>
     </AddInContent>
@@ -215,118 +195,90 @@
     </AddInContent>
     <Content Include="..\Shared\GPTools\pyt\base.py">
       <Link>GPTools\pyt\base.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DataAssistant.Append.pyt.xml">
       <Link>GPTools\pyt\DataAssistant.Append.pyt.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DataAssistant.NewFile.pyt.xml">
       <Link>GPTools\pyt\DataAssistant.NewFile.pyt.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DataAssistant.Preview.pyt.xml">
       <Link>GPTools\pyt\DataAssistant.Preview.pyt.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DataAssistant.pyt.xml">
       <Link>GPTools\pyt\DataAssistant.pyt.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DataAssistant.Replace.pyt.xml">
       <Link>GPTools\pyt\DataAssistant.Replace.pyt.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DataAssistant.Stage.pyt.xml">
       <Link>GPTools\pyt\DataAssistant.Stage.pyt.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\DATools.py">
       <Link>GPTools\pyt\DATools.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dla.py">
       <Link>GPTools\pyt\scripts\dla.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Shared\GPTools\pyt\scripts\dlaAppendData.py">
-      <Link>GPTools\pyt\scripts\dlaAppendData.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaCreateSourceTarget.py">
       <Link>GPTools\pyt\scripts\dlaCreateSourceTarget.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaExtractLayerToGDB.py">
       <Link>GPTools\pyt\scripts\dlaExtractLayerToGDB.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaFieldCalculator.py">
       <Link>GPTools\pyt\scripts\dlaFieldCalculator.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaPreview.py">
       <Link>GPTools\pyt\scripts\dlaPreview.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaPublish.py">
       <Link>GPTools\pyt\scripts\dlaPublish.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Shared\GPTools\pyt\scripts\dlaReplaceByField.py">
-      <Link>GPTools\pyt\scripts\dlaReplaceByField.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaService.py">
       <Link>GPTools\pyt\scripts\dlaService.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dlaStage.py">
       <Link>GPTools\pyt\scripts\dlaStage.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\FieldMatcher.xsl">
       <Link>GPTools\pyt\scripts\FieldMatcher.xsl</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\MatchLocal.xml">
       <Link>GPTools\pyt\scripts\MatchLocal.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\testHarness.py">
       <Link>GPTools\pyt\scripts\testHarness.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\__init__.py">
       <Link>GPTools\pyt\scripts\__init__.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\GPTools\pyt\validate.py">
       <Link>GPTools\pyt\validate.py</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaFieldCalculator.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaPreview.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaPreview.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaPublish.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaReplaceByField.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaReplaceByField.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaStage.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaStage.py</Link>
-    </Content>
     <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
@@ -336,7 +288,6 @@
       <Link>GPTools\arcpy\MatchLocal.xml</Link>
     </Content>
     <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>GPTools\DataLoadingAssistant.tbx</Link>
     </Content>
   </ItemGroup>
@@ -353,7 +304,7 @@
   <ItemGroup>
     <None Include="..\Shared\GPTools\pyt\DataAssistant.pyt">
       <Link>GPTools\pyt\DataAssistant.pyt</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

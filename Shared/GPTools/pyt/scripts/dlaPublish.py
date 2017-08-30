@@ -1,5 +1,6 @@
 ﻿import os
-
+import DATools
+import validate
 import arcpy
 
 from . import dlaExtractLayerToGDB, dlaFieldCalculator, dla, dlaService
@@ -38,12 +39,42 @@ def publish(xmlFileNames, continue_on_error, _useReplaceSettings):
     arcpy.AddMessage("Data Assistant")
     # function called from main or from another script, performs the data update processing
     dla._errCount = 0
-    dla.addMessage("CONTINUE ON ERROR SET TO: " + str(continue_on_error))
     arcpy.SetProgressor("default", "Data Assistant")
     arcpy.SetProgressorLabel("Data Assistant")
-    layers = []
+    layers = list()
+
+    if type(xmlFileNames) is not list:
+        xml_file = xmlFileNames
+        xmlFileNames = list()
+        xmlFileNames.append(xml_file)
 
     for xmlFile in xmlFileNames:  # multi value parameter, loop for each file
+
+        try:
+            validator = validate.Validator.from_xml(xmlFileName)
+            validator.validate()
+        except:
+            arcpy.AddMessage("Validation unable to be completed")
+
+        if validator.source_error is not None:
+            if validator.source_error.severity == "ERROR":
+                dla.addError(validator.source_error.message)
+                if continue_on_error:
+                    continue
+                else:
+                    return
+            else:
+                arcpy.AddWarning(validator.source_error.message)
+        if validator.target_error is not None:
+            if validator.target_error.severity == "ERROR":
+                dla.addError(validator.target_error.message)
+                if continue_on_error:
+                    continue
+                else:
+                    return
+            else:
+                arcpy.AddWarning(validator.target_error.message)
+
         xmlFile = dla.getXmlDocName(xmlFile)
         dla.addMessage("Configuration file: " + xmlFile)
         xmlDoc = dla.getXmlDoc(xmlFile)  # parse the xml document

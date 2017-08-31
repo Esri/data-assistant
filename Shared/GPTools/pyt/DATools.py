@@ -109,7 +109,7 @@ class NewFile(DAbase):
         """Define parameter definitions"""
         source_layer = self.get_input_layer(name="source", displayName="Source Dataset")
         target_layer = self.get_input_layer(name="target", displayName="Target Dataset")
-        output_xml = self.get_xml_parameter(direction="Output")
+        output_xml = self.get_output_folder()
         parameters = [source_layer, target_layer, output_xml]
         return parameters
 
@@ -139,7 +139,7 @@ class NewFile(DAbase):
     @staticmethod
     def run(source, target, xml):
         """Calls the dla script"""
-        return scripts.dlaCreateSourceTarget.createDlaFile(source, target, xml)
+        return scripts.dlaCreateSourceTarget.createDlaFile(source, target, xml+".xml")
 
 
 class Stage(DAbase):

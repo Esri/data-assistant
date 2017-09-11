@@ -285,19 +285,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\MatchLocal.xml</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
-      <Link>GPTools\DataLoadingAssistant.tbx</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Page Include="..\Shared\Dockpane1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

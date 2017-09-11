@@ -157,22 +157,6 @@
     <AddInContent Include="..\Shared\DarkImages\StageData32.png">
       <Link>DarkImages\StageData32.png</Link>
     </AddInContent>
-    <Content Include="..\Shared\GPTools\arcpy\dla.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dla.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaExtractLayerToGDB.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaExtractLayerToGDB.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaService.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaService.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
-    </Content>
     <AddInContent Include="..\Shared\Images\AddInDesktop16.png">
       <Link>Images\AddInDesktop16.png</Link>
     </AddInContent>
@@ -300,35 +284,6 @@
     </Content>
     <Content Include="..\Shared\GPTools\pyt\validate.py">
       <Link>GPTools\pyt\validate.py</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaFieldCalculator.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaPreview.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaPreview.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaPublish.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaStage.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaStage.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\MatchLocal.xml</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
-      <Link>GPTools\DataLoadingAssistant.tbx</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>

@@ -53,27 +53,27 @@ def publish(xmlFileNames, continue_on_error, _useReplaceSettings):
         try:
             validator = validate.Validator.from_xml(xmlFileName)
             validator.validate()
+
+            if validator.source_error is not None:
+                if validator.source_error.severity == "ERROR":
+                    dla.addError(validator.source_error.message)
+                    if continue_on_error:
+                        continue
+                    else:
+                        return
+                else:
+                    arcpy.AddWarning(validator.source_error.message)
+            if validator.target_error is not None:
+                if validator.target_error.severity == "ERROR":
+                    dla.addError(validator.target_error.message)
+                    if continue_on_error:
+                        continue
+                    else:
+                        return
+                else:
+                    arcpy.AddWarning(validator.target_error.message)
         except:
             arcpy.AddMessage("Validation unable to be completed")
-
-        if validator.source_error is not None:
-            if validator.source_error.severity == "ERROR":
-                dla.addError(validator.source_error.message)
-                if continue_on_error:
-                    continue
-                else:
-                    return
-            else:
-                arcpy.AddWarning(validator.source_error.message)
-        if validator.target_error is not None:
-            if validator.target_error.severity == "ERROR":
-                dla.addError(validator.target_error.message)
-                if continue_on_error:
-                    continue
-                else:
-                    return
-            else:
-                arcpy.AddWarning(validator.target_error.message)
 
         xmlFile = dla.getXmlDocName(xmlFile)
         dla.addMessage("Configuration file: " + xmlFile)

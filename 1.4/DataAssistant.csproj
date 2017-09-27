@@ -93,6 +93,12 @@
       <DependentUpon>Dockpane1.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\Shared\Dockpane1Apply.cs" />
+    <Compile Include="..\Shared\Dockpane1GetSet.cs">
+      <Link>Dockpane1GetSet.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Dockpane1MatchLib.cs">
+      <Link>Dockpane1MatchLib.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Dockpane1ViewModel.cs" />
     <Compile Include="..\Shared\Dockpane1Preview.cs" />
     <Compile Include="..\Shared\Dockpane2Settings.xaml.cs">
@@ -276,19 +282,6 @@
     <Content Include="..\Shared\GPTools\pyt\validate.py">
       <Link>GPTools\pyt\validate.py</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\MatchLocal.xml</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
-      <Link>GPTools\DataLoadingAssistant.tbx</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>

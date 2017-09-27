@@ -1,0 +1,26 @@
+#!/usr/bin/env groovy
+pipeline{
+	agent any
+	stages{
+		stage('CreateFile'){
+			steps{
+				bat 'UnitTests\\RunCreateTest'
+			}
+		}
+		stage('Preview'){
+			steps{
+				bat 'UnitTests\\RunPreviewTest'
+			}
+		}
+		stage('Stage'){
+			steps{
+				bat 'UnitTests\\RunStageTest'
+			}
+		}
+		stage('Append//Replace'){
+			steps{
+				bat 'UnitTests\\RunAppendTest'
+			}
+		}
+	}
+}

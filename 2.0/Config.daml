@@ -1,11 +1,11 @@
 ﻿<ArcGIS defaultAssembly="DataAssistant.dll" defaultNamespace="DataAssistant" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="2017.8.25" desktopVersion="2.0">
+  <AddInInfo id="{28142961-b645-420f-ba2a-72bcf8212558}" version="2017.9.1" desktopVersion="2.0">
     <Name>DataAssistant</Name>
     <Description>The Data Assistant can be used to transform your organization’s data and load it into a database or service.</Description>
     <Image>Images\DataMapper32.png</Image>
     <Author>Esri</Author>
     <Company>Vertex3 for Esri</Company>
-    <Date>2017.8.25</Date>
+    <Date>2017.9.1</Date>
     <Subject>Content,Framework,Data Loading Assistant</Subject>
   </AddInInfo>
   <modules>

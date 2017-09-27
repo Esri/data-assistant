@@ -72,6 +72,18 @@ class DAbase(object):
         return p
 
     @staticmethod
+    def get_output_folder(**kwargs):
+        """Returns a folder output for New File"""
+        p = arcpy.Parameter(name="output_directory",
+                            displayName="Source-Target configuration folder",
+                            datatype="DEFolder",
+                            direction="Output",
+                            parameterType="Required")
+        for k, v in kwargs.items():
+            setattr(p, k, v)
+        return p
+
+    @staticmethod
     def create_layers(source, target):
         """Creates layer objects out of the source and target parameters"""
         sDescribe = arcpy.Describe(source)

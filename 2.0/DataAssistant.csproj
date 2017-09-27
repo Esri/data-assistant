@@ -93,6 +93,12 @@
       <DependentUpon>Dockpane1.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\Shared\Dockpane1Apply.cs" />
+    <Compile Include="..\Shared\Dockpane1GetSet.cs">
+      <Link>Dockpane1GetSet.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Dockpane1MatchLib.cs">
+      <Link>Dockpane1MatchLib.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Dockpane1ViewModel.cs" />
     <Compile Include="..\Shared\Dockpane1Preview.cs" />
     <Compile Include="..\Shared\Dockpane2Settings.xaml.cs">
@@ -151,22 +157,6 @@
     <AddInContent Include="..\Shared\DarkImages\StageData32.png">
       <Link>DarkImages\StageData32.png</Link>
     </AddInContent>
-    <Content Include="..\Shared\GPTools\arcpy\dla.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dla.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaExtractLayerToGDB.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaExtractLayerToGDB.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaService.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaService.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaCreateSourceTarget.py</Link>
-    </Content>
     <AddInContent Include="..\Shared\Images\AddInDesktop16.png">
       <Link>Images\AddInDesktop16.png</Link>
     </AddInContent>
@@ -212,7 +202,6 @@
     <AddInContent Include="..\Shared\Images\StageData32.png">
       <Link>Images\StageData32.png</Link>
     </AddInContent>
-
     <Content Include="..\Shared\GPTools\pyt\base.py">
       <Link>GPTools\pyt\base.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -244,7 +233,6 @@
     <Content Include="..\Shared\GPTools\pyt\DATools.py">
       <Link>GPTools\pyt\DATools.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-
     </Content>
     <Content Include="..\Shared\GPTools\pyt\scripts\dla.py">
       <Link>GPTools\pyt\scripts\dla.py</Link>
@@ -296,35 +284,6 @@
     </Content>
     <Content Include="..\Shared\GPTools\pyt\validate.py">
       <Link>GPTools\pyt\validate.py</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaFieldCalculator.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaPreview.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaPreview.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaPublish.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\dlaStage.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\dlaStage.py</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\FieldMatcher.xsl</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>GPTools\arcpy\MatchLocal.xml</Link>
-    </Content>
-    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx">
-      <Link>GPTools\DataLoadingAssistant.tbx</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>

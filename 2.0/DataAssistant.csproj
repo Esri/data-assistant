@@ -284,6 +284,7 @@
     </Content>
     <Content Include="..\Shared\GPTools\pyt\validate.py">
       <Link>GPTools\pyt\validate.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -297,10 +298,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Shared\GPTools\pyt\DataAssistant.pyt">
+    <Content Include="..\Shared\GPTools\pyt\DataAssistant.pyt">
       <Link>GPTools\pyt\DataAssistant.pyt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.PackageAddIn" />

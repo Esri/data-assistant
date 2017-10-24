@@ -410,7 +410,7 @@ def appendRows(sourceTable, targetTable, expr, continue_on_error=True):
     retcode = True
 
     if int(numTargetFeat) != int(numSourceFeat) + int(numOriginalTarFeat):
-        arcpy.addWarningMessage("WARNING: Different number of rows in target dataset, " + numTargetFeat)
+        arcpy.AddWarning("WARNING: Different number of rows in target dataset, " + numTargetFeat)
         if not continue_on_error:
             sys.exit(-1)  # Option to stop all xml scripts if
     if int(numTargetFeat) == 0:

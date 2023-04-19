@@ -6,7 +6,7 @@ The data-assistant repo includes an ArcGIS Pro Add-in that helps communities (st
 
 * Data Assistant Add-in
 * Community Addresses
-* Community Parcels
+* Community Parcels test
 
 ## Instructions (2 options)
 

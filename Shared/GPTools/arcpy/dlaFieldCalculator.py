@@ -48,7 +48,7 @@ def calculate(xmlFileName,workspace,name,ignore):
     arcpy.ClearWorkspaceCache_management(dla.workspace)
     xmlDoc = dla.getXmlDoc(xmlFileName)
     dla.addMessage("Field Calculator: " + xmlFileName)
-    arcpy.env.Workspace = dla.workspace
+    arcpy.env.workspace = dla.workspace
     table = dla.getTempTable(name)
 
     if not arcpy.Exists(table):
@@ -76,7 +76,7 @@ def calculate(xmlFileName,workspace,name,ignore):
 
 
     for field in fields:
-        arcpy.env.Workspace = dla.workspace
+        arcpy.env.workspace = dla.workspace
         targetName = dla.getNodeValue(field,"TargetName")
         sourceName = dla.getNodeValue(field,"SourceName")
 

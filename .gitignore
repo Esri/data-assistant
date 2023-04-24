@@ -27,7 +27,13 @@ bld/
 [Oo]bj/
 [Ll]og/
 
-# Include release build of the 1.4 and 2.0 add-ins
+# Include release build of the 1.4,2.0,3.0 add-ins
+3.0/*
+!3.0/bin
+3.0/bin/*
+!3.0/bin/Release/
+3.0/bin/Release/*
+!3.0/bin/Release/*.esriAddInX
 2.0/*
 !2.0/bin
 2.0/bin/*

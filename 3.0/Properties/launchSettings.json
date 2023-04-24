@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "DataAssistant": {
+      "commandName": "Executable",
+      "executablePath": "C:\\ArcGIS\\bin\\ArcGISPro.exe",
+      "commandLineArgs": ""
+    }
+  }
+}

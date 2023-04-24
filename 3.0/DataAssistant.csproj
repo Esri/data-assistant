@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>CA1416</NoWarn>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\DataClasses.cs" Link="DataClasses.cs" />
+    <Compile Include="..\Shared\Dockpane1.xaml.cs" Link="Dockpane1.xaml.cs" />
+    <Compile Include="..\Shared\Dockpane1Apply.cs" Link="Dockpane1Apply.cs" />
+    <Compile Include="..\Shared\Dockpane1CheckXmlFile.cs" Link="Dockpane1CheckXmlFile.cs" />
+    <Compile Include="..\Shared\Dockpane1Domains.cs" Link="Dockpane1Domains.cs" />
+    <Compile Include="..\Shared\Dockpane1Preview.cs" Link="Dockpane1Preview.cs" />
+    <Compile Include="..\Shared\Dockpane1ViewModel.cs" Link="Dockpane1ViewModel.cs" />
+    <Compile Include="..\Shared\Dockpane2Settings.xaml.cs" Link="Dockpane2Settings.xaml.cs" />
+    <Compile Include="..\Shared\Dockpane2SettingsViewModel.cs" Link="Dockpane2SettingsViewModel.cs" />
+    <Compile Include="..\Shared\gridTooltipCreator.cs" Link="gridTooltipCreator.cs" />
+    <Compile Include="..\Shared\Module1.cs" Link="Module1.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <HintPath>C:\ArcGIS\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>C:\ArcGIS\bin\ArcGIS.Core.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <HintPath>C:\ArcGIS\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <HintPath>C:\ArcGIS\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Catalog">
+      <HintPath>C:\ArcGIS\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Editing">
+      <HintPath>C:\ArcGIS\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <HintPath>C:\ArcGIS\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config.daml" />
+    <Content Include="..\Shared\DarkImages\AppendData16.png" Link="DarkImages\AppendData16.png" />
+    <Content Include="..\Shared\DarkImages\AppendData32.png" Link="DarkImages\AppendData32.png" />
+    <Content Include="..\Shared\DarkImages\CogWheel16.png" Link="DarkImages\CogWheel16.png" />
+    <Content Include="..\Shared\DarkImages\CogWheel32.png" Link="DarkImages\CogWheel32.png" />
+    <Content Include="..\Shared\DarkImages\DataMapper16.png" Link="DarkImages\DataMapper16.png" />
+    <Content Include="..\Shared\DarkImages\DataMapper32.png" Link="DarkImages\DataMapper32.png" />
+    <Content Include="..\Shared\DarkImages\NewFile16.png" Link="DarkImages\NewFile16.png" />
+    <Content Include="..\Shared\DarkImages\NewFile32.png" Link="DarkImages\NewFile32.png" />
+    <Content Include="..\Shared\DarkImages\Preview16.png" Link="DarkImages\Preview16.png" />
+    <Content Include="..\Shared\DarkImages\Preview32.png" Link="DarkImages\Preview32.png" />
+    <Content Include="..\Shared\DarkImages\ReplaceData16.png" Link="DarkImages\ReplaceData16.png" />
+    <Content Include="..\Shared\DarkImages\ReplaceData32.png" Link="DarkImages\ReplaceData32.png" />
+    <Content Include="..\Shared\DarkImages\StageData16.png" Link="DarkImages\StageData16.png" />
+    <Content Include="..\Shared\DarkImages\StageData32.png" Link="DarkImages\StageData32.png" />
+    <Content Include="..\Shared\Images\AddInDesktop16.png" Link="Images\AddInDesktop16.png" />
+    <Content Include="..\Shared\Images\AppendData16.png" Link="Images\AppendData16.png" />
+    <Content Include="..\Shared\Images\AppendData32.png" Link="Images\AppendData32.png" />
+    <Content Include="..\Shared\Images\CogWheel16.png" Link="Images\CogWheel16.png" />
+    <Content Include="..\Shared\Images\CogWheel32.png" Link="Images\CogWheel32.png" />
+    <Content Include="..\Shared\Images\DataMapper16.png" Link="Images\DataMapper16.png" />
+    <Content Include="..\Shared\Images\DataMapper32.png" Link="Images\DataMapper32.png" />
+    <Content Include="..\Shared\Images\NewFile16.png" Link="Images\NewFile16.png" />
+    <Content Include="..\Shared\Images\NewFile32.png" Link="Images\NewFile32.png" />
+    <Content Include="..\Shared\Images\Preview16.png" Link="Images\Preview16.png" />
+    <Content Include="..\Shared\Images\Preview32.png" Link="Images\Preview32.png" />
+    <Content Include="..\Shared\Images\ReplaceData16.png" Link="Images\ReplaceData16.png" />
+    <Content Include="..\Shared\Images\ReplaceData32.png" Link="Images\ReplaceData32.png" />
+    <Content Include="..\Shared\Images\StageData16.png" Link="Images\StageData16.png" />
+    <Content Include="..\Shared\Images\StageData32.png" Link="Images\StageData32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Shared\GPTools\arcpy\dla.py" Link="GPTools\arcpy\dla.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaExtractLayerToGDB.py" Link="GPTools\arcpy\dlaExtractLayerToGDB.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaService.py" Link="GPTools\arcpy\dlaService.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaAppendData.py" Link="GPTools\arcpy\dlaAppendData.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaCreateSourceTarget.py" Link="GPTools\arcpy\dlaCreateSourceTarget.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaFieldCalculator.py" Link="GPTools\arcpy\dlaFieldCalculator.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaPreview.py" Link="GPTools\arcpy\dlaPreview.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaPublish.py" Link="GPTools\arcpy\dlaPublish.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaReplaceByField.py" Link="GPTools\arcpy\dlaReplaceByField.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\dlaStage.py" Link="GPTools\arcpy\dlaStage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\FieldMatcher.xsl" Link="GPTools\arcpy\FieldMatcher.xsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\arcpy\MatchLocal.xml" Link="GPTools\arcpy\MatchLocal.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\GPTools\DataLoadingAssistant.tbx" Link="GPTools\DataLoadingAssistant.tbx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="..\Shared\Dockpane1.xaml" Link="Dockpane1.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="..\Shared\Dockpane2Settings.xaml" Link="Dockpane2Settings.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <Import Project="C:\ArcGIS\bin\Esri.ProApp.SDK.Desktop.targets" Condition="Exists('C:\ArcGIS\bin\Esri.ProApp.SDK.Desktop.targets') AND !Exists('Esri.ArcGISPro.Extensions.targets')" />
+  <Target Name="BeforeBuild">
+    <Error Text="C:\ArcGIS\bin\Esri.ProApp.SDK.Desktop.targets not found." Condition="!Exists('C:\ArcGIS\bin\Esri.ProApp.SDK.Desktop.targets')" />
+  </Target>
+</Project>

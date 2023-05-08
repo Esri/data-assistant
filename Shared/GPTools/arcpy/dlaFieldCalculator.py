@@ -164,6 +164,13 @@ def calcValue(row,names,calcString):
         outVal = None
     return outVal
 
+def _add_quotes(exp_value):
+    if not exp_value.startswith('"'):
+        exp_value = '"' + exp_value
+    if not exp_value.endswith('"'):
+        exp_value = exp_value + '"'
+    return exp_value
+
 def setFieldValues(table,fields,names,ftypes,lengths):
     # from source xml file match old values to new values to prepare for append to target geodatabase
     success = False
@@ -240,12 +247,17 @@ def setFieldValues(table,fields,names,ftypes,lengths):
                         sname = dla.getNodeValue(field,"SourceName")
                         oper = dla.getNodeValue(field,"Oper")
                         iif = dla.getNodeValue(field,"If")
+                        ftype = ftypes[fnum]
                         if iif != " " and type(iif) == 'str':
                             for name in names:
                                 if name in iif:
                                     iif = iif.replace(name,"|"+name+"|")
                         tthen = dla.getNodeValue(field,"Then")
                         eelse = dla.getNodeValue(field,"Else")
+                        if ftype == "String":
+                            iif = _add_quotes(iif)
+                            tthen = _add_quotes(tthen)
+                            eelse = _add_quotes(eelse)
                         for name in names:
                             if name in eelse:
                                 eelse = eelse.replace(name,"|"+name+"|")
